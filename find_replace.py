@@ -3,15 +3,6 @@ given a large bunch (~1e7) of things to find and replace and a folder of data to
 and writes the cleaned copied data to the output folder, preserving the relative path
 
 if a tokenizer is used, only matches at token boundaries
-
-TODO: parallel work sharing to make processing faster
-TODO: add options to the to_regex function (space -> \s, etc)
-TODO: simplify (?:x|y|z) -> [xyz]
-TODO: find_all case insensitive
-TODO: find_all find first only or None, na=False
-TODO: None or na -> use empty string as replacement
-TODO: specify case=False in init
-TODO: case insensitivity in the tokenizer instead?
 """
 import collections
 import datetime
