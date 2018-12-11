@@ -14,8 +14,6 @@ import random
 import re
 import time
 
-import psutil
-
 PUNCTUATION = set(u'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
 NUMBERS = set(u'1234567890')
 ALPHABET = set(u'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
@@ -91,6 +89,7 @@ UNICODE_SPACES = {
 def format_bytes(num):
     """
     string formatting
+
     :type num: int
     :rtype: str
     """
@@ -110,6 +109,7 @@ def format_bytes(num):
 def format_seconds(num):
     """
     string formatting
+
     :type num: int | float
     :rtype: str
     """
@@ -135,6 +135,7 @@ def char_group_tokenize(text, token_max_len=65535):
     unused function
     tokenizes alphabet, numbers, and other unicode separately
     about 10% slower than the simpler tokenizer
+
     :param text:
     :param token_max_len:
     """
@@ -223,6 +224,7 @@ def char_group_tokenize(text, token_max_len=65535):
 def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
     """
     tokenize by whitespace (and punctuation)
+
     :param text: to be split
     :param token_max_len: truncate tokens after this length
     :param emit_space: emit spaces
@@ -279,12 +281,13 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
 def yield_lines(file_path, make_lower=False, threshold_len=0):
     """
     yields all non-empty lines in a file
+
     :param file_path: file to read
     :param make_lower: force line to lowercase
     :param threshold_len: ignore lines equal <= this length
     """
-    with io.open(file_path, mode='r', encoding='utf-8') as f:
-        for line in f:
+    with io.open(file_path, mode='r', encoding='utf-8') as _f:
+        for line in _f:
             line = line.strip()
             if make_lower:
                 line = line.lower()
@@ -305,7 +308,7 @@ class AhoCorasickReplace(object):
 
     @staticmethod
     def fromkeys(keys, default='', verbose=False, case_sensitive=True):
-        _trie = AhoCorasickReplace(case_sensitive=case_sensitive)
+        _trie = AhoCorasickReplace(lowercase=case_sensitive)
         _trie.update(((key, default) for key in keys), verbose=verbose)
         return _trie
 
@@ -316,14 +319,21 @@ class AhoCorasickReplace(object):
         def __init__(self):
             self.REPLACEMENT = _SENTINEL
 
-    def __init__(self, replacements=None, lexer=None, unlexer=None, case_sensitive=True):
+    def __init__(self, replacements=None, lexer=None, unlexer=None, lowercase=True):
+        """
+
+        :param replacements:
+        :param lexer: tokenizer that reads one character at a time and yields tokens
+        :param unlexer: function to combine tokens back into a string
+        :param lowercase: lowercase all the things (including output)
+        """
         """
         :type lexer: Iterable -> Iterable
         """
         self.head = self.Node()
 
         if lexer is None:
-            if case_sensitive:
+            if not lowercase:
                 def _lexer(seq):
                     for elem in seq:
                         yield elem
@@ -331,7 +341,7 @@ class AhoCorasickReplace(object):
                 def _lexer(seq):
                     for elem in seq:
                         yield elem.lower()
-        elif case_sensitive:
+        elif not lowercase:
             def _lexer(seq):
                 for elem in lexer(seq):
                     yield elem.lower()
@@ -615,8 +625,8 @@ class AhoCorasickReplace(object):
         yield tokens from a file given its path
         :param file_path: file to read
         """
-        with io.open(file_path, mode=('r', 'rb')[encoding is None], encoding=encoding) as f:
-            for token in self.tokenizer(char for line in f for char in line):
+        with io.open(file_path, mode=('r', 'rb')[encoding is None], encoding=encoding) as _f:
+            for token in self.tokenizer(char for line in _f for char in line):
                 yield token
 
     def _translate(self, input_sequence):
@@ -714,8 +724,6 @@ class AhoCorasickReplace(object):
         :type input_sequence: str | Iterable
         :param allow_overlapping: yield all overlapping matches (soar -> so, soar, oar)
         :type allow_overlapping: bool
-        :param tokenizer: fundtoin to tokenize input, or True to use pre-defined tokenizer
-        :type tokenizer: bool | function
         """
         matches = dict()  # {span_start: (span_end + 1, [span_stuff, ...]), ...} <-- because: match == seq[start:end+1]
         spans = dict()  # positions that are partial matches: {span_start: (span_head, [span_stuff, ...]), ...}
@@ -770,6 +778,11 @@ class AhoCorasickReplace(object):
             yield ''.join(match_replacement)
 
     def process_text(self, input_text):
+        """
+
+        :param input_text:
+        :return:
+        """
         return self.detokenizer(token for token in self._translate(self.tokenizer(input_text)))
 
     def process_file(self, input_path, output_path, overwrite=False, encoding='utf8'):
@@ -802,9 +815,9 @@ class AhoCorasickReplace(object):
             t0 = time.time()
 
             try:
-                with io.open(temp_path, mode=('w', 'wb')[encoding is None], encoding=encoding) as f:
+                with io.open(temp_path, mode=('w', 'wb')[encoding is None], encoding=encoding) as _f:
                     for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
-                        f.write(output_chunk)
+                        _f.write(output_chunk)
 
                 print(u'    output: %s' % temp_path[:-8])
 
@@ -840,10 +853,10 @@ def self_test():
     # feed in a list of tuples
     _trie = AhoCorasickReplace()
     _trie.update([('asd', '111'), ('hjk', '222'), ('dfgh', '3333'), ('ghjkl;', '44444'), ('jkl', '!')])
-    assert ''.join(_trie._translate('erasdfghjkll')) == 'er111fg222ll'
-    assert ''.join(_trie._translate('erasdfghjkl;jkl;')) == 'er111f44444!;'
-    assert ''.join(_trie._translate('erassdfghjkl;jkl;')) == 'erass3333!;!;'
-    assert ''.join(_trie._translate('ersdfghjkll')) == 'ers3333!l'
+    assert ''.join(_trie.process_text('erasdfghjkll')) == 'er111fg222ll'
+    assert ''.join(_trie.process_text('erasdfghjkl;jkl;')) == 'er111f44444!;'
+    assert ''.join(_trie.process_text('erassdfghjkl;jkl;')) == 'erass3333!;!;'
+    assert ''.join(_trie.process_text('ersdfghjkll')) == 'ers3333!l'
 
     # fuzz-test regex
     # a-z
@@ -875,7 +888,7 @@ def self_test():
     # feed in a generator
     _trie = AhoCorasickReplace()
     _trie.update(x.split('.') for x in 'a.b b.c c.d d.a'.split())
-    assert ''.join(_trie._translate('acbd')) == 'bdca'
+    assert ''.join(_trie.process_text('acbd')) == 'bdca'
 
     # feed in a dict
     _trie = AhoCorasickReplace()
@@ -889,11 +902,11 @@ def self_test():
     assert 'aaaaaaa' not in _trie
     _trie['aaaaaaa'] = '7'
 
-    assert ''.join(_trie._translate('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
-    assert ''.join(_trie._translate('a' * 40)) == '~773a'
-    assert ''.join(_trie._translate('a' * 45)) == '~~a'
-    assert ''.join(_trie._translate('a' * 25)) == '~3'
-    assert ''.join(_trie._translate('a' * 60)) == '~~772'
+    assert ''.join(_trie.process_text('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
+    assert ''.join(_trie.process_text('a' * 40)) == '~773a'
+    assert ''.join(_trie.process_text('a' * 45)) == '~~a'
+    assert ''.join(_trie.process_text('a' * 25)) == '~3'
+    assert ''.join(_trie.process_text('a' * 60)) == '~~772'
 
     del _trie['bbbb']
     assert 'b' not in _trie.head
@@ -921,20 +934,20 @@ def self_test():
 
     test = 'madagascareerror'
     assert list(_trie.find_all(test)) == ['madagascar', 'error']
-    assert list(_trie.find_all(test, True)) == \
-           ['mad', 'gas', 'madagascar', 'scar', 'car', 'scare', 'care', 'are', 'career', 'err', 'error']
+    assert list(_trie.find_all(test, True)) == ['mad', 'gas', 'madagascar',
+                                                'scar', 'car', 'scare', 'care',
+                                                'are', 'career', 'err', 'error']
 
     _trie = AhoCorasickReplace.fromkeys('to toga get her here there gather together hear the he ear'.split())
 
     test = 'togethere'
     assert list(_trie.find_all(test)) == ['together']
-    assert list(_trie.find_all(test, True)) == \
-           ['to', 'get', 'the', 'he', 'together', 'her', 'there', 'here']
+    assert list(_trie.find_all(test, True)) == ['to', 'get', 'the', 'he',
+                                                'together', 'her', 'there', 'here']
 
     test = 'togethear'
     assert list(_trie.find_all(test)) == ['to', 'get', 'hear']
-    assert list(_trie.find_all(test, True)) == \
-           ['to', 'get', 'the', 'he', 'hear', 'ear']
+    assert list(_trie.find_all(test, True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
 
     # test special characters
     _trie = AhoCorasickReplace.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
@@ -956,15 +969,15 @@ if __name__ == '__main__':
     # parse mapping list into trie with a tokenizer
     print('parse map to trie...')
     t_init = datetime.datetime.now()
-    m_init = psutil.virtual_memory().used
+    # m_init = psutil.virtual_memory().used
 
     # set tokenizer
-    trie = AhoCorasickReplace(space_tokenize)
+    trie = AhoCorasickReplace(lexer=space_tokenize)
     trie.update(mapping, verbose=True)
-    m_end = psutil.virtual_memory().used
+    # m_end = psutil.virtual_memory().used
     t_end = datetime.datetime.now()
     print('parse completed!', format_seconds((t_end - t_init).total_seconds()))
-    print('memory usage:', format_bytes(m_end - m_init))
+    # print('memory usage:', format_bytes(m_end - m_init))
 
     # start timer
     t_init = datetime.datetime.now()
