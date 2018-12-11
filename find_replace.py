@@ -1,4 +1,4 @@
-"""
+﻿"""
 given a large bunch (~1e7) of things to find and replace and a folder of data to clean
 and writes the cleaned copied data to the output folder, preserving the relative path
 
@@ -297,17 +297,15 @@ _SENTINEL = object()
 
 class AhoCorasickReplace(object):
     """
-
     to find and replace lots of things in one pass
-    something like aho-corasick search
-    but at a token level
+    something like aho-corasick search but it can do replacements
     """
 
-    __slots__ = ('head', 'tokenizer')
+    __slots__ = ('head', 'tokenizer', 'detokenizer')
 
     @staticmethod
-    def fromkeys(keys, default='', verbose=False):
-        _trie = AhoCorasickReplace()
+    def fromkeys(keys, default='', verbose=False, case_sensitive=True):
+        _trie = AhoCorasickReplace(case_sensitive=case_sensitive)
         _trie.update(((key, default) for key in keys), verbose=verbose)
         return _trie
 
@@ -318,17 +316,33 @@ class AhoCorasickReplace(object):
         def __init__(self):
             self.REPLACEMENT = _SENTINEL
 
-    def __init__(self, lexer=None, replacements=None):
+    def __init__(self, replacements=None, lexer=None, unlexer=None, case_sensitive=True):
         """
         :type lexer: Iterable -> Iterable
         """
         self.head = self.Node()
 
         if lexer is None:
-            def lexer(seq):
-                for elem in seq:
-                    yield elem
-        self.tokenizer = lexer
+            if case_sensitive:
+                def _lexer(seq):
+                    for elem in seq:
+                        yield elem
+            else:
+                def _lexer(seq):
+                    for elem in seq:
+                        yield elem.lower()
+        elif case_sensitive:
+            def _lexer(seq):
+                for elem in lexer(seq):
+                    yield elem.lower()
+        else:
+            _lexer = lexer
+        self.tokenizer = _lexer
+
+        if unlexer is None:
+            def unlexer(seq):
+                return ''.join(seq)
+        self.detokenizer = unlexer
 
         if replacements is not None:
             self.update(replacements)
@@ -421,7 +435,17 @@ class AhoCorasickReplace(object):
             else:
                 assert not _stack
 
-    def to_regex(self, fix_quotes=True, fix_spaces=True, fix_fffd=True, fix_singletons=True):
+    def to_regex(self, fuzzy_quotes=True, fuzzy_spaces=True, fffd_any=True, simplify=True, boundary=False):
+        """
+        build a (potentially very very long) regex to find any text in the trie
+
+        :param fuzzy_quotes: unicode quotes also match ascii quotes
+        :param fuzzy_spaces: whitespace char matches any unicode whitespace char
+        :param fffd_any: lets the \ufffd char match anything
+        :param simplify: shorten the output regex via post-processing rules
+        :param boundary: enforce boundary at edge of output regex using \b
+        :return: regex string
+        """
         _parts = [[], []]
         _stack = [(self.head, sorted(self.head.keys(), reverse=True))]
         while _stack:
@@ -439,24 +463,24 @@ class AhoCorasickReplace(object):
                 key = re.escape(key)
 
                 # allow ascii quotes
-                if fix_quotes:
-                    key = key.replace('\u2035', "[\u2035']")  # reversed prime
-                    key = key.replace('\u2032', "[\u2032']")  # prime
-                    key = key.replace('\u2018', "[\u2018']")  # left quote
-                    key = key.replace('\u2019', "[\u2019']")  # right quote
-                    key = key.replace('\u0060', "[\u0060']")  # grave
-                    key = key.replace('\u00b4', "[\u00b4']")  # acute accent
-                    key = key.replace('\u201d', '[\u201d"]')  # left double quote
-                    key = key.replace('\u201c', '[\u201c"]')  # right double quote
-                    key = key.replace('\u301d', '[\u301d"]')  # reversed double prime quotation mark
-                    key = key.replace('\u301e', '[\u301e"]')  # double prime quotation mark
+                if fuzzy_quotes:
+                    key = key.replace('\\\u2035', "[\\\u2035']")  # reversed prime
+                    key = key.replace('\\\u2032', "[\\\u2032']")  # prime
+                    key = key.replace('\\\u2018', "[\\\u2018']")  # left quote
+                    key = key.replace('\\\u2019', "[\\\u2019']")  # right quote
+                    key = key.replace('\\\u0060', "[\\\u0060']")  # grave
+                    key = key.replace('\\\u00b4', "[\\\u00b4']")  # acute accent
+                    key = key.replace('\\\u201d', '[\\\u201d"]')  # left double quote
+                    key = key.replace('\\\u201c', '[\\\u201c"]')  # right double quote
+                    key = key.replace('\\\u301d', '[\\\u301d"]')  # reversed double prime quotation mark
+                    key = key.replace('\\\u301e', '[\\\u301e"]')  # double prime quotation mark
 
                 # allow any whitesapce
-                if fix_spaces:
+                if fuzzy_spaces:
                     key = re.sub('\\s', '\\s', key)
 
                 # fffd matches any single character
-                if fix_fffd:
+                if fffd_any:
                     key = key.replace('\ufffd', '.')  # unicode replacement character
 
                 _parts[-1].append(key)
@@ -482,22 +506,74 @@ class AhoCorasickReplace(object):
         assert len(_parts) == 1
         _pattern = ''.join(_parts[0])
 
-        if fix_singletons:
-            # simplify `(?:.)` -> `.`
-            _pattern = re.sub(r'\(\?:(.)\)', r'\1', _pattern)
+        if simplify:
+            # this matches a single (possibly escaped) character
+            _char = r'(?:\\(?:u\d\d\d\d|x\d\d|\d\d\d?|.)|[^\\])'
 
-            # simplify `(?:\.)` -> `\.`
-            _pattern = re.sub(r'\(\?:(\\.)\)', r'\1', _pattern)
+            def char_group(match):
+                out = ['[']
+                sep = False
+                escaped = False
+                unicode = 0
+                for char in match.groups()[0]:
+                    if unicode:
+                        assert not sep
+                        out.append(char)
+                        unicode -= 1
+                        if not unicode:
+                            sep = True
 
-            # simplify `(?:\u0000)` -> `\u0000`
-            _pattern = re.sub(r'\(\?:(\\u\d\d\d\d)\)', r'\1', _pattern)
+                    elif escaped:
+                        assert not sep
+                        out.append(char)
+                        escaped = False
+                        if char == 'u':
+                            unicode = 4
+                        elif char in '1234567890':
+                            unicode = 2
+                        else:
+                            sep = True
+                    elif char == '\\':
+                        assert not sep
+                        out.append('\\')
+                        escaped = True
+                    elif char == '|':
+                        assert sep
+                        sep = False
+                    else:
+                        assert not sep
+                        out.append(char)
+                        sep = True
+                assert sep
+                out.append(']')
+                return ''.join(out)
+
+            # simplify `(?:x|y|z)` -> `[xyz]`
+            _pattern = re.sub(r'(?<!\\)\(\?:({C}(?:\|{C})*)\)'.format(C=_char), char_group, _pattern)
 
             # simplify `(?:[xyz])` -> `[xyz]`
-            _pattern = re.sub(r'\(\?:(\[[^\[\]]*[^\[\]\\]\])\)', r'\1', _pattern)
+            _pattern = re.sub(r'(?<!\\)\(\?:(\[[^\[\]]*[^\[\]\\]\])\)', r'\1', _pattern)
 
             # simplify `(?:[xyz]?)?` -> `[xyz]?`
-            _pattern = re.sub(r'\(\?:(\[[^\[\]]*[^\[\]\\]\]\?)\)\??', r'\1', _pattern)
+            _pattern = re.sub(r'(?<!\\)\(\?:(\[[^\[\]]*[^\[\]\\]\]\?)\)\??', r'\1', _pattern)
 
+            # simplify `[.]` -> `.`
+            _pattern = re.sub(r'(?<!\\)\[({C})\]'.format(C=_char), r'\1', _pattern)
+
+            # simplify `(?:.)` -> `.`
+            _pattern = re.sub(r'\(\?:({C})\)'.format(C=_char), r'\1', _pattern)
+
+        # force surrounding brackets, and enforce word boundary
+        if _pattern[3:] == '(?:':
+            assert _pattern[-1] == ')'
+            if boundary:
+                _pattern = u'(?:\\b%s\\b)' % _pattern[3:-1]
+        elif boundary:
+            _pattern = u'(?:\\b%s\\b)' % _pattern
+        else:
+            _pattern = u'(?:%s)' % _pattern
+
+        # done
         return _pattern
 
     def keys(self):
@@ -543,7 +619,7 @@ class AhoCorasickReplace(object):
             for token in self.tokenizer(char for line in f for char in line):
                 yield token
 
-    def translate(self, input_sequence):
+    def _translate(self, input_sequence):
         """
         processes text and yields output one token at a time
         :param input_sequence: iterable of hashable objects, preferably a string
@@ -631,7 +707,7 @@ class AhoCorasickReplace(object):
         while output_buffer:
             yield output_buffer.popleft()[1]
 
-    def find_all(self, input_sequence, allow_overlapping=False, tokenizer=True):
+    def find_all(self, input_sequence, allow_overlapping=False):
         """
         finds all occurrences within a string
         :param input_sequence: iterable of hashable objects
@@ -646,10 +722,7 @@ class AhoCorasickReplace(object):
         matches_to_remove = set()  # positions where matches may not start
         spans_to_remove = set()  # positions where matches may not start, or where matching failed
 
-        if tokenizer is True:
-            tokenizer = self.tokenizer
-
-        for index, input_item in enumerate(tokenizer(input_sequence)):
+        for index, input_item in enumerate(self.tokenizer(input_sequence)):
             # append new span to queue
             spans[index] = (self.head, [])
 
@@ -696,10 +769,16 @@ class AhoCorasickReplace(object):
         for match_start, (match_end, match_replacement) in sorted(matches.items()):
             yield ''.join(match_replacement)
 
-    def process_path(self, input_path, output_path, overwrite=False, encoding='utf8'):
+    def process_text(self, input_text):
+        return self.detokenizer(token for token in self._translate(self.tokenizer(input_text)))
+
+    def process_file(self, input_path, output_path, overwrite=False, encoding='utf8'):
         """
-        given a path
-        make a copy and clean it
+        given a path:
+        1. read the file
+        2. replace all the things
+        3. write the output to another file
+
         :type input_path: str
         :type output_path: str
         :type overwrite: bool
@@ -708,11 +787,11 @@ class AhoCorasickReplace(object):
 
         if os.path.exists(output_path) and not overwrite:
             # skip and log to screen once per thousand files
-            if random.random() < 0.001:
-                print('skipped: %s' % output_path)
+            print('skipped: %s' % output_path)
         else:
             # recursively make necessary folders
             if not os.path.isdir(os.path.dirname(output_path)):
+                assert not os.path.exists(os.path.dirname(output_path))
                 os.makedirs(os.path.dirname(output_path))
 
             # process to temp file
@@ -724,7 +803,7 @@ class AhoCorasickReplace(object):
 
             try:
                 with io.open(temp_path, mode=('w', 'wb')[encoding is None], encoding=encoding) as f:
-                    for output_chunk in self.translate(self._yield_tokens(input_path, encoding=encoding)):
+                    for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
                         f.write(output_chunk)
 
                 print(u'    output: %s' % temp_path[:-8])
@@ -761,34 +840,42 @@ def self_test():
     # feed in a list of tuples
     _trie = AhoCorasickReplace()
     _trie.update([('asd', '111'), ('hjk', '222'), ('dfgh', '3333'), ('ghjkl;', '44444'), ('jkl', '!')])
-    assert ''.join(_trie.translate('erasdfghjkll')) == 'er111fg222ll'
-    assert ''.join(_trie.translate('erasdfghjkl;jkl;')) == 'er111f44444!;'
-    assert ''.join(_trie.translate('erassdfghjkl;jkl;')) == 'erass3333!;!;'
-    assert ''.join(_trie.translate('ersdfghjkll')) == 'ers3333!l'
+    assert ''.join(_trie._translate('erasdfghjkll')) == 'er111fg222ll'
+    assert ''.join(_trie._translate('erasdfghjkl;jkl;')) == 'er111f44444!;'
+    assert ''.join(_trie._translate('erassdfghjkl;jkl;')) == 'erass3333!;!;'
+    assert ''.join(_trie._translate('ersdfghjkll')) == 'ers3333!l'
 
-    # test regex
+    # fuzz-test regex
+    # a-z
     permutations = []
     for a in 'abcde':
         for b in 'abcde':
             for c in 'abcde':
                 for d in 'abcde':
-                    for e in 'abcde':
-                        permutations.append(a + b + c + d + e)
+                    permutations.append(a + b + c + d)
 
+    # punctuation
+    for a in '`~!@#$%^&*()-=_+[]{}\\|;\':",./<>?\0':
+        for b in '`~!@#$%^&*()-=_+[]{}\\|;\':",./<>?\0':
+            for c in '`~!@#$%^&*()-=_+[]{}\\|;\':",./<>?\0':
+                permutations.append(a + b + c)
+
+    # run fuzzer
     for _ in range(1000):
         chosen = set()
         for i in range(10):
             chosen.add(random.choice(permutations))
         _trie = AhoCorasickReplace.fromkeys(chosen)
-        r1 = re.compile(_trie.to_regex())
+        r1 = re.compile(_trie.to_regex(fuzzy_quotes=False))  # fuzzy-matching quotes breaks this test
         for found in r1.findall(' '.join(permutations)):
+            assert found in chosen
             chosen.remove(found)
         assert len(chosen) == 0
 
     # feed in a generator
     _trie = AhoCorasickReplace()
     _trie.update(x.split('.') for x in 'a.b b.c c.d d.a'.split())
-    assert ''.join(_trie.translate('acbd')) == 'bdca'
+    assert ''.join(_trie._translate('acbd')) == 'bdca'
 
     # feed in a dict
     _trie = AhoCorasickReplace()
@@ -802,11 +889,11 @@ def self_test():
     assert 'aaaaaaa' not in _trie
     _trie['aaaaaaa'] = '7'
 
-    assert ''.join(_trie.translate('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
-    assert ''.join(_trie.translate('a' * 40)) == '~773a'
-    assert ''.join(_trie.translate('a' * 45)) == '~~a'
-    assert ''.join(_trie.translate('a' * 25)) == '~3'
-    assert ''.join(_trie.translate('a' * 60)) == '~~772'
+    assert ''.join(_trie._translate('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
+    assert ''.join(_trie._translate('a' * 40)) == '~773a'
+    assert ''.join(_trie._translate('a' * 45)) == '~~a'
+    assert ''.join(_trie._translate('a' * 25)) == '~3'
+    assert ''.join(_trie._translate('a' * 60)) == '~~772'
 
     del _trie['bbbb']
     assert 'b' not in _trie.head
@@ -827,8 +914,9 @@ def self_test():
     assert len(_trie.head['a']['a']['a']['a']) == 0
 
     del _trie['aaa':'bbb']
-    assert _trie.to_regex() == 'aa'
+    assert _trie.to_regex() == '(?:aa)'
 
+    # fromkeys
     _trie = AhoCorasickReplace.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
 
     test = 'madagascareerror'
@@ -836,19 +924,34 @@ def self_test():
     assert list(_trie.find_all(test, True)) == \
            ['mad', 'gas', 'madagascar', 'scar', 'car', 'scare', 'care', 'are', 'career', 'err', 'error']
 
+    _trie = AhoCorasickReplace.fromkeys('to toga get her here there gather together hear the he ear'.split())
+
+    test = 'togethere'
+    assert list(_trie.find_all(test)) == ['together']
+    assert list(_trie.find_all(test, True)) == \
+           ['to', 'get', 'the', 'he', 'together', 'her', 'there', 'here']
+
+    test = 'togethear'
+    assert list(_trie.find_all(test)) == ['to', 'get', 'hear']
+    assert list(_trie.find_all(test, True)) == \
+           ['to', 'get', 'the', 'he', 'hear', 'ear']
+
+    # test special characters
+    _trie = AhoCorasickReplace.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
+    assert re.findall(_trie.to_regex(), '***|\\||||') == ['***', '|\\', '|||', '|']
+
 
 if __name__ == '__main__':
     self_test()
 
     # define input/output
-    input_folder = os.path.abspath(u'.')
-    output_folder = os.path.abspath(u'../temp')
+    input_folder = os.path.abspath(u'test/input')
+    output_folder = os.path.abspath(u'test/output')
     file_name_pattern = u'*'
 
     # you can use a generator for the mapping to save memory space
-    mapping = [(line.split()[0], line.split()[-1][::-1]) for line in yield_lines('english-long.txt')]
-    print
-    u'%d pairs of replacements' % len(mapping)
+    mapping = [(line.split()[0], line.split()[-1][::-1]) for line in yield_lines('test/input/english-long.txt')]
+    print('%d pairs of replacements' % len(mapping))
 
     # parse mapping list into trie with a tokenizer
     print('parse map to trie...')
@@ -858,16 +961,10 @@ if __name__ == '__main__':
     # set tokenizer
     trie = AhoCorasickReplace(space_tokenize)
     trie.update(mapping, verbose=True)
-
-    # no tokenizer is better if you want to build a regex
-    # no tokenizer matches and replaces any substring, not just words
-    trie2 = AhoCorasickReplace()
-    trie2.update(mapping, verbose=True)
-
     m_end = psutil.virtual_memory().used
     t_end = datetime.datetime.now()
     print('parse completed!', format_seconds((t_end - t_init).total_seconds()))
-    print(format_bytes(m_end - m_init))
+    print('memory usage:', format_bytes(m_end - m_init))
 
     # start timer
     t_init = datetime.datetime.now()
@@ -877,7 +974,7 @@ if __name__ == '__main__':
     for path in glob.iglob(os.path.join(input_folder, '**', file_name_pattern), recursive=True):
         if os.path.isfile(path):
             new_path = path.replace(input_folder, output_folder)
-            trie.process_path(path, new_path, overwrite=True)
+            trie.process_file(path, new_path, overwrite=True)
 
     # stop timer
     t_end = datetime.datetime.now()
@@ -888,11 +985,23 @@ if __name__ == '__main__':
 
     # just find all matches, don't replace
     t = time.time()
-    with open('kjv.txt') as f:
+    with open('test/input/kjv.txt') as f:
         content = f.read()
     for _ in trie.find_all(content):
         pass
-    print(format_seconds(time.time() - t))
+    print('find_all took this long:', format_seconds(time.time() - t))
+
+    # no tokenizer is better if you want to build a regex
+    # no tokenizer matches and replaces any substring, not just words
+    trie2 = AhoCorasickReplace()
+    trie2.update(mapping[:1000], verbose=True)
 
     # create regex
-    print(trie2.to_regex())
+    print(trie2.to_regex(boundary=True))
+    print(len(trie2.to_regex(boundary=True)))
+
+    # short code to make regex
+    print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex())
+    print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex(simplify=False))
+    print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex())
+    print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex(boundary=True))
