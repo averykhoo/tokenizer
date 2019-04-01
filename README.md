@@ -15,4 +15,12 @@ uses the aho-corasick string search algorithm, but only considers the first long
 - parallel work sharing to make processing faster
 - add code history from 2016
 - split out the tokenizer maybe
+- cleanup and deconflict interfaces
+  - list-style interface (with slices)
+  - set-style interface (add, remove)
+  - dict-style interface (like a set, but with keys)
+  - iterator-style interface
+  - regex interface (improve regex optimization, more like re.findall/match/etc)
+- `__del__`
+- disable `fromkeys()` once created
 
