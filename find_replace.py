@@ -8,13 +8,79 @@ import collections
 import datetime
 import glob
 import io
-import math
 import os
 import random
 import re
 import time
 
-PUNCTUATION = set(u'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~')
+import math
+
+PUNCTUATION = {u'!',
+               u'"',
+               u'#',
+               u'$',
+               u'%',
+               u'&',
+               u"'",
+               u'(',
+               u')',
+               u'*',
+               u'+',
+               u',',
+               u'-',
+               u'.',
+               u'/',
+               u':',
+               u';',
+               u'<',
+               u'=',
+               u'>',
+               u'?',
+               u'@',
+               u'[',
+               u'\\',
+               u']',
+               u'^',
+               u'_',
+               u'`',
+               u'{',
+               u'|',
+               u'}',
+               u'~',
+               u'\u2014',  # en dash
+               u'\u2013',  # em dash
+               u'\u2025',
+               u'\u2026',  # horizontal ellipsis
+               u'\u22ee',  # vertical ellipsis
+               u'\u22ef',  # midline horizontal ellipsis
+               u'\u3002',  # ideographic full stop (chinese)
+               u'\u300e',  # left white corner bracket (chinese)
+               u'\u300f',  # right white corner bracket (chinese)
+               u'\u300c',  # left corner bracket (chinese)
+               u'\u300d',  # right corner bracket (chinese)
+               u'\ufe41',  # presentation form for vertical left angle bracket (chinese)
+               u'\ufe42',  # presentation form for vertical right corner bracket (chinese)
+               u'\u3001',  # ideographic/dun comma (chinese)
+               u'\u2022',  # middle dot
+               u'\u2027',  # hyphenation point
+               u'\u300a',  # left double angle bracket
+               u'\u300b',  # right double angle bracket
+               u'\u3008',  # left angle bracket
+               u'\u3009',  # right angle bracket
+               u'\ufe4f',  # wavy low line
+               u'\uff5e',  # wavy dash
+               u'\uff0c',  # fullwidth comma (chinese)
+               u'\uff01',  # fullwidth exclamation mark (chinese)
+               u'\uff1f',  # fullwidth question mark (chinese)
+               u'\uff1b',  # fullwidth semicolon (chinese)
+               u'\uff1a',  # fullwidth colon (chinese)
+               u'\uff08',  # fullwidth left parenthesis (chinese)
+               u'\uff09',  # fullwidth right parenthesis (chinese)
+               u'\uff3b',  # fullwidth left square bracket (chinese)
+               u'\uff3d',  # fullwidth right square bracket (chinese)
+               u'\u3010',  # left black lenticular bracket (chinese)
+               u'\u3011',  # right black lenticular bracket (chinese)
+               }
 NUMBERS = set(u'1234567890')
 ALPHABET = set(u'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
