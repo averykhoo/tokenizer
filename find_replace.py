@@ -81,7 +81,27 @@ PUNCTUATION = {u'!',
                u'\u3010',  # left black lenticular bracket (chinese)
                u'\u3011',  # right black lenticular bracket (chinese)
                }
-NUMBERS = set(u'1234567890')
+NUMBERS = {u'1',
+           u'2',
+           u'3',
+           u'4',
+           u'5',
+           u'6',
+           u'7',
+           u'8',
+           u'9',
+           u'0',
+           u'\uff11',  # fullwidth 1
+           u'\uff12',  # fullwidth 2
+           u'\uff13',  # fullwidth 3
+           u'\uff14',  # fullwidth 4
+           u'\uff15',  # fullwidth 5
+           u'\uff16',  # fullwidth 6
+           u'\uff17',  # fullwidth 7
+           u'\uff18',  # fullwidth 8
+           u'\uff19',  # fullwidth 9
+           u'\uff10',  # fullwidth 0
+           }
 ALPHABET = set(u'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 UNPRINTABLE_CHARS = {
