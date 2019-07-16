@@ -132,31 +132,25 @@ UNPRINTABLE_CHARS = {
     u'\ufffd',  # unicode replacement char
 }
 
+# refer to: https://en.wikipedia.org/wiki/Whitespace_character
 UNICODE_SPACES = {
+    # unicode whitespace
     u'\u0009',  # horizontal tab == '\t'
     u'\u000a',  # line feed (new line) == '\n'
     u'\u000b',  # vertical tab == '\v'
     u'\u000c',  # form feed (new page)
     u'\u000d',  # carriage return == '\r'
-    u'\u001c',  # file separator == '\f'
-    u'\u001d',  # group separator
-    u'\u001e',  # record separator
-    u'\u001f',  # unit separator
     u'\u0020',  # space == ' '
     u'\u0085',  # next line
     u'\u00a0',  # non-breaking space
     u'\u1680',  # ogham space
-    u'\u180e',  # mongolian vowel separator
-    u'\u200b',  # zero width space
-    u'\u200c',  # zero width non-joiner
-    u'\u200d',  # zero width joiner
     u'\u2000',  # en quad
     u'\u2001',  # em quad
     u'\u2002',  # en space
     u'\u2003',  # em space
-    u'\u2004',  # 3/em space
-    u'\u2005',  # 4/em space
-    u'\u2006',  # 6/em space
+    u'\u2004',  # 3-per-em space
+    u'\u2005',  # 4-per-em space
+    u'\u2006',  # 6-per-em space
     u'\u2007',  # figure space
     u'\u2008',  # punctuation space
     u'\u2009',  # thin space
@@ -165,10 +159,31 @@ UNICODE_SPACES = {
     u'\u2029',  # paragraph separator
     u'\u202f',  # narrow non-breaking space
     u'\u205f',  # medium mathematical space
-    u'\u2060',  # word joiner
-    u'\u2800',  # braille blank
     u'\u3000',  # ideographic space
-    u'\ufeff',  # zero width non-breaking space (also byte order mark)
+
+    # technically not whitespace, but they are blank and usage of these characters is a bug
+    u'\u001c',  # file separator == '\f'
+    u'\u001d',  # group separator
+    u'\u001e',  # record separator
+    u'\u001f',  # unit separator
+
+    # technically not whitespace, but render as blank
+    u'\u180e',  # mongolian vowel separator (NOT WHITESPACE)
+    u'\u200b',  # zero width space (NOT WHITESPACE)
+    u'\u200c',  # zero width non-joiner (NOT WHITESPACE)
+    u'\u200d',  # zero width joiner (NOT WHITESPACE)
+    u'\u2060',  # word joiner (NOT WHITESPACE)
+    u'\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
+
+    # unicode space-illustrating characters (visible)
+    u'\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
+    u'\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
+    u'\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
+    u'\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
+    u'\u2423',  # open box (non-blank symbol used to represent whitespace)
+
+    # specifically defined not to be whitespace, but also blank
+    u'\u2800',  # braille blank (NOT WHITESPACE)
 }
 
 
