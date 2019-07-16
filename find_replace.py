@@ -175,12 +175,12 @@ UNICODE_SPACES = {
     u'\u2060',  # word joiner (NOT WHITESPACE)
     u'\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
 
-    # unicode space-illustrating characters (visible)
-    u'\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
-    u'\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
-    u'\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
-    u'\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
-    u'\u2423',  # open box (non-blank symbol used to represent whitespace)
+    # # unicode space-illustrating characters (visible)
+    # u'\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
+    # u'\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
+    # u'\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
+    # u'\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
+    # u'\u2423',  # open box (non-blank symbol used to represent whitespace)
 
     # specifically defined not to be whitespace, but also blank
     u'\u2800',  # braille blank (NOT WHITESPACE)
