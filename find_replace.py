@@ -52,7 +52,7 @@ PUNCTUATION = {u'!',
                u'\u2025',
                u'\u2026',  # horizontal ellipsis
                u'\u22ee',  # vertical ellipsis
-               u'\u22ef',  # midline horizontal ellipsis
+               # u'\u22ef',  # midline horizontal ellipsis
                u'\u3002',  # ideographic full stop (chinese)
                u'\u300e',  # left white corner bracket (chinese)
                u'\u300f',  # right white corner bracket (chinese)
@@ -68,7 +68,7 @@ PUNCTUATION = {u'!',
                u'\u3008',  # left angle bracket
                u'\u3009',  # right angle bracket
                u'\ufe4f',  # wavy low line
-               u'\uff5e',  # wavy dash
+               # u'\uff5e',  # wavy dash
                u'\uff0c',  # fullwidth comma (chinese)
                u'\uff01',  # fullwidth exclamation mark (chinese)
                u'\uff1f',  # fullwidth question mark (chinese)
@@ -138,7 +138,7 @@ UNICODE_SPACES = {
     u'\u0009',  # horizontal tab == '\t'
     u'\u000a',  # line feed (new line) == '\n'
     u'\u000b',  # vertical tab == '\v'
-    u'\u000c',  # form feed (new page)
+    u'\u000c',  # form feed (new page) == '\f'
     u'\u000d',  # carriage return == '\r'
     u'\u0020',  # space == ' '
     u'\u0085',  # next line
@@ -162,7 +162,7 @@ UNICODE_SPACES = {
     u'\u3000',  # ideographic space
 
     # technically not whitespace, but they are blank and usage of these characters is a bug
-    u'\u001c',  # file separator == '\f'
+    u'\u001c',  # file separator
     u'\u001d',  # group separator
     u'\u001e',  # record separator
     u'\u001f',  # unit separator
