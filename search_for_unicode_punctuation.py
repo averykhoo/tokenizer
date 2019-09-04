@@ -48,7 +48,7 @@ if __name__ == '__main__':
                 f.write(f'    "\\\\",')
             elif p in string.printable:
                 f.write(f'    "{p}",')
-            elif ord(p) < 0xffff:
+            elif ord(p) <= 0xffff:
                 f.write(f'    "\\u{ord(p):04x}",')
             else:
                 f.write(f'    "\\U{ord(p):08x}",')
