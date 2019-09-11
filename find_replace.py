@@ -175,7 +175,7 @@ UNICODE_SPACES = {
     u'\u180e',  # mongolian vowel separator (NOT WHITESPACE)
     u'\u200b',  # zero width space (NOT WHITESPACE)
     u'\u200c',  # zero width non-joiner (NOT WHITESPACE)
-    u'\u200d',  # zero width joiner (NOT WHITESPACE)
+    u'\u200d',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
     u'\u2060',  # word joiner (NOT WHITESPACE)
     u'\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
 
