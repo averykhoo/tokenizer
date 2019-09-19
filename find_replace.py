@@ -391,7 +391,7 @@ def yield_lines(file_path, make_lower=False, threshold_len=0):
     :param make_lower: force line to lowercase
     :param threshold_len: ignore lines equal <= this length
     """
-    with io.open(file_path, mode='r', encoding='utf-8') as _f:
+    with io.open(file_path, mode='rt', encoding='utf-8') as _f:
         for line in _f:
             line = line.strip()
             if make_lower:
@@ -744,7 +744,7 @@ class AhoCorasickReplace(object):
         yield tokens from a file given its path
         :param file_path: file to read
         """
-        with io.open(file_path, mode=('r', 'rb')[encoding is None], encoding=encoding) as _f:
+        with io.open(file_path, mode=('rt', 'rb')[encoding is None], encoding=encoding) as _f:
             for token in self.tokenizer(char for line in _f for char in line):
                 yield token
 
@@ -934,7 +934,7 @@ class AhoCorasickReplace(object):
             t0 = time.time()
 
             try:
-                with io.open(temp_path, mode=('w', 'wb')[encoding is None], encoding=encoding) as _f:
+                with io.open(temp_path, mode=('wt', 'wb')[encoding is None], encoding=encoding) as _f:
                     for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
                         _f.write(output_chunk)
 
