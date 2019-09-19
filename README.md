@@ -1,6 +1,7 @@
 ﻿#   Aho-Corasick Find & Replace
--   Replaces strings with other strings
--   Runs a single pass of the Aho-Corasick string search algorithm, but only considers the first longest match
+-   Given a dict from strings to other strings, replaces all occurrences non-recursively
+-   Fast because it does a single pass over the target string
+-   Based on Aho-Corasick string search, but modified to perform replacements
 
 
 ##  TL;DR
@@ -71,25 +72,17 @@ print(output)  # 'I have a orange... I have an orange...'
 
 ##  Advanced Usage
 
--   `fromkeys` <--
 -   `update` <--
 -   `__setitem__` <--
 -   get (with slices)
--   `process_text` <-- replace stuff in a string
 -   `process_file` <-- replace stuff in a text file
--   `find_all` <-- find stuff in a string
--   `to_regex` <-- convert the entire trie into a regex
 -   `__delitem__` <-- 
 
 ##  To-Do
--   make readme
--   neaten and refactor code into multiple files
+-   finish readme
+-   refactor code into multiple files
 -   convert trie to DFA by computing suffix/failure links
--   parallel work sharing to make processing faster
--   split out the tokenizer maybe
--   cleanup and deconflict interfaces
-    -   set-style interface (add, remove)
-    -   iterator-style interface
--   disable `fromkeys()` once created
+-   parallel file processing to make processing faster, sharing a single trie
+-   split into find-only and find + replace
 -   unicode tokenize like fts5
 
