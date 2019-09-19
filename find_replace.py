@@ -412,12 +412,9 @@ class AhoCorasickReplace(object):
     __slots__ = ('head', 'tokenizer', 'detokenizer')
 
     @staticmethod
-    def fromkeys(keys, default=None, verbose=False, case_sensitive=True):
-        _trie = AhoCorasickReplace(lowercase=case_sensitive)
-        if default is not None:
-            _trie.update(((key, default) for key in keys), verbose=verbose)
-        else:
-            _trie.update(((key, key) for key in keys), verbose=verbose)
+    def fromkeys(keys, default='', verbose=False, case_sensitive=True):
+        _trie = AhoCorasickReplace(case_sensitive=case_sensitive)
+        _trie.update(((key, default) for key in keys), verbose=verbose)
         return _trie
 
     class Node(dict):
@@ -427,13 +424,13 @@ class AhoCorasickReplace(object):
         def __init__(self):
             self.REPLACEMENT = _SENTINEL
 
-    def __init__(self, replacements=None, lexer=None, unlexer=None, lowercase=True):
+    def __init__(self, replacements=None, lexer=None, unlexer=None, case_sensitive=False):
         """
 
         :param replacements:
         :param lexer: tokenizer that reads one character at a time and yields tokens
         :param unlexer: function to combine tokens back into a string
-        :param lowercase: lowercase all the things (including output)
+        :param case_sensitive: if False, lowercase all the things (including output)
         """
         """
         :type lexer: Iterable -> Iterable
@@ -441,7 +438,7 @@ class AhoCorasickReplace(object):
         self.head = self.Node()
 
         if lexer is None:
-            if not lowercase:
+            if case_sensitive:
                 def _lexer(seq):
                     for elem in seq:
                         yield elem
@@ -449,7 +446,7 @@ class AhoCorasickReplace(object):
                 def _lexer(seq):
                     for elem in seq:
                         yield elem.lower()
-        elif not lowercase:
+        elif case_sensitive:
             def _lexer(seq):
                 for elem in lexer(seq):
                     yield elem.lower()
@@ -554,7 +551,7 @@ class AhoCorasickReplace(object):
             else:
                 assert not _stack
 
-    def to_regex(self, fuzzy_quotes=True, fuzzy_spaces=True, fffd_any=True, simplify=True, boundary=False):
+    def to_regex(self, fuzzy_quotes=False, fuzzy_spaces=False, fffd_any=False, simplify=True, boundary=False):
         """
         build a (potentially very very long) regex to find any text in the trie
 
@@ -896,8 +893,8 @@ class AhoCorasickReplace(object):
                 else:
                     break
 
-        for match_start, (match_end, match_replacement) in sorted(matches.items()):
-            yield ''.join(match_replacement)
+        for match_start, (match_end, matched_sequence) in sorted(matches.items()):
+            yield ''.join(matched_sequence)
 
     def process_text(self, input_text):
         """
