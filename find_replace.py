@@ -509,6 +509,7 @@ class AhoCorasickReplace(object):
 
     def pop(self, key=None):
         if key is None:
+            # todo: check empty trie
             for key in self.keys():
                 break
 
@@ -592,7 +593,7 @@ class AhoCorasickReplace(object):
 
                 # allow any whitesapce
                 if fuzzy_spaces:
-                    key = re.sub(r'\s', ' ', key)#.replace(' ', '!\\s!')
+                    key = re.sub(r'\s', ' ', key)  # we'll do the \s replacement later
 
                 # fffd matches any single character
                 if fffd_any:
@@ -622,8 +623,6 @@ class AhoCorasickReplace(object):
         _pattern = ''.join(_parts[0])
 
         if simplify:
-            # this matches a single (possibly escaped) character
-            _char = r'(?:\\(?:u\d\d\d\d|x\d\d|\d\d\d?|.)|[^\\])'
 
             def char_group(match):
                 out = ['[']
@@ -663,6 +662,9 @@ class AhoCorasickReplace(object):
                 out.append(']')
                 return ''.join(out)
 
+            # this matches a single (possibly escaped) character
+            _char = r'(?:\\(?:u\d\d\d\d|x\d\d|\d\d\d?|.)|[^\\])'
+
             # simplify `(?:x|y|z)` -> `[xyz]`
             _pattern = re.sub(r'(?<!\\)\(\?:({C}(?:\|{C})*)\)'.format(C=_char), char_group, _pattern)
 
@@ -691,12 +693,14 @@ class AhoCorasickReplace(object):
         if fuzzy_spaces:
             _pattern = _pattern.replace('\\ ', '\\s')
             assert ' ' not in _pattern
+
             while '\\s\\s' in _pattern:
                 if '\\s\\s+' in _pattern:
                     _pattern = _pattern.replace('\\s\\s+', '\\s+')
                 else:
                     _pattern = _pattern.replace('\\s\\s', '\\s+')
-
+        else:
+            _pattern = _pattern.replace('\\ ', ' ')
 
         # done
         return _pattern
@@ -1008,10 +1012,10 @@ def self_test():
     # feed in a dict
     _trie = AhoCorasickReplace()
     _trie.update({
-        'aa':                     '2',
-        'aaa':                    '3',
+        'aa': '2',
+        'aaa': '3',
         'aaaaaaaaaaaaaaaaaaaaaa': '~',
-        'bbbb':                   '!',
+        'bbbb': '!',
     })
 
     assert 'aaaaaaa' not in _trie
@@ -1136,4 +1140,3 @@ if __name__ == '__main__':
 
     # test space in regex
     print(repr(AhoCorasickReplace.fromkeys(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi']).to_regex()))
-

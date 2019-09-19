@@ -3,6 +3,9 @@ replace multiple strings with multiple other strings in a single pass
 uses the aho-corasick string search algorithm, but only considers the first longest match
 
 ## usage
+-   `fromkeys` <--
+-   `update`
+-   `__setitem__`
 -   `process_text` <-- replace stuff in a string
 -   `process_file` <-- replace stuff in a text file
 -   `find_all` <-- find stuff in a string
