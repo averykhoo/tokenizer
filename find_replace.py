@@ -17,177 +17,177 @@ import math
 
 from punctuation_lookup import PUNCTUATION
 
-# PUNCTUATION = {u'!',
-#                u'"',
-#                u'#',
-#                u'$',
-#                u'%',
-#                u'&',
+# PUNCTUATION = {'!',
+#                '"',
+#                '#',
+#                '$',
+#                '%',
+#                '&',
 #                u"'",
-#                u'(',
-#                u')',
-#                u'*',
-#                u'+',
-#                u',',
-#                u'-',
-#                u'.',
-#                u'/',
-#                u':',
-#                u';',
-#                u'<',
-#                u'=',
-#                u'>',
-#                u'?',
-#                u'@',
-#                u'[',
-#                u'\\',
-#                u']',
-#                u'^',
-#                u'_',
-#                u'`',
-#                u'{',
-#                u'|',
-#                u'}',
-#                u'~',
-#                u'\u2014',  # en dash
-#                u'\u2013',  # em dash
-#                u'\u2025',
-#                u'\u2026',  # horizontal ellipsis
-#                u'\u22ee',  # vertical ellipsis
-#                # u'\u22ef',  # midline horizontal ellipsis
-#                u'\u3002',  # ideographic full stop (chinese)
-#                u'\u300e',  # left white corner bracket (chinese)
-#                u'\u300f',  # right white corner bracket (chinese)
-#                u'\u300c',  # left corner bracket (chinese)
-#                u'\u300d',  # right corner bracket (chinese)
-#                u'\ufe41',  # presentation form for vertical left angle bracket (chinese)
-#                u'\ufe42',  # presentation form for vertical right corner bracket (chinese)
-#                u'\u3001',  # ideographic/dun comma (chinese)
-#                u'\u2022',  # middle dot
-#                u'\u2027',  # hyphenation point
-#                u'\u300a',  # left double angle bracket
-#                u'\u300b',  # right double angle bracket
-#                u'\u3008',  # left angle bracket
-#                u'\u3009',  # right angle bracket
-#                u'\ufe4f',  # wavy low line
-#                # u'\uff5e',  # wavy dash
-#                u'\uff0c',  # fullwidth comma (chinese)
-#                u'\uff01',  # fullwidth exclamation mark (chinese)
-#                u'\uff1f',  # fullwidth question mark (chinese)
-#                u'\uff1b',  # fullwidth semicolon (chinese)
-#                u'\uff1a',  # fullwidth colon (chinese)
-#                u'\uff08',  # fullwidth left parenthesis (chinese)
-#                u'\uff09',  # fullwidth right parenthesis (chinese)
-#                u'\uff3b',  # fullwidth left square bracket (chinese)
-#                u'\uff3d',  # fullwidth right square bracket (chinese)
-#                u'\u3010',  # left black lenticular bracket (chinese)
-#                u'\u3011',  # right black lenticular bracket (chinese)
+#                '(',
+#                ')',
+#                '*',
+#                '+',
+#                ',',
+#                '-',
+#                '.',
+#                '/',
+#                ':',
+#                ';',
+#                '<',
+#                '=',
+#                '>',
+#                '?',
+#                '@',
+#                '[',
+#                '\\',
+#                ']',
+#                '^',
+#                '_',
+#                '`',
+#                '{',
+#                '|',
+#                '}',
+#                '~',
+#                '\u2014',  # en dash
+#                '\u2013',  # em dash
+#                '\u2025',
+#                '\u2026',  # horizontal ellipsis
+#                '\u22ee',  # vertical ellipsis
+#                # '\u22ef',  # midline horizontal ellipsis
+#                '\u3002',  # ideographic full stop (chinese)
+#                '\u300e',  # left white corner bracket (chinese)
+#                '\u300f',  # right white corner bracket (chinese)
+#                '\u300c',  # left corner bracket (chinese)
+#                '\u300d',  # right corner bracket (chinese)
+#                '\ufe41',  # presentation form for vertical left angle bracket (chinese)
+#                '\ufe42',  # presentation form for vertical right corner bracket (chinese)
+#                '\u3001',  # ideographic/dun comma (chinese)
+#                '\u2022',  # middle dot
+#                '\u2027',  # hyphenation point
+#                '\u300a',  # left double angle bracket
+#                '\u300b',  # right double angle bracket
+#                '\u3008',  # left angle bracket
+#                '\u3009',  # right angle bracket
+#                '\ufe4f',  # wavy low line
+#                # '\uff5e',  # wavy dash
+#                '\uff0c',  # fullwidth comma (chinese)
+#                '\uff01',  # fullwidth exclamation mark (chinese)
+#                '\uff1f',  # fullwidth question mark (chinese)
+#                '\uff1b',  # fullwidth semicolon (chinese)
+#                '\uff1a',  # fullwidth colon (chinese)
+#                '\uff08',  # fullwidth left parenthesis (chinese)
+#                '\uff09',  # fullwidth right parenthesis (chinese)
+#                '\uff3b',  # fullwidth left square bracket (chinese)
+#                '\uff3d',  # fullwidth right square bracket (chinese)
+#                '\u3010',  # left black lenticular bracket (chinese)
+#                '\u3011',  # right black lenticular bracket (chinese)
 #                }
 
-NUMBERS = {u'1',
-           u'2',
-           u'3',
-           u'4',
-           u'5',
-           u'6',
-           u'7',
-           u'8',
-           u'9',
-           u'0',
-           u'\uff11',  # fullwidth 1
-           u'\uff12',  # fullwidth 2
-           u'\uff13',  # fullwidth 3
-           u'\uff14',  # fullwidth 4
-           u'\uff15',  # fullwidth 5
-           u'\uff16',  # fullwidth 6
-           u'\uff17',  # fullwidth 7
-           u'\uff18',  # fullwidth 8
-           u'\uff19',  # fullwidth 9
-           u'\uff10',  # fullwidth 0
+NUMBERS = {'1',
+           '2',
+           '3',
+           '4',
+           '5',
+           '6',
+           '7',
+           '8',
+           '9',
+           '0',
+           '\uff11',  # fullwidth 1
+           '\uff12',  # fullwidth 2
+           '\uff13',  # fullwidth 3
+           '\uff14',  # fullwidth 4
+           '\uff15',  # fullwidth 5
+           '\uff16',  # fullwidth 6
+           '\uff17',  # fullwidth 7
+           '\uff18',  # fullwidth 8
+           '\uff19',  # fullwidth 9
+           '\uff10',  # fullwidth 0
            }
 
-ALPHABET = set(u'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+ALPHABET = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 UNPRINTABLE_CHARS = {
-    u'\u0000',  # null
-    u'\u0001',  # start of heading
-    u'\u0002',  # start of text
-    u'\u0003',  # end of text
-    u'\u0004',  # end of transmission
-    u'\u0005',  # enquiry
-    u'\u0006',  # acknowledge (ACK)
-    u'\u0007',  # bell (also used as bullet point)
-    u'\u0008',  # backspace
-    u'\u000e',  # shift out
-    u'\u000f',  # shift in
-    u'\u0010',  # data link escape
-    u'\u0011',  # device control 1
-    u'\u0012',  # device control 2
-    u'\u0013',  # device control 3
-    u'\u0014',  # device control 4
-    u'\u0015',  # negative acknowledge
-    u'\u0016',  # synchronous idle
-    u'\u0017',  # end of transmission block
-    u'\u0018',  # cancel
-    u'\u0019',  # end of medium
-    u'\u001a',  # substitute
-    u'\u001b',  # escape (ESC)
-    u'\u007f',  # delete (DEL)
-    u'\ufffd',  # unicode replacement char
+    '\u0000',  # null
+    '\u0001',  # start of heading
+    '\u0002',  # start of text
+    '\u0003',  # end of text
+    '\u0004',  # end of transmission
+    '\u0005',  # enquiry
+    '\u0006',  # acknowledge (ACK)
+    '\u0007',  # bell (also used as bullet point)
+    '\u0008',  # backspace
+    '\u000e',  # shift out
+    '\u000f',  # shift in
+    '\u0010',  # data link escape
+    '\u0011',  # device control 1
+    '\u0012',  # device control 2
+    '\u0013',  # device control 3
+    '\u0014',  # device control 4
+    '\u0015',  # negative acknowledge
+    '\u0016',  # synchronous idle
+    '\u0017',  # end of transmission block
+    '\u0018',  # cancel
+    '\u0019',  # end of medium
+    '\u001a',  # substitute
+    '\u001b',  # escape (ESC)
+    '\u007f',  # delete (DEL)
+    '\ufffd',  # unicode replacement char
 }
 
 # refer to: https://en.wikipedia.org/wiki/Whitespace_character
 UNICODE_SPACES = {
     # unicode whitespace
-    u'\u0009',  # horizontal tab == '\t'
-    u'\u000a',  # line feed (new line) == '\n'
-    u'\u000b',  # vertical tab == '\v'
-    u'\u000c',  # form feed (new page) == '\f'
-    u'\u000d',  # carriage return == '\r'
-    u'\u0020',  # space == ' '
-    u'\u0085',  # next line
-    u'\u00a0',  # non-breaking space
-    u'\u1680',  # ogham space
-    u'\u2000',  # en quad
-    u'\u2001',  # em quad
-    u'\u2002',  # en space
-    u'\u2003',  # em space
-    u'\u2004',  # 3-per-em space
-    u'\u2005',  # 4-per-em space
-    u'\u2006',  # 6-per-em space
-    u'\u2007',  # figure space
-    u'\u2008',  # punctuation space
-    u'\u2009',  # thin space
-    u'\u200a',  # hair space
-    u'\u2028',  # line separator
-    u'\u2029',  # paragraph separator
-    u'\u202f',  # narrow non-breaking space
-    u'\u205f',  # medium mathematical space
-    u'\u3000',  # ideographic space
+    '\u0009',  # horizontal tab == '\t'
+    '\u000a',  # line feed (new line) == '\n'
+    '\u000b',  # vertical tab == '\v'
+    '\u000c',  # form feed (new page) == '\f'
+    '\u000d',  # carriage return == '\r'
+    '\u0020',  # space == ' '
+    '\u0085',  # next line
+    '\u00a0',  # non-breaking space
+    '\u1680',  # ogham space
+    '\u2000',  # en quad
+    '\u2001',  # em quad
+    '\u2002',  # en space
+    '\u2003',  # em space
+    '\u2004',  # 3-per-em space
+    '\u2005',  # 4-per-em space
+    '\u2006',  # 6-per-em space
+    '\u2007',  # figure space
+    '\u2008',  # punctuation space
+    '\u2009',  # thin space
+    '\u200a',  # hair space
+    '\u2028',  # line separator
+    '\u2029',  # paragraph separator
+    '\u202f',  # narrow non-breaking space
+    '\u205f',  # medium mathematical space
+    '\u3000',  # ideographic space
 
     # technically not whitespace, but they are blank and usage of these characters is a bug
-    u'\u001c',  # file separator
-    u'\u001d',  # group separator
-    u'\u001e',  # record separator
-    u'\u001f',  # unit separator
+    '\u001c',  # file separator
+    '\u001d',  # group separator
+    '\u001e',  # record separator
+    '\u001f',  # unit separator
 
     # technically not whitespace, but render as blank
-    u'\u180e',  # mongolian vowel separator (NOT WHITESPACE)
-    u'\u200b',  # zero width space (NOT WHITESPACE)
-    u'\u200c',  # zero width non-joiner (NOT WHITESPACE)
-    u'\u200d',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
-    u'\u2060',  # word joiner (NOT WHITESPACE)
-    u'\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
+    '\u180e',  # mongolian vowel separator (NOT WHITESPACE)
+    '\u200b',  # zero width space (NOT WHITESPACE)
+    '\u200c',  # zero width non-joiner (NOT WHITESPACE)
+    '\u200d',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
+    '\u2060',  # word joiner (NOT WHITESPACE)
+    '\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
 
     # # unicode space-illustrating characters (visible)
-    # u'\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
-    # u'\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
-    # u'\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
-    # u'\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
-    # u'\u2423',  # open box (non-blank symbol used to represent whitespace)
+    # '\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
+    # '\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
+    # '\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
+    # '\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
+    # '\u2423',  # open box (non-blank symbol used to represent whitespace)
 
     # specifically defined not to be whitespace, but also blank
-    u'\u2800',  # braille blank (NOT WHITESPACE)
+    '\u2800',  # braille blank (NOT WHITESPACE)
 }
 
 
@@ -251,10 +251,10 @@ def char_group_tokenize(text, token_max_len=65535):
     alphabet = ALPHABET
 
     # init
-    is_space = u''
+    is_space = ''
     is_num = False
     is_alpha = False
-    temp = u''
+    temp = ''
 
     # main loop over all text
     for char in text:
@@ -267,7 +267,7 @@ def char_group_tokenize(text, token_max_len=65535):
                 if temp:
                     yield temp
                 temp = char
-                is_space = u''
+                is_space = ''
                 is_alpha = True
                 is_num = False
 
@@ -279,7 +279,7 @@ def char_group_tokenize(text, token_max_len=65535):
                 if temp:
                     yield temp
                 temp = char
-                is_space = u''
+                is_space = ''
                 is_alpha = False
                 is_num = True
 
@@ -299,7 +299,7 @@ def char_group_tokenize(text, token_max_len=65535):
             if temp:
                 yield temp
             yield char
-            temp = is_space = u''
+            temp = is_space = ''
             is_alpha = False
             is_num = False
 
@@ -308,7 +308,7 @@ def char_group_tokenize(text, token_max_len=65535):
             if temp:
                 yield temp
             temp = char
-            is_space = u''
+            is_space = ''
             is_num = False
             is_alpha = False
 
@@ -340,8 +340,8 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
     spaces = UNICODE_SPACES
 
     # init
-    is_space = u''
-    temp = u''
+    is_space = ''
+    temp = ''
 
     # main loop over all text
     for char in text:
@@ -360,14 +360,14 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
                 yield temp
             if emit_punc:
                 yield char
-            temp = is_space = u''
+            temp = is_space = ''
 
         # 3) first char
         elif is_space:
             if temp:
                 yield temp
             temp = char
-            is_space = u''
+            is_space = ''
 
         # 4) next char
         elif len(temp) < token_max_len:
@@ -412,9 +412,12 @@ class AhoCorasickReplace(object):
     __slots__ = ('head', 'tokenizer', 'detokenizer')
 
     @staticmethod
-    def fromkeys(keys, default='', verbose=False, case_sensitive=True):
+    def fromkeys(keys, default=None, verbose=False, case_sensitive=True):
         _trie = AhoCorasickReplace(lowercase=case_sensitive)
-        _trie.update(((key, default) for key in keys), verbose=verbose)
+        if default is not None:
+            _trie.update(((key, default) for key in keys), verbose=verbose)
+        else:
+            _trie.update(((key, key) for key in keys), verbose=verbose)
         return _trie
 
     class Node(dict):
@@ -641,7 +644,7 @@ class AhoCorasickReplace(object):
                         assert not sep
                         out.append(char)
                         escaped = False
-                        if char == 'u':
+                        if char == '':
                             unicode = 4
                         elif char in '1234567890':
                             unicode = 2
@@ -684,11 +687,11 @@ class AhoCorasickReplace(object):
         if _pattern[3:] == '(?:':
             assert _pattern[-1] == ')'
             if boundary:
-                _pattern = u'(?:\\b%s\\b)' % _pattern[3:-1]
+                _pattern = '(?:\\b%s\\b)' % _pattern[3:-1]
         elif boundary:
-            _pattern = u'(?:\\b%s\\b)' % _pattern
+            _pattern = '(?:\\b%s\\b)' % _pattern
         else:
-            _pattern = u'(?:%s)' % _pattern
+            _pattern = '(?:%s)' % _pattern
 
         if fuzzy_spaces:
             _pattern = _pattern.replace('\\ ', '\\s')
@@ -927,10 +930,10 @@ class AhoCorasickReplace(object):
                 os.makedirs(os.path.dirname(output_path))
 
             # process to temp file
-            print(u'=' * 100)
-            print(u'processing: %s' % input_path)
-            print(u'input size: %s' % format_bytes(os.path.getsize(input_path)))
-            temp_path = output_path + u'.partial'
+            print('=' * 100)
+            print('processing: %s' % input_path)
+            print('input size: %s' % format_bytes(os.path.getsize(input_path)))
+            temp_path = output_path + '.partial'
             t0 = time.time()
 
             try:
@@ -938,11 +941,11 @@ class AhoCorasickReplace(object):
                     for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
                         _f.write(output_chunk)
 
-                print(u'    output: %s' % temp_path[:-8])
+                print('    output: %s' % temp_path[:-8])
 
             except Exception:
                 os.remove(temp_path)
-                print(u'    failed: %s' % temp_path)
+                print('    failed: %s' % temp_path)
                 raise
 
             # rename to output
@@ -950,23 +953,19 @@ class AhoCorasickReplace(object):
                 os.remove(output_path)
             os.rename(temp_path, output_path)
             t1 = time.time()
-            print(u'total time: %s' % format_seconds(t1 - t0))
+            print('total time: %s' % format_seconds(t1 - t0))
 
 
 def self_test():
     # regex self-tests
     try:
-        assert set(re.sub(u'\\s', u'', ''.join(UNICODE_SPACES), flags=re.U)) in [
-            set(u'\u200b\u200c\u200d\u2060\u2800\ufeff'),
-            set(u'\u180e\u200b\u200c\u200d\u2060\u2800\ufeff')]
+        assert set(re.sub(r'\s', '', ''.join(UNICODE_SPACES), flags=re.U)) in [
+            set('\u200b\u200c\u200d\u2060\u2800\ufeff'),
+            set('\u180e\u200b\u200c\u200d\u2060\u2800\ufeff')]
 
     except AssertionError:
         print('whatever version of re you have has weird unicode spaces')
-        print(repr(re.sub(u'\\s', u'', ''.join(UNICODE_SPACES), flags=re.U)))
-        raise
-    except TypeError:
-        print('gotta use python 2.7')
-        print('#python2.7 use_gazeteer.py')
+        print(repr(re.sub(r'\s', '', ''.join(UNICODE_SPACES), flags=re.U)))
         raise
 
     # feed in a list of tuples
@@ -1077,9 +1076,9 @@ if __name__ == '__main__':
     self_test()
 
     # define input/output
-    input_folder = os.path.abspath(u'test/input')
-    output_folder = os.path.abspath(u'test/output')
-    file_name_pattern = u'*'
+    input_folder = os.path.abspath('test/input')
+    output_folder = os.path.abspath('test/output')
+    file_name_pattern = '*'
 
     # you can use a generator for the mapping to save memory space
     mapping = [(line.split()[0], line.split()[-1][::-1]) for line in yield_lines('test/input/english-long.txt')]
