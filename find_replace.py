@@ -551,7 +551,7 @@ class AhoCorasickReplace(object):
             else:
                 assert not _stack
 
-    def to_regex(self, fuzzy_quotes=False, fuzzy_spaces=False, fffd_any=False, simplify=True, boundary=False):
+    def to_regex(self, fuzzy_quotes=True, fuzzy_spaces=True, fffd_any=True, simplify=True, boundary=False):
         """
         build a (potentially very very long) regex to find any text in the trie
 
