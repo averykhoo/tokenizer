@@ -592,7 +592,7 @@ class AhoCorasickReplace(object):
 
                 # allow any whitesapce
                 if fuzzy_spaces:
-                    key = re.sub('\\s', '\\s', key)
+                    key = re.sub(r'\s', ' ', key)#.replace(' ', '!\\s!')
 
                 # fffd matches any single character
                 if fffd_any:
@@ -687,6 +687,16 @@ class AhoCorasickReplace(object):
             _pattern = u'(?:\\b%s\\b)' % _pattern
         else:
             _pattern = u'(?:%s)' % _pattern
+
+        if fuzzy_spaces:
+            _pattern = _pattern.replace('\\ ', '\\s')
+            assert ' ' not in _pattern
+            while '\\s\\s' in _pattern:
+                if '\\s\\s+' in _pattern:
+                    _pattern = _pattern.replace('\\s\\s+', '\\s+')
+                else:
+                    _pattern = _pattern.replace('\\s\\s', '\\s+')
+
 
         # done
         return _pattern
@@ -1060,66 +1070,70 @@ def self_test():
 
 
 if __name__ == '__main__':
-    self_test()
-
-    # define input/output
-    input_folder = os.path.abspath(u'test/input')
-    output_folder = os.path.abspath(u'test/output')
-    file_name_pattern = u'*'
-
-    # you can use a generator for the mapping to save memory space
-    mapping = [(line.split()[0], line.split()[-1][::-1]) for line in yield_lines('test/input/english-long.txt')]
-    print('%d pairs of replacements' % len(mapping))
-
-    # parse mapping list into trie with a tokenizer
-    print('parse map to trie...')
-    t_init = datetime.datetime.now()
-    # m_init = psutil.virtual_memory().used
-
-    # set tokenizer
-    trie = AhoCorasickReplace(lexer=space_tokenize)
-    trie.update(mapping, verbose=True)
-    # m_end = psutil.virtual_memory().used
-    t_end = datetime.datetime.now()
-    print('parse completed!', format_seconds((t_end - t_init).total_seconds()))
-    # print('memory usage:', format_bytes(m_end - m_init))
-
-    # start timer
-    t_init = datetime.datetime.now()
-    print('processing start...', t_init)
-
-    # process everything using the same tokenizer
-    for path in glob.iglob(os.path.join(input_folder, '**', file_name_pattern), recursive=True):
-        if os.path.isfile(path):
-            new_path = path.replace(input_folder, output_folder)
-            trie.process_file(path, new_path, overwrite=True)
-
-    # stop timer
-    t_end = datetime.datetime.now()
-    print('')
-    print('processing complete!', t_end)
-    print('processing total time:', format_seconds((t_end - t_init).total_seconds()))
-    print('processing total time:', (t_end - t_init))
-
-    # just find all matches, don't replace
-    t = time.time()
-    with open('test/input/kjv.txt') as f:
-        content = f.read()
-    for _ in trie.find_all(content):
-        pass
-    print('find_all took this long:', format_seconds(time.time() - t))
-
-    # no tokenizer is better if you want to build a regex
-    # no tokenizer matches and replaces any substring, not just words
-    trie2 = AhoCorasickReplace()
-    trie2.update(mapping[:1000], verbose=True)
-
-    # create regex
-    print(trie2.to_regex(boundary=True))
-    print(len(trie2.to_regex(boundary=True)))
+    # self_test()
+    #
+    # # define input/output
+    # input_folder = os.path.abspath(u'test/input')
+    # output_folder = os.path.abspath(u'test/output')
+    # file_name_pattern = u'*'
+    #
+    # # you can use a generator for the mapping to save memory space
+    # mapping = [(line.split()[0], line.split()[-1][::-1]) for line in yield_lines('test/input/english-long.txt')]
+    # print('%d pairs of replacements' % len(mapping))
+    #
+    # # parse mapping list into trie with a tokenizer
+    # print('parse map to trie...')
+    # t_init = datetime.datetime.now()
+    # # m_init = psutil.virtual_memory().used
+    #
+    # # set tokenizer
+    # trie = AhoCorasickReplace(lexer=space_tokenize)
+    # trie.update(mapping, verbose=True)
+    # # m_end = psutil.virtual_memory().used
+    # t_end = datetime.datetime.now()
+    # print('parse completed!', format_seconds((t_end - t_init).total_seconds()))
+    # # print('memory usage:', format_bytes(m_end - m_init))
+    #
+    # # start timer
+    # t_init = datetime.datetime.now()
+    # print('processing start...', t_init)
+    #
+    # # process everything using the same tokenizer
+    # for path in glob.iglob(os.path.join(input_folder, '**', file_name_pattern), recursive=True):
+    #     if os.path.isfile(path):
+    #         new_path = path.replace(input_folder, output_folder)
+    #         trie.process_file(path, new_path, overwrite=True)
+    #
+    # # stop timer
+    # t_end = datetime.datetime.now()
+    # print('')
+    # print('processing complete!', t_end)
+    # print('processing total time:', format_seconds((t_end - t_init).total_seconds()))
+    # print('processing total time:', (t_end - t_init))
+    #
+    # # just find all matches, don't replace
+    # t = time.time()
+    # with open('test/input/kjv.txt') as f:
+    #     content = f.read()
+    # for _ in trie.find_all(content):
+    #     pass
+    # print('find_all took this long:', format_seconds(time.time() - t))
+    #
+    # # no tokenizer is better if you want to build a regex
+    # # no tokenizer matches and replaces any substring, not just words
+    # trie2 = AhoCorasickReplace()
+    # trie2.update(mapping[:1000], verbose=True)
+    #
+    # # create regex
+    # print(trie2.to_regex(boundary=True))
+    # print(len(trie2.to_regex(boundary=True)))
 
     # short code to make regex
     print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex())
     print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex(simplify=False))
     print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex())
     print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex(boundary=True))
+
+    # test space in regex
+    print(repr(AhoCorasickReplace.fromkeys(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi']).to_regex()))
+
