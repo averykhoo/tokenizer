@@ -1,6 +1,6 @@
 ﻿#   Aho-Corasick Find & Replace
--   replace multiple strings with multiple other strings in a single pass
--   uses the aho-corasick string search algorithm, but only considers the first longest match
+-   Replaces strings with other strings
+-   Runs a single pass of the Aho-Corasick string search algorithm, but only considers the first longest match
 
 
 ##  TL;DR
@@ -38,6 +38,8 @@ print(matches)  # ['pen', 'apple']
 ```
 -   How do I make it case insensitive?
     -   Use `trie = AhoCorasickReplace.fromkeys(strings, case_sensitive=False)`
+-   How do I find overlapping matches?
+    -   Use `trie.find_all(target, allow_overlapping=True)`
 
 ### Replace occurrences of some strings with other strings
 ```python
