@@ -1,8 +1,10 @@
 ﻿#   Aho-Corasick Find & Replace
 -   Given a dict from strings to other strings, replaces all occurrences non-recursively
 -   Fast because it does a single pass over the target string
--   (Incompletely) based on Aho-Corasick string search, but modified to perform replacements
-    -   Uses a trie *without* suffix links, so that you can dynamically add/remove stuff
+-   (Incompletely) based on [Aho-Corasick string search](https://en.wikipedia.org/wiki/Aho–Corasick_algorithm), 
+    but modified to perform replacements
+    -   Uses a [trie](https://en.wikipedia.org/wiki/Trie) structure *without* suffix links, 
+        so that you can dynamically add/remove stuff
 
 
 ##  TL;DR
