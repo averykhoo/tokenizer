@@ -563,6 +563,8 @@ class Trie(object):
         :param boundary: enforce boundary at edge of output regex using \b
         :return: regex string
         """
+        assert list(self.tokenizer('test-test test')) == list('test-test test'), "shouldn't use a tokenizer"
+
         _parts = [[], []]
         _stack = [(self.head, sorted(self.head.keys(), reverse=True))]
         while _stack:
