@@ -10,6 +10,7 @@
 ##  TL;DR
 
 ### Convert list of strings into a regex:
+-   Single line: `print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil'], case_sensitive=False).to_regex())`
 ```python
 from find_replace import Trie
 
@@ -19,7 +20,6 @@ trie = Trie.fromkeys(strings, case_sensitive=False)
 pattern = trie.to_regex()
 print(pattern)  # '(?:(?:apple|p(?:en(?:cil)?|ineapple)))'
 ```
--   Single line: `print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil'], case_sensitive=False).to_regex())`
 -   Why is space being changed to match all whitespace ('\s')?
     -   Fuzzy spaces make life easier
     -   To disable, use `trie.to_regex(fuzzy_spaces=False)`
@@ -80,18 +80,22 @@ print(output)  # 'I have a orange... I have an orange...'
 
 ##  Advanced Usage
 
--   `update` <--
--   `__setitem__` <--
--   get (with slices)
--   `process_file` <-- replace stuff in a text file
--   `__delitem__` <-- 
+-   `update`: add/modify replacements, 
+              e.g. `trie.update({'apple', 'orange', 'orange': 'apple'})`
+-   `__setitem__`: add/modify replacements, 
+                   e.g. `trie['pen+apple'] = 'apple pen'`
+-   `__getitem__`: see what you've inserted, 
+                   e.g. `print(trie['pen'])` or `print(trie['apple':'orange'])`
+-   `process_file`: replace stuff in some text file to a new file, 
+                    e.g. `trie.process_file(input_path, output_path)`
+-   `__delitem__`: remove a string-replacement pair, 
+                   e.g. `del trie['pen']`
 
 ##  To-Do
--   finish readme
--   refactor code into multiple files
--   convert trie to DFA by computing suffix/failure links
--   parallel file processing to make processing faster, sharing a single trie
--   split into find-only and find + replace
--   unicode tokenize like fts5
--   find a way to add suffix links while allowing in-place updates to the trie
+-   refactor code into multiple files?
+-   parallelize file processing to make processing faster, sharing a single trie
+-   split into find-only and find+replace
+-   unicode_tokenize (like [fts5](https://sqlite.org/fts5.html#unicode61_tokenizer))
+-   find a way to convert trie to DFA by computing suffix/failure links, 
+    while still allowing in-place updates to the trie
 
