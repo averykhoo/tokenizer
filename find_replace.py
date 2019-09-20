@@ -15,74 +15,75 @@ import time
 
 import math
 
-from punctuation_lookup import PUNCTUATION
-
-# PUNCTUATION = {'!',
-#                '"',
-#                '#',
-#                '$',
-#                '%',
-#                '&',
-#                u"'",
-#                '(',
-#                ')',
-#                '*',
-#                '+',
-#                ',',
-#                '-',
-#                '.',
-#                '/',
-#                ':',
-#                ';',
-#                '<',
-#                '=',
-#                '>',
-#                '?',
-#                '@',
-#                '[',
-#                '\\',
-#                ']',
-#                '^',
-#                '_',
-#                '`',
-#                '{',
-#                '|',
-#                '}',
-#                '~',
-#                '\u2014',  # en dash
-#                '\u2013',  # em dash
-#                '\u2025',
-#                '\u2026',  # horizontal ellipsis
-#                '\u22ee',  # vertical ellipsis
-#                # '\u22ef',  # midline horizontal ellipsis
-#                '\u3002',  # ideographic full stop (chinese)
-#                '\u300e',  # left white corner bracket (chinese)
-#                '\u300f',  # right white corner bracket (chinese)
-#                '\u300c',  # left corner bracket (chinese)
-#                '\u300d',  # right corner bracket (chinese)
-#                '\ufe41',  # presentation form for vertical left angle bracket (chinese)
-#                '\ufe42',  # presentation form for vertical right corner bracket (chinese)
-#                '\u3001',  # ideographic/dun comma (chinese)
-#                '\u2022',  # middle dot
-#                '\u2027',  # hyphenation point
-#                '\u300a',  # left double angle bracket
-#                '\u300b',  # right double angle bracket
-#                '\u3008',  # left angle bracket
-#                '\u3009',  # right angle bracket
-#                '\ufe4f',  # wavy low line
-#                # '\uff5e',  # wavy dash
-#                '\uff0c',  # fullwidth comma (chinese)
-#                '\uff01',  # fullwidth exclamation mark (chinese)
-#                '\uff1f',  # fullwidth question mark (chinese)
-#                '\uff1b',  # fullwidth semicolon (chinese)
-#                '\uff1a',  # fullwidth colon (chinese)
-#                '\uff08',  # fullwidth left parenthesis (chinese)
-#                '\uff09',  # fullwidth right parenthesis (chinese)
-#                '\uff3b',  # fullwidth left square bracket (chinese)
-#                '\uff3d',  # fullwidth right square bracket (chinese)
-#                '\u3010',  # left black lenticular bracket (chinese)
-#                '\u3011',  # right black lenticular bracket (chinese)
-#                }
+try:
+    from punctuation_lookup import PUNCTUATION
+except ImportError:
+    PUNCTUATION = {'!',
+                   '"',
+                   '#',
+                   '$',
+                   '%',
+                   '&',
+                   u"'",
+                   '(',
+                   ')',
+                   '*',
+                   '+',
+                   ',',
+                   '-',
+                   '.',
+                   '/',
+                   ':',
+                   ';',
+                   '<',
+                   '=',
+                   '>',
+                   '?',
+                   '@',
+                   '[',
+                   '\\',
+                   ']',
+                   '^',
+                   '_',
+                   '`',
+                   '{',
+                   '|',
+                   '}',
+                   '~',
+                   '\u2014',  # en dash
+                   '\u2013',  # em dash
+                   '\u2025',
+                   '\u2026',  # horizontal ellipsis
+                   '\u22ee',  # vertical ellipsis
+                   # '\u22ef',  # midline horizontal ellipsis
+                   '\u3002',  # ideographic full stop (chinese)
+                   '\u300e',  # left white corner bracket (chinese)
+                   '\u300f',  # right white corner bracket (chinese)
+                   '\u300c',  # left corner bracket (chinese)
+                   '\u300d',  # right corner bracket (chinese)
+                   '\ufe41',  # presentation form for vertical left angle bracket (chinese)
+                   '\ufe42',  # presentation form for vertical right corner bracket (chinese)
+                   '\u3001',  # ideographic/dun comma (chinese)
+                   '\u2022',  # middle dot
+                   '\u2027',  # hyphenation point
+                   '\u300a',  # left double angle bracket
+                   '\u300b',  # right double angle bracket
+                   '\u3008',  # left angle bracket
+                   '\u3009',  # right angle bracket
+                   '\ufe4f',  # wavy low line
+                   # '\uff5e',  # wavy dash
+                   '\uff0c',  # fullwidth comma (chinese)
+                   '\uff01',  # fullwidth exclamation mark (chinese)
+                   '\uff1f',  # fullwidth question mark (chinese)
+                   '\uff1b',  # fullwidth semicolon (chinese)
+                   '\uff1a',  # fullwidth colon (chinese)
+                   '\uff08',  # fullwidth left parenthesis (chinese)
+                   '\uff09',  # fullwidth right parenthesis (chinese)
+                   '\uff3b',  # fullwidth left square bracket (chinese)
+                   '\uff3d',  # fullwidth right square bracket (chinese)
+                   '\u3010',  # left black lenticular bracket (chinese)
+                   '\u3011',  # right black lenticular bracket (chinese)
+                   }
 
 NUMBERS = {'1',
            '2',
@@ -1008,10 +1009,10 @@ def self_test():
     # feed in a dict
     _trie = AhoCorasickReplace()
     _trie.update({
-        'aa': '2',
-        'aaa': '3',
+        'aa':                     '2',
+        'aaa':                    '3',
         'aaaaaaaaaaaaaaaaaaaaaa': '~',
-        'bbbb': '!',
+        'bbbb':                   '!',
     })
 
     assert 'aaaaaaa' not in _trie
