@@ -58,6 +58,11 @@ print(output)  # 'I have a pineapple... I have an pencil...'
 ```
 -   How do I make it case insensitive?
     -   Use `trie = Trie(replacements, case_sensitive=False)`
+-   Why is it finding substrings (e.g. "java" in "javascript")?
+    -   That's just what a string search should do...
+    -   To match at word boundaries, specify a tokenizer when creating the trie
+        -   First: `from find_replace import space_tokenize` <-- tokenizes on spaces and punctuation
+        -   Then: `trie = Trie(replacements, lexer=space_tokenize)` 
 
 ### Replace occurrences of some strings with a specific string
 ```python
