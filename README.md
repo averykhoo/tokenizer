@@ -1,22 +1,23 @@
 ﻿#   Aho-Corasick Find & Replace
 -   Given a dict from strings to other strings, replaces all occurrences non-recursively
 -   Fast because it does a single pass over the target string
--   Based on Aho-Corasick string search, but modified to perform replacements
+-   (Incompletely) based on Aho-Corasick string search, but modified to perform replacements
+    -   Uses a trie *without* suffix links, so that you can dynamically add/remove stuff
 
 
 ##  TL;DR
 
 ### Convert list of strings into a regex:
 ```python
-from find_replace import AhoCorasickReplace
+from find_replace import Trie
 
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
-trie = AhoCorasickReplace.fromkeys(strings, case_sensitive=False)
+trie = Trie.fromkeys(strings, case_sensitive=False)
 pattern = trie.to_regex()
 print(pattern)  # '(?:(?:apple|p(?:en(?:cil)?|ineapple)))'
 ```
--   Single line: `print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil'], case_sensitive=False).to_regex())`
+-   Single line: `print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil'], case_sensitive=False).to_regex())`
 -   Why is space being changed to match all whitespace ('\s')?
     -   Fuzzy spaces make life easier
     -   To disable, use `trie.to_regex(fuzzy_spaces=False)`
@@ -28,47 +29,47 @@ print(pattern)  # '(?:(?:apple|p(?:en(?:cil)?|ineapple)))'
 
 ### Find occurrences of a list of strings
 ```python
-from find_replace import AhoCorasickReplace
+from find_replace import Trie
 
 target = 'I have a pen... I have an apple...'
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
-trie = AhoCorasickReplace.fromkeys(strings)
+trie = Trie.fromkeys(strings)
 matches = list(trie.find_all(target))  # `find_all` returns a generator
 print(matches)  # ['pen', 'apple']
 ```
 -   How do I make it case insensitive?
-    -   Use `trie = AhoCorasickReplace.fromkeys(strings, case_sensitive=False)`
+    -   Use `trie = Trie.fromkeys(strings, case_sensitive=False)`
 -   How do I find overlapping matches?
     -   Use `trie.find_all(target, allow_overlapping=True)`
 
 ### Replace occurrences of some strings with other strings
 ```python
-from find_replace import AhoCorasickReplace
+from find_replace import Trie
 
 target = 'I have a pen... I have an apple...'
 replacements = {'pen': 'pineapple', 'apple': 'pencil'}
 
-trie = AhoCorasickReplace(replacements)
+trie = Trie(replacements)
 output = trie.process_text(target)
 print(output)  # 'I have a pineapple... I have an pencil...'
 ```
 -   How do I make it case insensitive?
-    -   Use `trie = AhoCorasickReplace(replacements, case_sensitive=False)`
+    -   Use `trie = Trie(replacements, case_sensitive=False)`
 
 ### Replace occurrences of some strings with a specific string
 ```python
-from find_replace import AhoCorasickReplace
+from find_replace import Trie
 
 target = 'I have a pen... I have an apple...'
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
-trie = AhoCorasickReplace.fromkeys(strings, 'orange')
+trie = Trie.fromkeys(strings, 'orange')
 output = trie.process_text(target)
 print(output)  # 'I have a orange... I have an orange...'
 ```
 -   How do I remove instead of replace?
-    -   Use `AhoCorasickReplace.fromkeys(strings, '')`
+    -   Use `Trie.fromkeys(strings, '')`
 
 ##  Advanced Usage
 
@@ -85,4 +86,5 @@ print(output)  # 'I have a orange... I have an orange...'
 -   parallel file processing to make processing faster, sharing a single trie
 -   split into find-only and find + replace
 -   unicode tokenize like fts5
+-   find a way to add suffix links while allowing in-place updates to the trie
 

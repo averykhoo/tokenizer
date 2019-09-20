@@ -404,7 +404,7 @@ def yield_lines(file_path, make_lower=False, threshold_len=0):
 _SENTINEL = object()
 
 
-class AhoCorasickReplace(object):
+class Trie(object):
     """
     to find and replace lots of things in one pass
     something like aho-corasick search but it can do replacements
@@ -414,7 +414,7 @@ class AhoCorasickReplace(object):
 
     @staticmethod
     def fromkeys(keys, default='', verbose=False, case_sensitive=True):
-        _trie = AhoCorasickReplace(case_sensitive=case_sensitive)
+        _trie = Trie(case_sensitive=case_sensitive)
         _trie.update(((key, default) for key in keys), verbose=verbose)
         return _trie
 
@@ -967,7 +967,7 @@ def self_test():
         raise
 
     # feed in a list of tuples
-    _trie = AhoCorasickReplace()
+    _trie = Trie()
     _trie.update([('asd', '111'), ('hjk', '222'), ('dfgh', '3333'), ('ghjkl;', '44444'), ('jkl', '!')])
     assert ''.join(_trie.process_text('erasdfghjkll')) == 'er111fg222ll'
     assert ''.join(_trie.process_text('erasdfghjkl;jkl;')) == 'er111f44444!;'
@@ -994,7 +994,7 @@ def self_test():
         chosen = set()
         for i in range(10):
             chosen.add(random.choice(permutations))
-        _trie = AhoCorasickReplace.fromkeys(chosen)
+        _trie = Trie.fromkeys(chosen)
         r1 = re.compile(_trie.to_regex(fuzzy_quotes=False))  # fuzzy-matching quotes breaks this test
         for found in r1.findall(' '.join(permutations)):
             assert found in chosen
@@ -1002,12 +1002,12 @@ def self_test():
         assert len(chosen) == 0
 
     # feed in a generator
-    _trie = AhoCorasickReplace()
+    _trie = Trie()
     _trie.update(x.split('.') for x in 'a.b b.c c.d d.a'.split())
     assert ''.join(_trie.process_text('acbd')) == 'bdca'
 
     # feed in a dict
-    _trie = AhoCorasickReplace()
+    _trie = Trie()
     _trie.update({
         'aa':                     '2',
         'aaa':                    '3',
@@ -1046,7 +1046,7 @@ def self_test():
     assert _trie.to_regex() == '(?:aa)'
 
     # fromkeys
-    _trie = AhoCorasickReplace.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
+    _trie = Trie.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
 
     test = 'madagascareerror'
     assert list(_trie.find_all(test)) == ['madagascar', 'error']
@@ -1054,7 +1054,7 @@ def self_test():
                                                 'scar', 'car', 'scare', 'care',
                                                 'are', 'career', 'err', 'error']
 
-    _trie = AhoCorasickReplace.fromkeys('to toga get her here there gather together hear the he ear'.split())
+    _trie = Trie.fromkeys('to toga get her here there gather together hear the he ear'.split())
 
     test = 'togethere'
     assert list(_trie.find_all(test)) == ['together']
@@ -1066,7 +1066,7 @@ def self_test():
     assert list(_trie.find_all(test, True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
 
     # test special characters
-    _trie = AhoCorasickReplace.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
+    _trie = Trie.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
     assert re.findall(_trie.to_regex(), '***|\\||||') == ['***', '|\\', '|||', '|']
 
 
@@ -1088,7 +1088,7 @@ if __name__ == '__main__':
     # m_init = psutil.virtual_memory().used
 
     # set tokenizer
-    trie = AhoCorasickReplace(lexer=space_tokenize)
+    trie = Trie(lexer=space_tokenize)
     trie.update(mapping, verbose=True)
     # m_end = psutil.virtual_memory().used
     t_end = datetime.datetime.now()
@@ -1122,7 +1122,7 @@ if __name__ == '__main__':
 
     # no tokenizer is better if you want to build a regex
     # no tokenizer matches and replaces any substring, not just words
-    trie2 = AhoCorasickReplace()
+    trie2 = Trie()
     trie2.update(mapping[:1000], verbose=True)
 
     # create regex
@@ -1130,10 +1130,10 @@ if __name__ == '__main__':
     print(len(trie2.to_regex(boundary=True)))
 
     # short code to make regex
-    print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex())
-    print(AhoCorasickReplace.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex(simplify=False))
-    print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex())
-    print(AhoCorasickReplace.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex(boundary=True))
+    print(Trie.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex())
+    print(Trie.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex(simplify=False))
+    print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex())
+    print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex(boundary=True))
 
     # test space in regex
-    print(repr(AhoCorasickReplace.fromkeys(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi']).to_regex()))
+    print(repr(Trie.fromkeys(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi']).to_regex()))
