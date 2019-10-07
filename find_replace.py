@@ -181,7 +181,7 @@ UNICODE_SPACES = {
     '\u2060',  # word joiner (NOT WHITESPACE)
     '\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
 
-    # # unicode space-illustrating characters (visible)
+    # # unicode space-illustrating characters (visible and NOT WHITESPACE)
     # '\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
     # '\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
     # '\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
