@@ -24,7 +24,7 @@ except ImportError:
                    '$',
                    '%',
                    '&',
-                   u"'",
+                   "'",
                    '(',
                    ')',
                    '*',
@@ -134,6 +134,7 @@ UNPRINTABLE_CHARS = {
     '\u001a',  # substitute
     '\u001b',  # escape (ESC)
     '\u007f',  # delete (DEL)
+    '\uffef',  # unicode invalid char (should never exist)
     '\ufffd',  # unicode replacement char
 }
 
