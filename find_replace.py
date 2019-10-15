@@ -526,7 +526,7 @@ class Trie(object):
             breadcrumbs.append((token, head))
         if head.REPLACEMENT is _SENTINEL:
             raise KeyError(key)
-        out = head.REPLACEMENT
+        replacement = head.REPLACEMENT
         head.REPLACEMENT = _SENTINEL
         prev_token, _ = breadcrumbs.pop(-1)
         for token, head in breadcrumbs[::-1]:
@@ -537,7 +537,7 @@ class Trie(object):
                 break
             if head.REPLACEMENT is not _SENTINEL:
                 break
-        return out
+        return key, replacement
 
     def items(self):
         _path = []
