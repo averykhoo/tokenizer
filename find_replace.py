@@ -510,8 +510,12 @@ class Trie(object):
         return value
 
     def pop(self, key=None):
+        # empty Trie, so behave like an empty set
+        if not self.head.keys():
+            raise KeyError(key)
+
+        # pop first item if key not specified
         if key is None:
-            # todo: check empty trie
             for key in self.keys():
                 break
 
