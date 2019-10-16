@@ -15,6 +15,8 @@ import time
 
 import math
 
+import psutil
+
 try:
     from punctuation_lookup import PUNCTUATION
 except ImportError:
@@ -961,6 +963,21 @@ class Trie(object):
             print('total time: %s' % format_seconds(t1 - t0))
 
 
+def to_regex(list_of_strings,
+             case_sensitive=False,
+             fuzzy_quotes=True,
+             fuzzy_spaces=True,
+             fffd_any=True,
+             simplify=True,
+             boundary=False):
+    _trie = Trie.fromkeys(list_of_strings, case_sensitive=case_sensitive)
+    return _trie.to_regex(fuzzy_quotes=fuzzy_quotes,
+                          fuzzy_spaces=fuzzy_spaces,
+                          fffd_any=fffd_any,
+                          simplify=simplify,
+                          boundary=boundary)
+
+
 def self_test():
     # regex self-tests
     try:
@@ -1010,7 +1027,7 @@ def self_test():
 
     # feed in a generator
     _trie = Trie()
-    _trie.update(x.split('.') for x in 'a.b b.c c.d d.a'.split())
+    _trie.update({'a': 'b', 'b': 'c', 'c': 'd', 'd': 'a'})
     assert ''.join(_trie.process_text('acbd')) == 'bdca'
 
     # feed in a dict
@@ -1092,15 +1109,15 @@ if __name__ == '__main__':
     # parse mapping list into trie with a tokenizer
     print('parse map to trie...')
     t_init = datetime.datetime.now()
-    # m_init = psutil.virtual_memory().used
+    m_init = psutil.virtual_memory().used
 
     # set tokenizer
     trie = Trie(lexer=space_tokenize)
     trie.update(mapping, verbose=True)
-    # m_end = psutil.virtual_memory().used
+    m_end = psutil.virtual_memory().used
     t_end = datetime.datetime.now()
     print('parse completed!', format_seconds((t_end - t_init).total_seconds()))
-    # print('memory usage:', format_bytes(m_end - m_init))
+    print('memory usage:', format_bytes(m_end - m_init))
 
     # start timer
     t_init = datetime.datetime.now()

@@ -10,24 +10,23 @@
 ##  TL;DR
 
 ### Convert list of strings into a regex:
--   Single line: `print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil'], case_sensitive=False).to_regex())`
+-   Single line: `print(to_regex(['pen', 'pineapple', 'apple', 'pencil']))`
 ```python
-from find_replace import Trie
+from find_replace import to_regex
 
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
-trie = Trie.fromkeys(strings, case_sensitive=False)
-pattern = trie.to_regex()
+pattern = to_regex(strings, case_sensitive=False)
 print(pattern)  # '(?:(?:apple|p(?:en(?:cil)?|ineapple)))'
 ```
 -   Why is space being changed to match all whitespace ('\s')?
     -   Fuzzy spaces make life easier
-    -   To disable, use `trie.to_regex(fuzzy_spaces=False)`
+    -   To disable, use `to_regex(fuzzy_spaces=False)`
 -   Why is the black shape ('\uFFFD') being changed to match any ('.')?
     -   '\uFFFD' is a char that could have been anything
-    -   To disable, use `trie.to_regex(fffd_any=False)`
+    -   To disable, use `to_regex(fffd_any=False)`
 -   What's happening to my curly quotes?
-    -   To disable, use `trie.to_regex(fuzzy_quotes=False)`
+    -   To disable, use `to_regex(fuzzy_quotes=False)`
 
 ### Find occurrences of a list of strings
 ```python
