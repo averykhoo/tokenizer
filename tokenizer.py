@@ -1,27 +1,9 @@
 import unicodedata
 
-NUMBERS = {'1',
-           '2',
-           '3',
-           '4',
-           '5',
-           '6',
-           '7',
-           '8',
-           '9',
-           '0',
-           '\uff11',  # fullwidth 1
-           '\uff12',  # fullwidth 2
-           '\uff13',  # fullwidth 3
-           '\uff14',  # fullwidth 4
-           '\uff15',  # fullwidth 5
-           '\uff16',  # fullwidth 6
-           '\uff17',  # fullwidth 7
-           '\uff18',  # fullwidth 8
-           '\uff19',  # fullwidth 9
-           '\uff10',  # fullwidth 0
-           }
+# todo: use numeric/digit instead
+NUMBERS = set('0123456789\uff10\uff11\uff12\uff13\uff14\uff15\uff16\uff17\uff18\uff19')  # includes full-width digits
 
+# todo: full-width alphabet
 ALPHABET = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 # refer to: https://en.wikipedia.org/wiki/Whitespace_character
@@ -139,64 +121,6 @@ _is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tok
 _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=True):
-    """
-    tokenize by whitespace and punctuation
-
-    :param text: to be split
-    :param token_max_len: truncate tokens after this length
-    :param emit_space: emit spaces
-    :param emit_punctuation: emit punctuation
-    """
-    # init
-    space_char = ''
-    text_buffer = []
-
-    # main loop over all text
-    for char in text:
-        # 1) spaces
-        if _is_space_char(char):
-            if char == space_char and len(text_buffer) < token_max_len:
-                text_buffer.append(char)
-            else:
-                if text_buffer:
-                    yield ''.join(text_buffer)
-                if emit_space:
-                    space_char = char
-                    text_buffer = [char]
-                else:
-                    space_char = ''
-
-        # 2) punctuation
-        elif _is_punctuation_char(char):
-            if text_buffer:
-                yield ''.join(text_buffer)
-            if emit_punctuation:
-                yield char
-            space_char = ''
-            text_buffer = []
-
-        # 3) first char
-        elif space_char:
-            if text_buffer:
-                yield ''.join(text_buffer)
-            space_char = ''
-            text_buffer = [char]
-
-        # 4) next char
-        elif len(text_buffer) < token_max_len:
-            text_buffer.append(char)
-
-        # 5) max char
-        else:
-            yield ''.join(text_buffer)
-            text_buffer = [char]
-
-    # finally, yield the last chunk
-    if text_buffer:
-        yield ''.join(text_buffer)
-
-
 def unicode61_tokenize(text, yield_non_words=True):
     text_buffer = []
     for char in text:
@@ -267,7 +191,7 @@ def char_group_tokenize(text, token_max_len=65535):
                 is_num = True
 
         # 3) spaces tokenized in groups of the same char
-        elif char in UNICODE_SPACES:
+        elif _is_space_char(char):
             if char == is_space and len(temp) < token_max_len:
                 temp += char
             else:
