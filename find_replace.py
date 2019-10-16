@@ -17,186 +17,26 @@ import time
 import psutil
 
 try:
-    from punctuation_lookup import PUNCTUATION
+    from tokenizer import _is_punctuation_char, UNICODE_SPACES
 except ImportError:
-    PUNCTUATION = {'!',
-                   '"',
-                   '#',
-                   '$',
-                   '%',
-                   '&',
-                   "'",
-                   '(',
-                   ')',
-                   '*',
-                   '+',
-                   ',',
-                   '-',
-                   '.',
-                   '/',
-                   ':',
-                   ';',
-                   '<',
-                   '=',
-                   '>',
-                   '?',
-                   '@',
-                   '[',
-                   '\\',
-                   ']',
-                   '^',
-                   '_',
-                   '`',
-                   '{',
-                   '|',
-                   '}',
-                   '~',
-                   '‘',  # unicode curly quotes
-                   '’',  # unicode curly quotes
-                   '“',  # unicode curly quotes
-                   '”',  # unicode curly quotes
-                   '§',  # section header
-                   '±',
-                   '√',  # sqrt, sometime used as tick
-                   '\u2014',  # en dash (medium length dash)
-                   '\u2013',  # em dash (long dash)
-                   '\u2025',  # two-dot leader
-                   '\u2026',  # horizontal ellipsis
-                   '\u22ee',  # vertical ellipsis
-                   '\u3002',  # ideographic full stop (chinese)
-                   '\u300e',  # left white corner bracket (chinese)
-                   '\u300f',  # right white corner bracket (chinese)
-                   '\u300c',  # left corner bracket (chinese)
-                   '\u300d',  # right corner bracket (chinese)
-                   '\ufe41',  # presentation form for vertical left angle bracket (chinese)
-                   '\ufe42',  # presentation form for vertical right corner bracket (chinese)
-                   '\u3001',  # ideographic/dun comma (chinese)
-                   '\u2022',  # middle dot
-                   '\u2027',  # hyphenation point
-                   '\u300a',  # left double angle bracket
-                   '\u300b',  # right double angle bracket
-                   '\u3008',  # left angle bracket
-                   '\u3009',  # right angle bracket
-                   '\ufe4f',  # wavy low line
-                   '\uff0c',  # fullwidth comma (chinese)
-                   '\uff01',  # fullwidth exclamation mark (chinese)
-                   '\uff1f',  # fullwidth question mark (chinese)
-                   '\uff1b',  # fullwidth semicolon (chinese)
-                   '\uff1a',  # fullwidth colon (chinese)
-                   '\uff08',  # fullwidth left parenthesis (chinese)
-                   '\uff09',  # fullwidth right parenthesis (chinese)
-                   '\uff3b',  # fullwidth left square bracket (chinese)
-                   '\uff3d',  # fullwidth right square bracket (chinese)
-                   '\u3010',  # left black lenticular bracket (chinese)
-                   '\u3011',  # right black lenticular bracket (chinese)
-                   }
+    def _is_punctuation_char(char):
+        return char in {
+            # COMMON PUNCTUATION
+            '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?',
+            '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~', '‘', '’', '“', '”', '§', '±', '√', '\u2014',
+            '\u2013', '\u2025', '\u2026', '\u22ee', '\u3002', '\u300e', '\u300f', '\u300c', '\u300d', '\ufe41',
+            '\ufe42', '\u3001', '\u2022', '\u2027', '\u300a', '\u300b', '\u3008', '\u3009', '\ufe4f', '\uff0c',
+            '\uff01', '\uff1f', '\uff1b', '\uff1a', '\uff08', '\uff09', '\uff3b', '\uff3d', '\u3010', '\u3011',
+            # UNPRINTABLE CHARS
+            '\u0000', '\u0001', '\u0002', '\u0003', '\u0004', '\u0005', '\u0006', '\u0007', '\u0008', '\u000e',
+            '\u000f', '\u0010', '\u0011', '\u0012', '\u0013', '\u0014', '\u0015', '\u0016', '\u0017', '\u0018',
+            '\u0019', '\u001a', '\u001b', '\u007f', '\uffef', '\ufffd'}
 
-NUMBERS = {'1',
-           '2',
-           '3',
-           '4',
-           '5',
-           '6',
-           '7',
-           '8',
-           '9',
-           '0',
-           '\uff11',  # fullwidth 1
-           '\uff12',  # fullwidth 2
-           '\uff13',  # fullwidth 3
-           '\uff14',  # fullwidth 4
-           '\uff15',  # fullwidth 5
-           '\uff16',  # fullwidth 6
-           '\uff17',  # fullwidth 7
-           '\uff18',  # fullwidth 8
-           '\uff19',  # fullwidth 9
-           '\uff10',  # fullwidth 0
-           }
 
-ALPHABET = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-
-UNPRINTABLE_CHARS = {
-    '\u0000',  # null
-    '\u0001',  # start of heading
-    '\u0002',  # start of text
-    '\u0003',  # end of text
-    '\u0004',  # end of transmission
-    '\u0005',  # enquiry
-    '\u0006',  # acknowledge (ACK)
-    '\u0007',  # bell (also used as bullet point)
-    '\u0008',  # backspace
-    '\u000e',  # shift out
-    '\u000f',  # shift in
-    '\u0010',  # data link escape
-    '\u0011',  # device control 1
-    '\u0012',  # device control 2
-    '\u0013',  # device control 3
-    '\u0014',  # device control 4
-    '\u0015',  # negative acknowledge
-    '\u0016',  # synchronous idle
-    '\u0017',  # end of transmission block
-    '\u0018',  # cancel
-    '\u0019',  # end of medium
-    '\u001a',  # substitute
-    '\u001b',  # escape (ESC)
-    '\u007f',  # delete (DEL)
-    '\uffef',  # unicode invalid char (should never exist)
-    '\ufffd',  # unicode replacement char
-}
-
-# refer to: https://en.wikipedia.org/wiki/Whitespace_character
-UNICODE_SPACES = {
-    # unicode whitespace
-    '\u0009',  # horizontal tab == '\t'
-    '\u000a',  # line feed (new line) == '\n'
-    '\u000b',  # vertical tab == '\v'
-    '\u000c',  # form feed (new page) == '\f'
-    '\u000d',  # carriage return == '\r'
-    '\u0020',  # space == ' '
-    '\u0085',  # next line
-    '\u00a0',  # non-breaking space (alt+0160)
-    '\u1680',  # ogham space
-    '\u2000',  # en quad
-    '\u2001',  # em quad
-    '\u2002',  # en space
-    '\u2003',  # em space
-    '\u2004',  # 3-per-em space
-    '\u2005',  # 4-per-em space
-    '\u2006',  # 6-per-em space
-    '\u2007',  # figure space
-    '\u2008',  # punctuation space
-    '\u2009',  # thin space
-    '\u200a',  # hair space
-    '\u2028',  # line separator
-    '\u2029',  # paragraph separator
-    '\u202f',  # narrow non-breaking space
-    '\u205f',  # medium mathematical space
-    '\u3000',  # ideographic space
-
-    # technically not whitespace, but they are blank and usage of these characters is a bug
-    '\u001c',  # file separator
-    '\u001d',  # group separator
-    '\u001e',  # record separator
-    '\u001f',  # unit separator
-
-    # technically not whitespace, but render as blank
-    '\u180e',  # mongolian vowel separator (NOT WHITESPACE)
-    '\u200b',  # zero width space (NOT WHITESPACE)
-    '\u200c',  # zero width non-joiner (NOT WHITESPACE)
-    '\u200d',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
-    '\u2060',  # word joiner (NOT WHITESPACE)
-    '\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
-
-    # # unicode space-illustrating characters (visible and NOT WHITESPACE)
-    # '\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
-    # '\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
-    # '\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
-    # '\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
-    # '\u2423',  # open box (non-blank symbol used to represent whitespace)
-
-    # specifically defined not to be whitespace, but also blank
-    '\u2800',  # braille blank (NOT WHITESPACE)
-}
+    UNICODE_SPACES = {'\t', '\n', '\v', '\f', '\r', ' ', '\x85', '\xa0', '\x1c', '\x1d', '\x1e', '\x1f', '\ufeff',
+                      '\u1680', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007',
+                      '\u2008', '\u2009', '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000', '\u180e',
+                      '\u200b', '\u200c', '\u200d', '\u2060', '\u2800'}
 
 
 def format_bytes(num):
@@ -243,97 +83,6 @@ def format_seconds(num):
     return ('%.2f %s' if num % 1 else '%d %s') % (num, unit[:-1] if num == 1 else unit)
 
 
-def char_group_tokenize(text, token_max_len=65535):
-    """
-    unused function
-    tokenizes alphabet, numbers, and other unicode separately
-    about 10% slower than the simpler tokenizer
-
-    :param text:
-    :param token_max_len:
-    """
-    # character classes
-    punctuation = PUNCTUATION | UNPRINTABLE_CHARS
-    spaces = UNICODE_SPACES
-    numbers = NUMBERS
-    alphabet = ALPHABET
-
-    # init
-    is_space = ''
-    is_num = False
-    is_alpha = False
-    temp = ''
-
-    # main loop over all text
-    for char in text:
-
-        # 1) chunks of alphabets (most common case first)
-        if char in alphabet:
-            if is_alpha and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = char
-                is_space = ''
-                is_alpha = True
-                is_num = False
-
-        # 2) numbers tokenized as chunks of digits
-        elif char in numbers:
-            if is_num and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = char
-                is_space = ''
-                is_alpha = False
-                is_num = True
-
-        # 3) spaces tokenized in groups of the same char
-        elif char in spaces:
-            if char == is_space and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = is_space = char
-                is_alpha = False
-                is_num = False
-
-        # 4) punctuation tokenized as individual chars
-        elif char in punctuation:
-            if temp:
-                yield temp
-            yield char
-            temp = is_space = ''
-            is_alpha = False
-            is_num = False
-
-        # 5) arbitrary unicode, first token
-        elif is_space or is_num or is_alpha:
-            if temp:
-                yield temp
-            temp = char
-            is_space = ''
-            is_num = False
-            is_alpha = False
-
-        # 6) arbitrary unicode, next token
-        elif len(temp) < token_max_len:
-            temp += char
-
-        # 7) arbitrary unicode, max token
-        else:
-            yield temp
-            temp = char
-
-    # finally, yield the last chunk
-    if temp:
-        yield temp
-
-
 def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
     """
     tokenize by whitespace (and punctuation)
@@ -343,52 +92,53 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
     :param emit_space: emit spaces
     :param emit_punc: emit punctuation
     """
-    # character classes
-    punctuation = PUNCTUATION | UNPRINTABLE_CHARS
-    spaces = UNICODE_SPACES
-
     # init
-    is_space = ''
-    temp = ''
+    space_char = ''
+    text_buffer = []
 
     # main loop over all text
     for char in text:
         # 1) spaces
-        if char in spaces:
-            if char == is_space and len(temp) < token_max_len:
-                temp += char
+        if char in UNICODE_SPACES:
+            if char == space_char and len(text_buffer) < token_max_len:
+                text_buffer.append(char)
             else:
-                if temp:
-                    yield temp
-                temp = is_space = char if emit_space else ''
+                if text_buffer:
+                    yield ''.join(text_buffer)
+                if emit_space:
+                    space_char = char
+                    text_buffer = [char]
+                else:
+                    space_char = ''
 
         # 2) punctuation
-        elif char in punctuation:
-            if temp:
-                yield temp
+        elif _is_punctuation_char(char):
+            if text_buffer:
+                yield ''.join(text_buffer)
             if emit_punc:
                 yield char
-            temp = is_space = ''
+            space_char = ''
+            text_buffer = []
 
         # 3) first char
-        elif is_space:
-            if temp:
-                yield temp
-            temp = char
-            is_space = ''
+        elif space_char:
+            if text_buffer:
+                yield ''.join(text_buffer)
+            space_char = ''
+            text_buffer = [char]
 
         # 4) next char
-        elif len(temp) < token_max_len:
-            temp += char
+        elif len(text_buffer) < token_max_len:
+            text_buffer.append(char)
 
         # 5) max char
         else:
-            yield temp
-            temp = char
+            yield ''.join(text_buffer)
+            text_buffer = [char]
 
     # finally, yield the last chunk
-    if temp:
-        yield temp
+    if text_buffer:
+        yield ''.join(text_buffer)
 
 
 def yield_lines(file_path, make_lower=False, threshold_len=0):
