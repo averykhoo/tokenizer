@@ -123,11 +123,11 @@ _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 def unicode_tokenize(text, words_only=False):
     """
+    based on fts5 but merges spaces and allows diacritics
 
     :param text: string to be tokenizes
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     """
-
     non_text_tokens = not words_only
     text_buffer = []
     last_space = None
