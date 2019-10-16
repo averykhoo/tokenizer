@@ -155,7 +155,7 @@ UNICODE_SPACES = {
     '\u000d',  # carriage return == '\r'
     '\u0020',  # space == ' '
     '\u0085',  # next line
-    '\u00a0',  # non-breaking space
+    '\u00a0',  # non-breaking space (alt+0160)
     '\u1680',  # ogham space
     '\u2000',  # en quad
     '\u2001',  # em quad
