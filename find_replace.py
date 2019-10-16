@@ -17,7 +17,8 @@ import time
 import psutil
 
 try:
-    from tokenizer import _is_punctuation_char, UNICODE_SPACES
+    from tokenizer import _is_punctuation_char, _is_space_char
+
 except ImportError:
     def _is_punctuation_char(char):
         return char in {
@@ -33,10 +34,11 @@ except ImportError:
             '\u0019', '\u001a', '\u001b', '\u007f', '\uffef', '\ufffd'}
 
 
-    UNICODE_SPACES = {'\t', '\n', '\v', '\f', '\r', ' ', '\x85', '\xa0', '\x1c', '\x1d', '\x1e', '\x1f', '\ufeff',
-                      '\u1680', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007',
-                      '\u2008', '\u2009', '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000', '\u180e',
-                      '\u200b', '\u200c', '\u200d', '\u2060', '\u2800'}
+    def _is_space_char(char):
+        return char in {'\t', '\n', '\v', '\f', '\r', ' ', '\x85', '\xa0', '\x1c', '\x1d', '\x1e', '\x1f', '\ufeff',
+                        '\u1680', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007',
+                        '\u2008', '\u2009', '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000', '\u180e',
+                        '\u200b', '\u200c', '\u200d', '\u2060', '\u2800'}  # UNICODE SPACES
 
 
 def format_bytes(num):
@@ -85,7 +87,7 @@ def format_seconds(num):
 
 def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=True):
     """
-    tokenize by whitespace (and punctuation)
+    tokenize by whitespace and punctuation
 
     :param text: to be split
     :param token_max_len: truncate tokens after this length
@@ -99,7 +101,7 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=
     # main loop over all text
     for char in text:
         # 1) spaces
-        if char in UNICODE_SPACES:
+        if _is_space_char(char):
             if char == space_char and len(text_buffer) < token_max_len:
                 text_buffer.append(char)
             else:
@@ -162,11 +164,6 @@ _SENTINEL = object()
 
 
 class Trie(object):
-    """
-    to find and replace lots of things in one pass
-    something like aho-corasick search but it can do replacements
-    """
-
     __slots__ = ('head', 'tokenizer', 'detokenizer')
 
     @staticmethod
@@ -182,40 +179,46 @@ class Trie(object):
         def __init__(self):
             self.REPLACEMENT = _SENTINEL
 
-    def __init__(self, replacements=None, lexer=None, unlexer=None, case_sensitive=False):
+    def __init__(self, replacements=None, tokenizer=None, detokenizer=None, case_sensitive=False):
         """
 
         :param replacements:
-        :param lexer: tokenizer that reads one character at a time and yields tokens
-        :param unlexer: function to combine tokens back into a string
+        :param tokenizer: tokenizer that reads one character at a time and yields tokens
+        :type tokenizer: Iterable -> Iterable
+        :param detokenizer: function to combine tokens back into a string
         :param case_sensitive: if False, lowercase all the things (including output)
-        """
-        """
-        :type lexer: Iterable -> Iterable
         """
         self.head = self.Node()
 
-        if lexer is None:
+        if tokenizer is None:
             if case_sensitive:
-                def _lexer(seq):
+                def _list_tokenizer(seq):
                     for elem in seq:
                         yield elem
+
+                self.tokenizer = _list_tokenizer
             else:
-                def _lexer(seq):
+                def _lowercase_list_tokenizer(seq):
                     for elem in seq:
                         yield elem.lower()
-        elif case_sensitive:
-            def _lexer(seq):
-                for elem in lexer(seq):
-                    yield elem.lower()
-        else:
-            _lexer = lexer
-        self.tokenizer = _lexer
 
-        if unlexer is None:
-            def unlexer(seq):
+                self.tokenizer = _lowercase_list_tokenizer
+        elif case_sensitive:
+            def _lowercase_wrap_tokenizer(seq):
+                for elem in tokenizer(seq):
+                    yield elem.lower()
+
+            self.tokenizer = _lowercase_wrap_tokenizer
+        else:
+            self.tokenizer = tokenizer
+
+        if detokenizer is None:
+            def _list_detokenizer(seq):
                 return ''.join(seq)
-        self.detokenizer = unlexer
+
+            self.detokenizer = _list_detokenizer
+        else:
+            self.detokenizer = detokenizer
 
         if replacements is not None:
             self.update(replacements)
@@ -734,14 +737,15 @@ def to_regex(list_of_strings,
 
 def self_test():
     # regex self-tests
+    _spaces = '\t\n\v\f\r \x85\xa0\x1c\x1d\x1e\x1f\ufeff\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006' \
+              '\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\u180e\u200b\u200c\u200d\u2060\u2800'
     try:
-        assert set(re.sub(r'\s', '', ''.join(UNICODE_SPACES), flags=re.U)) in [
+        assert set(re.sub(r'\s', '', _spaces, flags=re.U)) in [
             set('\u200b\u200c\u200d\u2060\u2800\ufeff'),
             set('\u180e\u200b\u200c\u200d\u2060\u2800\ufeff')]
 
     except AssertionError:
-        print('whatever version of re you have has weird unicode spaces')
-        print(repr(re.sub(r'\s', '', ''.join(UNICODE_SPACES), flags=re.U)))
+        print('whatever version of re you have has weird unicode spaces', repr(re.sub(r'\s', '', _spaces, flags=re.U)))
         raise
 
     # feed in a list of tuples
@@ -866,7 +870,7 @@ if __name__ == '__main__':
     m_init = psutil.virtual_memory().used
 
     # set tokenizer
-    trie = Trie(lexer=space_tokenize)
+    trie = Trie(tokenizer=space_tokenize)
     trie.update(mapping, verbose=True)
     m_end = psutil.virtual_memory().used
     t_end = datetime.datetime.now()
