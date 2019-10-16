@@ -121,7 +121,12 @@ _is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tok
 _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode_tokenize(text, yield_non_words=True):
+def unicode_tokenize(text, non_text_tokens=True):
+    """
+
+    :param text: string to be tokenizes
+    :param non_text_tokens: whether or not to return punctuation/symbols/unprintable/whitespace
+    """
     text_buffer = []
     last_space = None
     for char in text:
@@ -129,7 +134,7 @@ def unicode_tokenize(text, yield_non_words=True):
         if _is_text_char(char):
             # buffer contains space
             if last_space is not None:
-                if yield_non_words:
+                if non_text_tokens:
                     yield ''.join(text_buffer)
                 last_space = None
                 text_buffer = [char]
@@ -143,7 +148,7 @@ def unicode_tokenize(text, yield_non_words=True):
             if last_space is not None:
                 if last_space == char:
                     text_buffer.append(char)
-                elif yield_non_words:
+                elif non_text_tokens:
                     yield ''.join(text_buffer)
                     last_space = char
                     text_buffer = [char]
@@ -160,18 +165,24 @@ def unicode_tokenize(text, yield_non_words=True):
                 last_space = char
                 text_buffer = [char]
 
-        # char is punctuation or unprintable (or hieroglyphs or squiggles) AND buffer is full
-        elif text_buffer:
-            yield ''.join(text_buffer)
+        # char is punctuation/symbols/unprintable AND buffer is space
+        elif last_space:
+            if non_text_tokens:
+                yield ''.join(text_buffer)
             last_space = None
             text_buffer = []
 
+        # char is punctuation/symbols/unprintable AND buffer is text
+        elif text_buffer:
+            yield ''.join(text_buffer)
+            text_buffer = []
+
             # yield non-word?
-            if yield_non_words:
+            if non_text_tokens:
                 yield char
 
-        # char is punctuation or unprintable (or hieroglyphs or squiggles)
-        elif yield_non_words:
+        # char is punctuation/symbols/unprintable
+        elif non_text_tokens:
             yield char
 
     # yield remainder
