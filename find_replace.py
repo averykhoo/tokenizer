@@ -1154,10 +1154,10 @@ if __name__ == '__main__':
     print(len(trie2.to_regex(boundary=True)))
 
     # short code to make regex
-    print(Trie.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex())
-    print(Trie.fromkeys(['bob', 'bobo', 'boba', 'baba', 'bobi']).to_regex(simplify=False))
-    print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex())
-    print(Trie.fromkeys(['pen', 'pineapple', 'apple', 'pencil']).to_regex(boundary=True))
+    print(to_regex(['bob', 'bobo', 'boba', 'baba', 'bobi']))
+    print(to_regex(['bob', 'bobo', 'boba', 'baba', 'bobi'], simplify=False))
+    print(to_regex(['pen', 'pineapple', 'apple', 'pencil']))
+    print(to_regex(['pen', 'pineapple', 'apple', 'pencil'], boundary=True))
 
     # test space in regex
-    print(repr(Trie.fromkeys(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi']).to_regex()))
+    print(repr(to_regex(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi'])))
