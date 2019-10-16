@@ -121,12 +121,14 @@ _is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tok
 _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode_tokenize(text, non_text_tokens=True):
+def unicode_tokenize(text, words_only=False):
     """
 
     :param text: string to be tokenizes
-    :param non_text_tokens: whether or not to return punctuation/symbols/unprintable/whitespace
+    :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     """
+
+    non_text_tokens = not words_only
     text_buffer = []
     last_space = None
     for char in text:
