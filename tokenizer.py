@@ -1,10 +1,9 @@
+import string
+
 import unicodedata
 
-# todo: use numeric/digit instead
-NUMBERS = set('0123456789\uff10\uff11\uff12\uff13\uff14\uff15\uff16\uff17\uff18\uff19')  # includes full-width digits
-
-# todo: full-width alphabet
-ALPHABET = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
+ALPHABET = set(string.ascii_lowercase + string.ascii_uppercase)
+DIGITS = set(string.digits)
 
 # refer to: https://en.wikipedia.org/wiki/Whitespace_character
 UNICODE_SPACES = {
@@ -121,7 +120,7 @@ _is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tok
 _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode61_tokenize(text, yield_non_words=True):
+def unicode_tokenize(text, yield_non_words=True):
     text_buffer = []
     for char in text:
         # part of word, append
@@ -166,7 +165,7 @@ def char_group_tokenize(text, token_max_len=65535):
     # main loop over all text
     for char in text:
 
-        # 1) chunks of alphabets (most common case first)
+        # 1) chunks of ASCII alphabets (most common case first)
         if char in ALPHABET:
             if is_alpha and len(temp) < token_max_len:
                 temp += char
@@ -178,8 +177,8 @@ def char_group_tokenize(text, token_max_len=65535):
                 is_alpha = True
                 is_num = False
 
-        # 2) numbers tokenized as chunks of digits
-        elif char in NUMBERS:
+        # 2) numbers tokenized as chunks of ASCII digits
+        elif char in DIGITS:
             if is_num and len(temp) < token_max_len:
                 temp += char
             else:
