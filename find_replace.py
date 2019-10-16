@@ -83,14 +83,14 @@ def format_seconds(num):
     return ('%.2f %s' if num % 1 else '%d %s') % (num, unit[:-1] if num == 1 else unit)
 
 
-def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
+def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=True):
     """
     tokenize by whitespace (and punctuation)
 
     :param text: to be split
     :param token_max_len: truncate tokens after this length
     :param emit_space: emit spaces
-    :param emit_punc: emit punctuation
+    :param emit_punctuation: emit punctuation
     """
     # init
     space_char = ''
@@ -115,7 +115,7 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punc=True):
         elif _is_punctuation_char(char):
             if text_buffer:
                 yield ''.join(text_buffer)
-            if emit_punc:
+            if emit_punctuation:
                 yield char
             space_char = ''
             text_buffer = []
