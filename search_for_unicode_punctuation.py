@@ -1,8 +1,8 @@
-import sys
-import unicodedata
-from collections import defaultdict
 import string
+import sys
+from collections import defaultdict
 
+import unicodedata
 
 if __name__ == '__main__':
 
@@ -25,7 +25,6 @@ if __name__ == '__main__':
 
         if unicodedata.digit(c, None) is not None:
             unicode_digit[unicodedata.digit(c)].append(c)
-
 
         if unicodedata.decimal(c, None) is not None:
             unicode_decimal[unicodedata.decimal(c)].append(c)

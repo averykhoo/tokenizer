@@ -94,7 +94,6 @@ print(output)  # 'I have a orange... I have an orange...'
 -   refactor code into multiple files?
 -   parallelize file processing to make processing faster, sharing a single trie
 -   split into find-only and find+replace
--   unicode_tokenize (like [fts5](https://sqlite.org/fts5.html#unicode61_tokenizer))
--   find a way to convert trie to DFA by computing suffix/failure links, 
+-   find a way to convert trie to DFA by computing suffix/failure links,
     while still allowing in-place updates to the trie
 

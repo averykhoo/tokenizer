@@ -8,12 +8,11 @@ import collections
 import datetime
 import glob
 import io
+import math
 import os
 import random
 import re
 import time
-
-import math
 
 import psutil
 
