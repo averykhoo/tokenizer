@@ -91,9 +91,10 @@ UNPRINTABLE_CHARS = {
 
 class _IsTextChar(dict):
     def __missing__(self, char):
-        ret = self[char] = unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',
-                                                          'Nd', 'Nl', 'No',
-                                                          'Co',
+        ret = self[char] = unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
+                                                          'Nd', 'Nl', 'No',  # numbers
+                                                          'Mn', 'Mc', 'Me',  # diacritics, etc
+                                                          'Co',  # private use char class
                                                           }
         return ret
 
@@ -122,21 +123,54 @@ _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 def unicode_tokenize(text, yield_non_words=True):
     text_buffer = []
+    last_space = None
     for char in text:
-        # part of word, append
+        # char is part of word
         if _is_text_char(char):
-            text_buffer.append(char)
+            # buffer contains space
+            if last_space is not None:
+                if yield_non_words:
+                    yield ''.join(text_buffer)
+                last_space = None
+                text_buffer = [char]
+            # buffer contains word / is empty
+            else:
+                text_buffer.append(char)
 
-        # not part of word, return last word
+        # char is space
+        elif _is_space_char(char):
+            # buffer contains space
+            if last_space is not None:
+                if last_space == char:
+                    text_buffer.append(char)
+                elif yield_non_words:
+                    yield ''.join(text_buffer)
+                    last_space = char
+                    text_buffer = [char]
+                else:
+                    last_space = char
+                    text_buffer = [char]
+            # buffer contains word
+            elif text_buffer:
+                yield ''.join(text_buffer)
+                last_space = char
+                text_buffer = [char]
+            # buffer is empty
+            else:
+                last_space = char
+                text_buffer = [char]
+
+        # char is punctuation or unprintable (or hieroglyphs or squiggles) AND buffer is full
         elif text_buffer:
             yield ''.join(text_buffer)
+            last_space = None
             text_buffer = []
 
             # yield non-word?
             if yield_non_words:
                 yield char
 
-        # yield non-word
+        # char is punctuation or unprintable (or hieroglyphs or squiggles)
         elif yield_non_words:
             yield char
 
