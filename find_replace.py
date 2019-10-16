@@ -52,12 +52,18 @@ except ImportError:
                    '|',
                    '}',
                    '~',
-                   '\u2014',  # en dash
-                   '\u2013',  # em dash
-                   '\u2025',
+                   '‘',  # unicode curly quotes
+                   '’',  # unicode curly quotes
+                   '“',  # unicode curly quotes
+                   '”',  # unicode curly quotes
+                   '§',  # section header
+                   '±',
+                   '√',  # sqrt, sometime used as tick
+                   '\u2014',  # en dash (medium length dash)
+                   '\u2013',  # em dash (long dash)
+                   '\u2025',  # two-dot leader
                    '\u2026',  # horizontal ellipsis
                    '\u22ee',  # vertical ellipsis
-                   # '\u22ef',  # midline horizontal ellipsis
                    '\u3002',  # ideographic full stop (chinese)
                    '\u300e',  # left white corner bracket (chinese)
                    '\u300f',  # right white corner bracket (chinese)
@@ -73,7 +79,6 @@ except ImportError:
                    '\u3008',  # left angle bracket
                    '\u3009',  # right angle bracket
                    '\ufe4f',  # wavy low line
-                   # '\uff5e',  # wavy dash
                    '\uff0c',  # fullwidth comma (chinese)
                    '\uff01',  # fullwidth exclamation mark (chinese)
                    '\uff1f',  # fullwidth question mark (chinese)
