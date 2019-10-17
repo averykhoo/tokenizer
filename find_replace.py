@@ -481,9 +481,11 @@ class Trie(object):
             yield value
 
     def __delitem__(self, key):
-        if type(key) is slice:
+        if isinstance(key, slice):
             for key, value in self._item_slice(key.start, key.stop, key.step):
                 self.pop(key)
+        elif key is None:
+            raise KeyError(None)
         else:
             self.pop(key)
 
