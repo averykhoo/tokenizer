@@ -275,18 +275,27 @@ class Trie(object):
 
         # pop first item if key not specified
         if key is None:
-            for key in self.keys():
-                break
+            key = next(self.keys())
 
         head = self.head
         breadcrumbs = [(None, head)]
+
+        # trace through trie
         for token in self.tokenizer(key):
-            head = head.setdefault(token, self.Node())
+            if token not in head:
+                raise KeyError(key)
+            head = head[token]
             breadcrumbs.append((token, head))
+
+        # key has no value, hence not contained in trie
         if head.REPLACEMENT is _SENTINEL:
             raise KeyError(key)
-        replacement = head.REPLACEMENT
+
+        # store value to be returned later and erase value
+        ret_val = head.REPLACEMENT
         head.REPLACEMENT = _SENTINEL
+
+        # erase unnecessary nodes backwards, if they have no value and no descendants
         prev_token, _ = breadcrumbs.pop(-1)
         for token, head in breadcrumbs[::-1]:
             if len(head[prev_token]) == 0:
@@ -296,7 +305,9 @@ class Trie(object):
                 break
             if head.REPLACEMENT is not _SENTINEL:
                 break
-        return key, replacement
+
+        # finally return the popped key & value
+        return key, ret_val
 
     def items(self):
         _path = []
