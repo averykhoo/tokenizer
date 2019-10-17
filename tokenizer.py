@@ -1,4 +1,5 @@
 import string
+from typing import Generator
 
 import unicodedata
 
@@ -121,14 +122,20 @@ _is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tok
 _is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode_tokenize(text, words_only=False):
+def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, None, None]:
     """
     based on fts5 but merges spaces and allows diacritics
 
-    :param text: string to be tokenizes
+    :param text: string to be tokenized
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     """
-    non_text_tokens = not words_only
+    if words_only:
+        return _unicode_tokenize_words(text)
+    else:
+        return _unicode_tokenize_all(text)
+
+
+def _unicode_tokenize_all(text):
     text_buffer = []
     last_space = None
     for char in text:
@@ -136,8 +143,7 @@ def unicode_tokenize(text, words_only=False):
         if _is_text_char(char):
             # buffer contains space
             if last_space is not None:
-                if non_text_tokens:
-                    yield ''.join(text_buffer)
+                yield ''.join(text_buffer)
                 last_space = None
                 text_buffer = [char]
             # buffer contains word / is empty
@@ -150,11 +156,8 @@ def unicode_tokenize(text, words_only=False):
             if last_space is not None:
                 if last_space == char:
                     text_buffer.append(char)
-                elif non_text_tokens:
-                    yield ''.join(text_buffer)
-                    last_space = char
-                    text_buffer = [char]
                 else:
+                    yield ''.join(text_buffer)
                     last_space = char
                     text_buffer = [char]
             # buffer contains word
@@ -169,8 +172,7 @@ def unicode_tokenize(text, words_only=False):
 
         # char is punctuation/symbols/unprintable AND buffer is space
         elif last_space:
-            if non_text_tokens:
-                yield ''.join(text_buffer)
+            yield ''.join(text_buffer)
             last_space = None
             text_buffer = []
 
@@ -180,12 +182,28 @@ def unicode_tokenize(text, words_only=False):
             text_buffer = []
 
             # yield non-word?
-            if non_text_tokens:
-                yield char
-
-        # char is punctuation/symbols/unprintable
-        elif non_text_tokens:
             yield char
+
+        # char is punctuation/symbols/unprintable AND buffer is empty
+        else:
+            yield char
+
+    # yield remainder
+    if text_buffer:
+        yield ''.join(text_buffer)
+
+
+def _unicode_tokenize_words(text):
+    text_buffer = []
+    for char in text:
+        # char is part of word
+        if _is_text_char(char):
+            text_buffer.append(char)
+
+        # char is non-text AND buffer is text
+        elif text_buffer:
+            yield ''.join(text_buffer)
+            text_buffer = []
 
     # yield remainder
     if text_buffer:
