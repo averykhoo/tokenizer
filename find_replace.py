@@ -353,6 +353,11 @@ class Trie(object):
                 if _parts[-1]:
                     _parts[-1].append('|')
 
+                # allow any whitespace
+                # note that this must happen before regex char escaping as different spaces escape differently
+                if fuzzy_spaces:
+                    key = re.sub(r'\s', ' ', key)  # we'll do the \s replacement later
+
                 # character escaping
                 key = re.escape(key)
 
@@ -368,10 +373,6 @@ class Trie(object):
                     key = key.replace('\\\u201c', '[\\\u201c"]')  # right double quote
                     key = key.replace('\\\u301d', '[\\\u301d"]')  # reversed double prime quotation mark
                     key = key.replace('\\\u301e', '[\\\u301e"]')  # double prime quotation mark
-
-                # allow any whitesapce
-                if fuzzy_spaces:
-                    key = re.sub(r'\s', ' ', key)  # we'll do the \s replacement later
 
                 # fffd matches any single character
                 if fffd_any:
