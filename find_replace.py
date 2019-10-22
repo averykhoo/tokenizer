@@ -617,7 +617,7 @@ class Trie(object):
         while output_buffer:
             yield output_buffer.popleft()[1]
 
-    def find_all(self, input_sequence, allow_overlapping=False):
+    def _find_all(self, input_sequence, allow_overlapping=False):
         """
         finds all occurrences within a string
         :param input_sequence: iterable of hashable objects
@@ -675,6 +675,10 @@ class Trie(object):
                     break
 
         for match_start, (match_end, matched_sequence) in sorted(matches.items()):
+            yield match_start, match_end, matched_sequence
+
+    def find_all(self, input_sequence, allow_overlapping=False):
+        for _, _, matched_sequence in self._find_all(input_sequence, allow_overlapping=allow_overlapping):
             yield ''.join(matched_sequence)
 
     def process_text(self, input_text):
