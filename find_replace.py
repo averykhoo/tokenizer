@@ -41,6 +41,35 @@ except ImportError:
                         '\u200b', '\u200c', '\u200d', '\u2060', '\u2800'}  # UNICODE SPACES
 
 
+class Match:
+    def __init__(self, start, end, match):
+        self.regs = ((start, end),)  # mimic the re.Match object
+        self.str = match  # re.Match stores a reference to the ENTIRE ORIGINAL STRING, let's not do that
+
+    def __getitem__(self, group_index):
+        if group_index != 0:
+            raise IndexError('no such group')
+        return self.str
+
+    def group(self, group_index=0):
+        return self[group_index]
+
+    def start(self, group_index=0):
+        if group_index != 0:
+            raise IndexError('no such group')
+        return self.regs[0][0]
+
+    def end(self, group_index=0):
+        if group_index != 0:
+            raise IndexError('no such group')
+        return self.regs[0][1]
+
+    def span(self, group_index=0):
+        if group_index != 0:
+            raise IndexError('no such group')
+        return self.regs[0]
+
+
 def format_bytes(num):
     """
     string formatting
@@ -617,7 +646,7 @@ class Trie(object):
         while output_buffer:
             yield output_buffer.popleft()[1]
 
-    def _find_all(self, input_sequence, allow_overlapping=False):
+    def finditer(self, input_sequence, *, allow_overlapping=False):
         """
         finds all occurrences within a string
         :param input_sequence: iterable of hashable objects
@@ -675,11 +704,10 @@ class Trie(object):
                     break
 
         for match_start, (match_end, matched_sequence) in sorted(matches.items()):
-            yield match_start, match_end, matched_sequence
+            yield Match(match_start, match_end, matched_sequence)
 
-    def find_all(self, input_sequence, allow_overlapping=False):
-        for _, _, matched_sequence in self._find_all(input_sequence, allow_overlapping=allow_overlapping):
-            yield ''.join(matched_sequence)
+    def findall(self, input_sequence, allow_overlapping=False):
+        return [match.str for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping)]
 
     def process_text(self, input_text):
         """
@@ -849,21 +877,21 @@ def self_test():
     _trie = Trie.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
 
     test = 'madagascareerror'
-    assert list(_trie.find_all(test)) == ['madagascar', 'error']
-    assert list(_trie.find_all(test, True)) == ['mad', 'gas', 'madagascar',
-                                                'scar', 'car', 'scare', 'care',
-                                                'are', 'career', 'err', 'error']
+    assert list(_trie.findall(test)) == ['madagascar', 'error']
+    assert list(_trie.findall(test, True)) == ['mad', 'gas', 'madagascar',
+                                               'scar', 'car', 'scare', 'care',
+                                               'are', 'career', 'err', 'error']
 
     _trie = Trie.fromkeys('to toga get her here there gather together hear the he ear'.split())
 
     test = 'togethere'
-    assert list(_trie.find_all(test)) == ['together']
-    assert list(_trie.find_all(test, True)) == ['to', 'get', 'the', 'he',
-                                                'together', 'her', 'there', 'here']
+    assert list(_trie.findall(test)) == ['together']
+    assert list(_trie.findall(test, True)) == ['to', 'get', 'the', 'he',
+                                               'together', 'her', 'there', 'here']
 
     test = 'togethear'
-    assert list(_trie.find_all(test)) == ['to', 'get', 'hear']
-    assert list(_trie.find_all(test, True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
+    assert list(_trie.findall(test)) == ['to', 'get', 'hear']
+    assert list(_trie.findall(test, True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
 
     # test special characters
     _trie = Trie.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
@@ -916,7 +944,7 @@ if __name__ == '__main__':
     t = time.time()
     with open('test/input/kjv.txt') as f:
         content = f.read()
-    for _ in trie.find_all(content):
+    for _ in trie.findall(content):
         pass
     print('find_all took this long:', format_seconds(time.time() - t))
 
