@@ -564,7 +564,7 @@ class Trie(object):
             for token in self.tokenizer(char for line in _f for char in line):
                 yield token
 
-    def _translate(self, tokens: Iterable[AnyStr]) -> Generator[str, None, None]:
+    def _translate(self, tokens: Iterable[AnyStr]) -> Generator[AnyStr, None, None]:
         """
         processes text and yields output one token at a time
         :param tokens: iterable of hashable objects, preferably strings
@@ -625,8 +625,8 @@ class Trie(object):
                 while output_buffer and output_buffer[0][0] < match_end:  # remember match_end already has the +1
                     output_buffer.popleft()
                 # emit replacement
-                for item in match_replacement:
-                    yield item
+                for token in self.tokenizer(match_replacement):
+                    yield token
                 # grab next match and retry
                 del matches[first_match]
                 first_match = min(matches) if matches else index
@@ -710,7 +710,11 @@ class Trie(object):
         for match_start, (match_end, matched_sequence) in sorted(matches.items()):
             yield Match(match_start, match_end, self.detokenizer(matched_sequence))
 
-    def findall(self, input_sequence: AnyStr, allow_overlapping: bool = False) -> List[AnyStr]:
+    def search(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> Union[Match, None]:
+        for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping):
+            return match
+
+    def findall(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> List[AnyStr]:
         return [match.str for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping)]
 
     def process_text(self, input_text):
