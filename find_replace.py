@@ -13,6 +13,11 @@ import os
 import random
 import re
 import time
+from typing import AnyStr
+from typing import Generator
+from typing import Iterable
+from typing import List
+from typing import Union
 
 import psutil
 
@@ -349,7 +354,7 @@ class Trie(object):
                 head = head[key]
                 _path.append(key)
                 if head.REPLACEMENT is not _SENTINEL:
-                    yield ''.join(_path), head.REPLACEMENT
+                    yield self.detokenizer(_path), head.REPLACEMENT
                 _stack.append((head, sorted(head.keys(), reverse=True)))
             elif _path:
                 _path.pop(-1)
@@ -549,20 +554,20 @@ class Trie(object):
             self[sequence] = replacement
         return self
 
-    def _yield_tokens(self, file_path, encoding='utf8'):
+    def _yield_tokens(self, file_path: Union[str, os.PathLike], encoding: str = 'utf8') -> Generator[str, None, None]:
         """
         yield tokens from a file given its path
+        :param encoding:
         :param file_path: file to read
         """
         with io.open(file_path, mode=('rt', 'rb')[encoding is None], encoding=encoding) as _f:
             for token in self.tokenizer(char for line in _f for char in line):
                 yield token
 
-    def _translate(self, input_sequence):
+    def _translate(self, tokens: Iterable[AnyStr]) -> Generator[str, None, None]:
         """
         processes text and yields output one token at a time
-        :param input_sequence: iterable of hashable objects, preferably a string
-        :type input_sequence: str | Iterable
+        :param tokens: iterable of hashable objects, preferably strings
         """
         output_buffer = collections.deque()  # [(index, token), ...]
         matches = dict()  # {span_start: (span_end + 1, REPLACEMENT), ...} <-- because: match == seq[start:end+1]
@@ -570,7 +575,7 @@ class Trie(object):
         matches_to_remove = set()  # positions where matches may not start
         spans_to_remove = set()  # positions where matches may not start, or where matching failed
 
-        for index, input_item in enumerate(input_sequence):
+        for index, input_item in enumerate(tokens):
             # append new item to output_buffer
             output_buffer.append((index, input_item))
 
@@ -646,13 +651,11 @@ class Trie(object):
         while output_buffer:
             yield output_buffer.popleft()[1]
 
-    def finditer(self, input_sequence, *, allow_overlapping=False):
+    def finditer(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> Generator[Match, None, None]:
         """
         finds all occurrences within a string
         :param input_sequence: iterable of hashable objects
-        :type input_sequence: str | Iterable
         :param allow_overlapping: yield all overlapping matches (soar -> so, soar, oar)
-        :type allow_overlapping: bool
         """
         matches = dict()  # {span_start: (span_end + 1, [span_stuff, ...]), ...} <-- because: match == seq[start:end+1]
         spans = dict()  # positions that are partial matches: {span_start: (span_head, [span_stuff, ...]), ...}
@@ -698,15 +701,16 @@ class Trie(object):
             while matches:
                 match_start = min(matches)
                 if match_start < first_span or allow_overlapping:
-                    yield ''.join(matches[match_start][1])
+                    match_end, matched_sequence = matches[match_start]
+                    yield Match(match_start, match_end, self.detokenizer(matched_sequence))
                     del matches[match_start]
                 else:
                     break
 
         for match_start, (match_end, matched_sequence) in sorted(matches.items()):
-            yield Match(match_start, match_end, matched_sequence)
+            yield Match(match_start, match_end, self.detokenizer(matched_sequence))
 
-    def findall(self, input_sequence, allow_overlapping=False):
+    def findall(self, input_sequence: AnyStr, allow_overlapping: bool = False) -> List[AnyStr]:
         return [match.str for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping)]
 
     def process_text(self, input_text):
@@ -877,6 +881,7 @@ def self_test():
     _trie = Trie.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
 
     test = 'madagascareerror'
+    print(_trie.findall(test))
     assert list(_trie.findall(test)) == ['madagascar', 'error']
     assert list(_trie.findall(test, True)) == ['mad', 'gas', 'madagascar',
                                                'scar', 'car', 'scare', 'care',
