@@ -74,6 +74,9 @@ class Match:
             raise IndexError('no such group')
         return self.regs[0]
 
+    def __repr__(self):
+        return f'<Match object; span={self.regs[0]}, match={repr(self.str)}>'
+
 
 def format_bytes(num):
     """
@@ -887,24 +890,32 @@ def self_test():
     test = 'madagascareerror'
     print(_trie.findall(test))
     assert list(_trie.findall(test)) == ['madagascar', 'error']
-    assert list(_trie.findall(test, True)) == ['mad', 'gas', 'madagascar',
-                                               'scar', 'car', 'scare', 'care',
-                                               'are', 'career', 'err', 'error']
+    assert list(_trie.findall(test, allow_overlapping=True)) == ['mad', 'gas', 'madagascar',
+                                                                 'scar', 'car', 'scare', 'care',
+                                                                 'are', 'career', 'err', 'error']
 
     _trie = Trie.fromkeys('to toga get her here there gather together hear the he ear'.split())
 
     test = 'togethere'
     assert list(_trie.findall(test)) == ['together']
-    assert list(_trie.findall(test, True)) == ['to', 'get', 'the', 'he',
-                                               'together', 'her', 'there', 'here']
+    assert list(_trie.findall(test, allow_overlapping=True)) == ['to', 'get', 'the', 'he',
+                                                                 'together', 'her', 'there', 'here']
 
     test = 'togethear'
     assert list(_trie.findall(test)) == ['to', 'get', 'hear']
-    assert list(_trie.findall(test, True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
+    assert list(_trie.findall(test, allow_overlapping=True)) == ['to', 'get', 'the', 'he', 'hear', 'ear']
 
     # test special characters
     _trie = Trie.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
     assert re.findall(_trie.to_regex(), '***|\\||||') == ['***', '|\\', '|||', '|']
+
+    # test finditer
+    _trie = Trie.fromkeys(['asdf'])
+    res = list(_trie.finditer('asdfasdfqweasdf'))
+    assert len(res) == 3
+    assert res[0].span() == (0, 4)
+    assert res[1].span() == (4, 8)
+    assert res[2].span() == (11, 15)
 
 
 if __name__ == '__main__':
@@ -973,4 +984,4 @@ if __name__ == '__main__':
     print(to_regex(['pen', 'pineapple', 'apple', 'pencil'], boundary=True))
 
     # test space in regex
-    print(repr(to_regex(['bo b', 'bo bo', 'boba', 'ba  ba', 'bo bi'])))
+    print(repr(to_regex(['bo b', 'bo\xa0bo', 'boba', 'ba\t ba', 'bo bi'])))
