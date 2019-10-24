@@ -701,14 +701,14 @@ class Trie(object):
             while matches:
                 match_start = min(matches)
                 if match_start < first_span or allow_overlapping:
-                    match_end, matched_sequence = matches[match_start]
-                    yield Match(match_start, match_end, self.detokenizer(matched_sequence))
+                    match_end, match_sequence = matches[match_start]
+                    yield Match(match_start, match_end, self.detokenizer(match_sequence))
                     del matches[match_start]
                 else:
                     break
 
-        for match_start, (match_end, matched_sequence) in sorted(matches.items()):
-            yield Match(match_start, match_end, self.detokenizer(matched_sequence))
+        for match_start, (match_end, match_sequence) in sorted(matches.items()):
+            yield Match(match_start, match_end, self.detokenizer(match_sequence))
 
     def search(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> Union[Match, None]:
         for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping):
