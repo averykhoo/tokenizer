@@ -564,7 +564,7 @@ class Trie(object):
         :param file_path: file to read
         """
         with io.open(file_path, mode=('rt', 'rb')[encoding is None], encoding=encoding) as _f:
-            for token in self.tokenizer(char for line in _f for char in line):
+            for token in self.tokenizer(char for line in _f for char in line):  # make sure to read line by line
                 yield token
 
     def _translate(self, tokens: Iterable[AnyStr]) -> Generator[AnyStr, None, None]:
@@ -720,13 +720,13 @@ class Trie(object):
     def findall(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> List[AnyStr]:
         return [match.str for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping)]
 
-    def process_text(self, input_text):
+    def translate(self, text: str) -> str:
         """
-
-        :param input_text:
-        :return:
+        kind of like re.sub, but you don't provide replacements because it's already defined
+        >>> Trie({'yellow': 'hello'}).translate('yellow world')
+        'hello world'
         """
-        return self.detokenizer(token for token in self._translate(self.tokenizer(input_text)))
+        return self.detokenizer(token for token in self._translate(self.tokenizer(text)))
 
     def process_file(self, input_path, output_path, overwrite=False, encoding='utf8'):
         """
@@ -738,7 +738,7 @@ class Trie(object):
         :type input_path: str
         :type output_path: str
         :type overwrite: bool
-        :type encoding: str
+        :type encoding: str | None
         """
 
         if os.path.exists(output_path) and not overwrite:
@@ -758,7 +758,7 @@ class Trie(object):
             t0 = time.time()
 
             try:
-                with io.open(temp_path, mode=('wt', 'wb')[encoding is None], encoding=encoding) as _f:
+                with open(temp_path, mode=('wt', 'wb')[encoding is None], encoding=encoding) as _f:
                     for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
                         _f.write(output_chunk)
 
@@ -808,10 +808,10 @@ def self_test():
     # feed in a list of tuples
     _trie = Trie()
     _trie.update([('asd', '111'), ('hjk', '222'), ('dfgh', '3333'), ('ghjkl;', '44444'), ('jkl', '!')])
-    assert ''.join(_trie.process_text('erasdfghjkll')) == 'er111fg222ll'
-    assert ''.join(_trie.process_text('erasdfghjkl;jkl;')) == 'er111f44444!;'
-    assert ''.join(_trie.process_text('erassdfghjkl;jkl;')) == 'erass3333!;!;'
-    assert ''.join(_trie.process_text('ersdfghjkll')) == 'ers3333!l'
+    assert ''.join(_trie.translate('erasdfghjkll')) == 'er111fg222ll'
+    assert ''.join(_trie.translate('erasdfghjkl;jkl;')) == 'er111f44444!;'
+    assert ''.join(_trie.translate('erassdfghjkl;jkl;')) == 'erass3333!;!;'
+    assert ''.join(_trie.translate('ersdfghjkll')) == 'ers3333!l'
 
     # fuzz-test regex
     # a-z
@@ -843,7 +843,7 @@ def self_test():
     # feed in a generator
     _trie = Trie()
     _trie.update({'a': 'b', 'b': 'c', 'c': 'd', 'd': 'a'})
-    assert ''.join(_trie.process_text('acbd')) == 'bdca'
+    assert ''.join(_trie.translate('acbd')) == 'bdca'
 
     # feed in a dict
     _trie = Trie()
@@ -857,11 +857,11 @@ def self_test():
     assert 'aaaaaaa' not in _trie
     _trie['aaaaaaa'] = '7'
 
-    assert ''.join(_trie.process_text('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
-    assert ''.join(_trie.process_text('a' * 40)) == '~773a'
-    assert ''.join(_trie.process_text('a' * 45)) == '~~a'
-    assert ''.join(_trie.process_text('a' * 25)) == '~3'
-    assert ''.join(_trie.process_text('a' * 60)) == '~~772'
+    assert ''.join(_trie.translate('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
+    assert ''.join(_trie.translate('a' * 40)) == '~773a'
+    assert ''.join(_trie.translate('a' * 45)) == '~~a'
+    assert ''.join(_trie.translate('a' * 25)) == '~3'
+    assert ''.join(_trie.translate('a' * 60)) == '~~772'
 
     del _trie['bbbb']
     assert 'b' not in _trie.head
