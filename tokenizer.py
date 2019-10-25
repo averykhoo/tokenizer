@@ -170,22 +170,19 @@ def _unicode_tokenize_all(text):
                 last_space = char
                 text_buffer = [char]
 
-        # char is punctuation/symbols/unprintable AND buffer is space
-        elif last_space:
-            yield ''.join(text_buffer)
-            last_space = None
-            text_buffer = []
-
-        # char is punctuation/symbols/unprintable AND buffer is text
-        elif text_buffer:
-            yield ''.join(text_buffer)
-            text_buffer = []
-
-            # yield non-word?
-            yield char
-
-        # char is punctuation/symbols/unprintable AND buffer is empty
+        # char is punctuation/symbols/unprintable
         else:
+            # buffer is space
+            if last_space:
+                yield ''.join(text_buffer)
+                last_space = None
+                text_buffer = []
+
+            # buffer is text
+            elif text_buffer:
+                yield ''.join(text_buffer)
+                text_buffer = []
+
             yield char
 
     # yield remainder
