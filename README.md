@@ -36,13 +36,21 @@ target = 'I have a pen... I have an apple...'
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
 trie = Trie.fromkeys(strings)
-matches = list(trie.find_all(target))  # `find_all` returns a generator
+matches = trie.findall(target)  # `findall` returns a list of str
 print(matches)  # ['pen', 'apple']
 ```
+-   How do I do incremental search (via a generator)?
+    -   `trie.finditer(target)`
 -   How do I make it case insensitive?
     -   Use `trie = Trie.fromkeys(strings, case_sensitive=False)`
+    -   *You must a case-insensitive trie to perform case-insensitive search, and vice versa* 
 -   How do I find overlapping matches?
-    -   Use `trie.find_all(target, allow_overlapping=True)`
+    -   Use `trie.findall(target, allow_overlapping=True)`
+    -   Or `trie.finditer(target, allow_overlapping=True)`
+    -   *Note that you cannot perform replacements on overlapping matches*
+-   How do I get Match objects (like the builtin `re.finditer`)?
+    -   `trie.finditer(target)`
+    -   *Note that not all properties of the re.Match object are available* 
 
 ### Replace occurrences of some strings with other strings
 ```python
@@ -52,7 +60,7 @@ target = 'I have a pen... I have an apple...'
 replacements = {'pen': 'pineapple', 'apple': 'pencil'}
 
 trie = Trie(replacements)
-output = trie.process_text(target)
+output = trie.translate(target)
 print(output)  # 'I have a pineapple... I have an pencil...'
 ```
 -   How do I make it case insensitive?
@@ -60,8 +68,8 @@ print(output)  # 'I have a pineapple... I have an pencil...'
 -   Why is it finding substrings (e.g. "java" in "javascript")?
     -   That's just what a string search should do...
     -   To match at word boundaries, specify a tokenizer when creating the trie
-        -   First: `from find_replace import space_tokenize` <-- tokenizes on spaces and punctuation
-        -   Then: `trie = Trie(replacements, lexer=space_tokenize)` 
+        -   First: `from tokenizer import unicode_tokenize` <-- tokenizes on spaces and punctuation
+        -   Then: `trie = Trie(replacements, lexer=unicode_tokenize)`
 
 ### Replace occurrences of some strings with a specific string
 ```python
@@ -71,7 +79,7 @@ target = 'I have a pen... I have an apple...'
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
 trie = Trie.fromkeys(strings, 'orange')
-output = trie.process_text(target)
+output = trie.translate(target)
 print(output)  # 'I have a orange... I have an orange...'
 ```
 -   How do I remove instead of replace?
@@ -79,21 +87,18 @@ print(output)  # 'I have a orange... I have an orange...'
 
 ##  Advanced Usage
 
--   `update`: add/modify replacements, 
-              e.g. `trie.update({'apple', 'orange', 'orange': 'apple'})`
--   `__setitem__`: add/modify replacements, 
-                   e.g. `trie['pen+apple'] = 'apple pen'`
--   `__getitem__`: see what you've inserted, 
-                   e.g. `print(trie['pen'])` or `print(trie['apple':'orange'])`
--   `process_file`: replace stuff in some text file to a new file, 
-                    e.g. `trie.process_file(input_path, output_path)`
--   `__delitem__`: remove a string-replacement pair, 
-                   e.g. `del trie['pen']`
+| Function       | Explanation                                   | Usage                                                   |
+|:---------------|:----------------------------------------------|:--------------------------------------------------------|
+| `update`       | add/modify replacements                       | `trie.update({'apple', 'orange', 'orange': 'apple'})`   |
+| `__setitem__`  | add/modify replacements                       | `trie['pen apple'] = 'apple pen'`                       |
+| `__getitem__`  | see what you've inserted                      | `print(trie['pen'])` or `print(trie['apple':'orange'])` |
+| `process_file` | replace stuff in some text file to a new file | `trie.process_file(input_path, output_path)`            |
+| `__delitem__`  | remove a string-replacement pair              | `del trie['pen']`                                       |
+
 
 ##  To-Do
 -   refactor code into multiple files?
 -   parallelize file processing to make processing faster, sharing a single trie
--   split into find-only and find+replace
 -   find a way to convert trie to DFA by computing suffix/failure links,
     while still allowing in-place updates to the trie
 

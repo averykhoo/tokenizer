@@ -567,7 +567,7 @@ class Trie(object):
             for token in self.tokenizer(char for line in _f for char in line):  # make sure to read line by line
                 yield token
 
-    def _translate(self, tokens: Iterable[AnyStr]) -> Generator[AnyStr, None, None]:
+    def _translate_tokens(self, tokens: Iterable[AnyStr]) -> Generator[AnyStr, None, None]:
         """
         processes text and yields output one token at a time
         :param tokens: iterable of hashable objects, preferably strings
@@ -726,7 +726,7 @@ class Trie(object):
         >>> Trie({'yellow': 'hello'}).translate('yellow world')
         'hello world'
         """
-        return self.detokenizer(token for token in self._translate(self.tokenizer(text)))
+        return self.detokenizer(token for token in self._translate_tokens(self.tokenizer(text)))
 
     def process_file(self, input_path, output_path, overwrite=False, encoding='utf8'):
         """
@@ -759,7 +759,7 @@ class Trie(object):
 
             try:
                 with open(temp_path, mode=('wt', 'wb')[encoding is None], encoding=encoding) as _f:
-                    for output_chunk in self._translate(self._yield_tokens(input_path, encoding=encoding)):
+                    for output_chunk in self._translate_tokens(self._yield_tokens(input_path, encoding=encoding)):
                         _f.write(output_chunk)
 
                 print('    output: %s' % temp_path[:-8])
