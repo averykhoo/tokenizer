@@ -117,9 +117,9 @@ class _IsSpaceChar(dict):
         return ret
 
 
-_is_text_char = _IsTextChar().__getitem__  # new item for each tokenizer
-_is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tokenizer
-_is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
+is_text_char = _IsTextChar().__getitem__  # new item for each tokenizer
+is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tokenizer
+is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
 def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, None, None]:
@@ -140,7 +140,7 @@ def _unicode_tokenize_all(text):
     last_space = None
     for char in text:
         # char is part of word
-        if _is_text_char(char):
+        if is_text_char(char):
             # buffer contains space
             if last_space is not None:
                 yield ''.join(text_buffer)
@@ -151,7 +151,7 @@ def _unicode_tokenize_all(text):
                 text_buffer.append(char)
 
         # char is space
-        elif _is_space_char(char):
+        elif is_space_char(char):
             # buffer contains space
             if last_space is not None:
                 if last_space == char:
@@ -194,7 +194,7 @@ def _unicode_tokenize_words(text):
     text_buffer = []
     for char in text:
         # char is part of word
-        if _is_text_char(char):
+        if is_text_char(char):
             text_buffer.append(char)
 
         # char is non-text AND buffer is text
@@ -252,7 +252,7 @@ def char_group_tokenize(text, token_max_len=65535):
                 is_num = True
 
         # 3) spaces tokenized in groups of the same char
-        elif _is_space_char(char):
+        elif is_space_char(char):
             if char == is_space and len(temp) < token_max_len:
                 temp += char
             else:
@@ -263,7 +263,7 @@ def char_group_tokenize(text, token_max_len=65535):
                 is_num = False
 
         # 4) punctuation tokenized as individual chars
-        elif _is_punctuation_char(char):
+        elif is_punctuation_char(char):
             if temp:
                 yield temp
             yield char
