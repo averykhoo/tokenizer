@@ -104,7 +104,9 @@ print(output)  # 'I have a orange... I have an orange...'
 -   check why flashtext algo is faster
     -   because it does't handle unicode? (unlikely)
     -   because the simpler algo has fewer branches? (likely)
-    -   because it favors average case (short matches) and ignores the worst case? (true)
+    -   because it favors average case (short matches) and ignores the psychopathic worst case? (true but not too bad)
+    -   because it has bugs (if input ends with space)
 -   add length
 -   case insensitive replacement
+-   maybe mimic flashtext for average case
 
