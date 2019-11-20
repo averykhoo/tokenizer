@@ -16,7 +16,7 @@ from find_replace import to_regex
 
 strings = ['pen', 'pineapple', 'apple', 'pencil']
 
-pattern = to_regex(strings, case_sensitive=False)
+pattern = to_regex(strings, lowercase=True)
 print(pattern)  # '(?:(?:apple|p(?:en(?:cil)?|ineapple)))'
 ```
 -   Why is space being changed to match all whitespace ('\s')?
@@ -42,7 +42,7 @@ print(matches)  # ['pen', 'apple']
 -   How do I do incremental search (via a generator)?
     -   `trie.finditer(target)`
 -   How do I make it case insensitive?
-    -   Use `trie = Trie.fromkeys(strings, case_sensitive=False)`
+    -   Use `trie = Trie.fromkeys(strings, lowercase=True)`
     -   *You must a case-insensitive trie to perform case-insensitive search, and vice versa* 
 -   How do I find overlapping matches?
     -   Use `trie.findall(target, allow_overlapping=True)`
@@ -64,7 +64,7 @@ output = trie.translate(target)
 print(output)  # 'I have a pineapple... I have an pencil...'
 ```
 -   How do I make it case insensitive?
-    -   Use `trie = Trie(replacements, case_sensitive=False)`
+    -   Not implemented
 -   Why is it finding substrings (e.g. "java" in "javascript")?
     -   That's just what a string search should do...
     -   To match at word boundaries, specify a tokenizer when creating the trie
@@ -101,4 +101,10 @@ print(output)  # 'I have a orange... I have an orange...'
 -   parallelize file processing to make processing faster, sharing a single trie
 -   find a way to convert trie to DFA by computing suffix/failure links,
     while still allowing in-place updates to the trie
+-   check why flashtext algo is faster
+    -   because it does't handle unicode? (unlikely)
+    -   because the simpler algo has fewer branches? (likely)
+    -   because it favors average case (short matches) and ignores the worst case? (true)
+-   add length
+-   case insensitive replacement
 

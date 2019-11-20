@@ -205,7 +205,7 @@ class Trie(object):
 
     @staticmethod
     def fromkeys(keys, default='', verbose=False, case_sensitive=True):
-        _trie = Trie(case_sensitive=case_sensitive)
+        _trie = Trie(lowercase=case_sensitive)
         _trie.update(((key, default) for key in keys), verbose=verbose)
         return _trie
 
@@ -216,19 +216,19 @@ class Trie(object):
         def __init__(self):
             self.REPLACEMENT = _SENTINEL
 
-    def __init__(self, replacements=None, tokenizer=None, detokenizer=None, case_sensitive=False):
+    def __init__(self, replacements=None, tokenizer=None, detokenizer=None, lowercase=False):
         """
 
         :param replacements:
         :param tokenizer: tokenizer that reads one character at a time and yields tokens
         :type tokenizer: Iterable -> Iterable
         :param detokenizer: function to combine tokens back into a string
-        :param case_sensitive: if False, lowercase all the things (including output)
+        :param lowercase: if True, lowercase all the things (including output)
         """
         self.head = self.Node()
 
         if tokenizer is None:
-            if case_sensitive:
+            if not lowercase:
                 def _list_tokenizer(seq):
                     for elem in seq:
                         yield elem
@@ -240,7 +240,7 @@ class Trie(object):
                         yield elem.lower()
 
                 self.tokenizer = _lowercase_list_tokenizer
-        elif case_sensitive:
+        elif lowercase:
             def _lowercase_wrap_tokenizer(seq):
                 for elem in tokenizer(seq):
                     yield elem.lower()
