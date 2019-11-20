@@ -1,7 +1,7 @@
 import os
 import time
 
-from find_replace import Trie, space_tokenize
+from find_replace import Trie
 from tokenizer import unicode_tokenize
 
 
@@ -20,6 +20,7 @@ def yield_lines(file_path, make_lower=False, threshold_len=0):
                 line = line.lower()
             if len(line) > threshold_len:
                 yield line
+
 
 def process_file(kwp, input_path, output_path, overwrite=False, encoding='utf8'):
     """
@@ -70,25 +71,24 @@ def process_file(kwp, input_path, output_path, overwrite=False, encoding='utf8')
         t1 = time.time()
         print('total time: %s' % (t1 - t0))
 
+
 keyword_processor = Trie(lowercase=True, tokenizer=unicode_tokenize)
 for line in yield_lines('test/input/english-long.txt'):
     keyword_processor[line.split()[0]] = line.split()[-1][::-1]
-
 
 # print('%d pairs of replacements' % len(keyword_processor))
 
 new_sentence = keyword_processor.translate('I love Big Apple and new delhi.')
 print(new_sentence)
 
-process_file(keyword_processor, 'test/input/kjv.txt', 'tmp/kjv2.txt', overwrite=True)
+# process_file(keyword_processor, 'test/input/kjv.txt', 'tmp/kjv2.txt', overwrite=True)
 
-keyword_processor['a ' * 1000 + 'b'] ='b'
-keyword_processor['a ' * 100 ] ='c'
-keyword_processor['a'] ='d'
-text = 'a '* 30000 + 'b c'
-
+keyword_processor['a ' * 1000 + 'b'] = 'b'
+# keyword_processor[('a ' * 100 ).strip()+'c'] ='c'
+keyword_processor['a'] = 'd'
+text = 'a ' * 100000 + 'b c'
 
 t = time.time()
 tmp = keyword_processor.translate(text)
 print(time.time() - t)
-
+print(len(tmp))
