@@ -109,4 +109,6 @@ print(output)  # 'I have a orange... I have an orange...'
 -   add length
 -   case insensitive replacement
 -   maybe mimic flashtext for average case
+    -   welp lesson learned here
+    -   better big O doesn't mean better performance
 

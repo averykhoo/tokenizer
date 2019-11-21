@@ -83,12 +83,23 @@ print(new_sentence)
 
 # process_file(keyword_processor, 'test/input/kjv.txt', 'tmp/kjv2.txt', overwrite=True)
 
-keyword_processor['a ' * 1000 + 'b'] = 'b'
+keyword_processor['a ' * 5000 + 'b'] = 'b'
 # keyword_processor[('a ' * 100 ).strip()+'c'] ='c'
 keyword_processor['a'] = 'd'
-text = 'a ' * 100000 + 'b c'
+text = 'a ' * 20000 + 'b c'
 
 t = time.time()
 tmp = keyword_processor.translate(text)
 print(time.time() - t)
 print(len(tmp))
+
+
+# i evol gib elppa dna wen ihled.
+# 54.451382875442505
+# 30003
+
+# flashtext
+
+# I evol Big Apple dna wen ihled.
+# 83.42606282234192
+# 30003
