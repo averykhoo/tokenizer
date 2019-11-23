@@ -72,34 +72,51 @@ def process_file(kwp, input_path, output_path, overwrite=False, encoding='utf8')
         print('total time: %s' % (t1 - t0))
 
 
-keyword_processor = Trie(lowercase=True, tokenizer=unicode_tokenize)
+keyword_processor = Trie(tokenizer=unicode_tokenize)
 for line in yield_lines('test/input/english-long.txt'):
     keyword_processor[line.split()[0]] = line.split()[-1][::-1]
 
-# print('%d pairs of replacements' % len(keyword_processor))
+print('%d pairs of replacements' % len(keyword_processor))
 
 new_sentence = keyword_processor.translate('I love Big Apple and new delhi.')
 print(new_sentence)
 
 # process_file(keyword_processor, 'test/input/kjv.txt', 'tmp/kjv2.txt', overwrite=True)
 
-keyword_processor['a ' * 5000 + 'b'] = 'b'
+keyword_processor['a ' * 3000 + 'b'] = 'b'
 # keyword_processor[('a ' * 100 ).strip()+'c'] ='c'
 keyword_processor['a'] = 'd'
-text = 'a ' * 20000 + 'b c'
+text = 'a ' * 10000 + 'b c'
 
 t = time.time()
 tmp = keyword_processor.translate(text)
 print(time.time() - t)
 print(len(tmp))
 
+text = 'a' * 10000000 + ' b c'  # this has happened before, but it wsa a 160MB word
 
-# i evol gib elppa dna wen ihled.
-# 54.451382875442505
-# 30003
+t = time.time()
+tmp = keyword_processor.translate(text)
+print(time.time() - t)
+print(len(tmp))
 
-# flashtext
-
+# C:\tools\Anaconda3\python.exe C:/Users/avery/PycharmProjects/aho-corasick-string-replacement/test.py
+# 149521 pairs of replacements
 # I evol Big Apple dna wen ihled.
-# 83.42606282234192
-# 30003
+# 15.477612733840942
+# 14003
+# 1.5199294090270996
+# 10000004
+#
+# Process finished with exit code 0
+
+
+# C:\tools\Anaconda3\python.exe C:/Users/avery/PycharmProjects/flashtext/test.py
+# 149521 pairs of replacements
+# I evol Big Apple dna wen ihled.
+# 22.0151104927063
+# 14003
+# 7.894888877868652
+# 10000004
+#
+# Process finished with exit code 0

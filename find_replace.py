@@ -201,7 +201,7 @@ _SENTINEL = object()
 
 
 class Trie(object):
-    __slots__ = ('head', 'tokenizer', 'detokenizer')
+    __slots__ = ('head', 'tokenizer', 'detokenizer', 'length')
 
     @staticmethod
     def fromkeys(keys, default='', verbose=False, case_sensitive=True):
@@ -226,6 +226,7 @@ class Trie(object):
         :param lowercase: if True, lowercase all the things (including output)
         """
         self.head = self.Node()
+        self.length = 0
 
         if tokenizer is None:
             if not lowercase:
@@ -268,6 +269,12 @@ class Trie(object):
             head = head[token]
         return head.REPLACEMENT is not _SENTINEL
 
+    def __len__(self):
+        # return self.length
+        length = sum(1 for _ in self.items())
+        assert length == self.length
+        return length
+
     def _item_slice(self, start, stop, step=None):
         out = []
         for key, value in self.items():
@@ -295,6 +302,7 @@ class Trie(object):
             head = head.setdefault(token, self.Node())
         if head.REPLACEMENT is not _SENTINEL:
             return head.REPLACEMENT
+        self.length += 1
         head.REPLACEMENT = value
         return value
 
@@ -302,6 +310,8 @@ class Trie(object):
         head = self.head
         for token in self.tokenizer(key):
             head = head.setdefault(token, self.Node())
+        if head.REPLACEMENT is _SENTINEL:
+            self.length += 1
         head.REPLACEMENT = value
         return value
 
@@ -331,6 +341,7 @@ class Trie(object):
         # store value to be returned later and erase value
         ret_val = head.REPLACEMENT
         head.REPLACEMENT = _SENTINEL
+        self.length -= 1
 
         # erase unnecessary nodes backwards, if they have no value and no descendants
         prev_token, _ = breadcrumbs.pop(-1)
@@ -345,6 +356,15 @@ class Trie(object):
 
         # finally return the popped key & value
         return key, ret_val
+
+    def __delitem__(self, key):
+        if isinstance(key, slice):
+            for key, value in self._item_slice(key.start, key.stop, key.step):
+                self.pop(key)
+        elif key is None:
+            raise KeyError(None)  # handle None because pop(None) will pop the first item
+        else:
+            self.pop(key)
 
     def items(self):
         _path = []
@@ -528,15 +548,6 @@ class Trie(object):
     def values(self):
         for key, value in self.items():
             yield value
-
-    def __delitem__(self, key):
-        if isinstance(key, slice):
-            for key, value in self._item_slice(key.start, key.stop, key.step):
-                self.pop(key)
-        elif key is None:
-            raise KeyError(None)
-        else:
-            self.pop(key)
 
     def update(self, replacements, verbose=True):
         """

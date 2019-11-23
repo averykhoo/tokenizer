@@ -104,11 +104,20 @@ print(output)  # 'I have a orange... I have an orange...'
 -   check why flashtext algo is faster
     -   because it does't handle unicode? (unlikely)
     -   because the simpler algo has fewer branches? (likely)
+        -   with bugs (if input ends with space)
+        -   loads everything into memory to work with, assumes no IO bound
+        -   has an illegal word "_keyword_" to simplify the algo
     -   because it favors average case (short matches) and ignores the psychopathic worst case? (true but not too bad)
-    -   because it has bugs (if input ends with space)
--   add length
--   case insensitive replacement
+    
+-   fix case insensitive replacement
 -   maybe mimic flashtext for average case
-    -   welp lesson learned here
-    -   better big O doesn't mean better performance
+    -   welp lesson learned here, better big O may not mean better overall performance
+    -   modified to use generators
+    -   and a decent tokenizer
+
+-   run tokenizer on file `tokenize(open('test.txt'))`
+-   min (key)
+-   max (key)
+-   predecessor (key)
+-   successor (key)
 
