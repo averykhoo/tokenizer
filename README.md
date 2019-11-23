@@ -120,4 +120,5 @@ print(output)  # 'I have a orange... I have an orange...'
 -   max (key)
 -   predecessor (key)
 -   successor (key)
+-   test len: delete, setdefault, set, update many, set existing
 
