@@ -197,7 +197,7 @@ def yield_lines(file_path, make_lower=False, threshold_len=0):
                 yield line
 
 
-_SENTINEL = object()
+_SENTINEL = object()  # todo: rename to `NOTHING`?
 
 
 class Trie(object):
@@ -225,7 +225,7 @@ class Trie(object):
         :param detokenizer: function to combine tokens back into a string
         :param lowercase: if True, lowercase all the things (including output)
         """
-        self.head = self.Node()
+        self.head = self.Node()  # todo: rename to `root`?
         self.length = 0
 
         if tokenizer is None:
@@ -295,6 +295,12 @@ class Trie(object):
         if head.REPLACEMENT is _SENTINEL:
             raise KeyError(key)
         return head.REPLACEMENT
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def setdefault(self, key, value):
         head = self.head

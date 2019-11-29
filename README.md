@@ -122,3 +122,29 @@ print(output)  # 'I have a orange... I have an orange...'
 -   successor (key)
 -   test len: delete, setdefault, set, update many, set existing
 
+##  Notes on Aho Corasick string search
+```python
+from __future__ import annotations  # allow self-referential types
+from dataclasses import dataclass
+from typing import Dict, Optional
+
+
+@dataclass
+class Node:  # todo: implement `__slots__`, subclass `dict`   
+    length: int 
+    next: Dict[str, Node]
+    replacement: Optional[str]
+    fail: Optional[Node] = None
+    match: Optional[Node] = None
+```
+-   to implement incremental AC, we need an inverse failure link tree
+-   we can't implement failure links on a DAWG
+-   if failure links are implemented just right, we can probably get a DFA
+-   failure link and match implementation depend on how we want to return results
+    -   return all?
+    -   return first longest?
+-   recursive failure generation:
+    -   `node.next[char].fail = node.fail.next[char] or root_node.next[char]`
+    -   or `node.fail = node.parent.fail[char]`
+    -   can be done dfs or bfs, no difference
+- 
