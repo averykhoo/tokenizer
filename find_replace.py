@@ -48,6 +48,13 @@ except ImportError:
 
 class Match:
     def __init__(self, start, end, match):
+        """
+        match result (similar to re.Match, but currently using token indices because of how tokenization works)
+
+        :param start: index of start TOKEN (not char)
+        :param end: index after end token
+        :param match: string matched
+        """
         self.regs = ((start, end),)  # mimic the re.Match object
         self.str = match  # re.Match stores a reference to the ENTIRE ORIGINAL STRING, let's not do that
 
@@ -674,6 +681,7 @@ class Trie(object):
     def finditer(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> Generator[Match, None, None]:
         """
         finds all occurrences within a string
+
         :param input_sequence: iterable of hashable objects
         :param allow_overlapping: yield all overlapping matches (soar -> so, soar, oar)
         """
@@ -731,6 +739,12 @@ class Trie(object):
             yield Match(match_start, match_end, self.detokenizer(match_sequence))
 
     def search(self, input_sequence: AnyStr, *, allow_overlapping: bool = False) -> Union[Match, None]:
+        """
+        # todo: code a special case since we don't need to track multiple matches?
+
+        :param input_sequence: string to search
+        :param allow_overlapping: if enabled, returns first shortest match; otherwise returns first longest match
+        """
         for match in self.finditer(input_sequence, allow_overlapping=allow_overlapping):
             return match
 
@@ -816,15 +830,17 @@ def self_test():
     try:
         assert set(re.sub(r'\s', '', _spaces, flags=re.U)) in [
             set('\u200b\u200c\u200d\u2060\u2800\ufeff'),
-            set('\u180e\u200b\u200c\u200d\u2060\u2800\ufeff')]
+            set('\u200b\u200c\u200d\u2060\u2800\ufeff' + '\u180e')]
 
     except AssertionError:
-        print('whatever version of re you have has weird unicode spaces', repr(re.sub(r'\s', '', _spaces, flags=re.U)))
+        print('whatever version of re you have has wrong unicode spaces', repr(re.sub(r'\s', '', _spaces, flags=re.U)))
         raise
 
     # feed in a list of tuples
     _trie = Trie()
+    assert len(_trie) == 0
     _trie.update([('asd', '111'), ('hjk', '222'), ('dfgh', '3333'), ('ghjkl;', '44444'), ('jkl', '!')])
+    assert len(_trie) == 5
     assert ''.join(_trie.translate('erasdfghjkll')) == 'er111fg222ll'
     assert ''.join(_trie.translate('erasdfghjkl;jkl;')) == 'er111f44444!;'
     assert ''.join(_trie.translate('erassdfghjkl;jkl;')) == 'erass3333!;!;'
@@ -851,6 +867,7 @@ def self_test():
         for i in range(10):
             chosen.add(random.choice(permutations))
         _trie = Trie.fromkeys(chosen)
+        assert len(_trie) == len(chosen)
         r1 = re.compile(_trie.to_regex(fuzzy_quotes=False))  # fuzzy-matching quotes breaks this test
         for found in r1.findall(' '.join(permutations)):
             assert found in chosen
@@ -870,9 +887,11 @@ def self_test():
         'aaaaaaaaaaaaaaaaaaaaaa': '~',
         'bbbb':                   '!',
     })
+    assert len(_trie) == 4
 
     assert 'aaaaaaa' not in _trie
     _trie['aaaaaaa'] = '7'
+    assert len(_trie) == 5
 
     assert ''.join(_trie.translate('a' * 12 + 'b' + 'a' * 28)) == '732b~33'
     assert ''.join(_trie.translate('a' * 40)) == '~773a'
@@ -882,15 +901,19 @@ def self_test():
 
     del _trie['bbbb']
     assert 'b' not in _trie.head
+    assert len(_trie) == 4
 
     del _trie['aaaaaaa']
+    assert len(_trie) == 3
     assert 'aaa' in _trie
     assert 'aaaaaaa' not in _trie
     assert 'aaaaaaaaaaaaaaaaaaaaaa' in _trie
 
     _trie['aaaa'] = 4
+    assert len(_trie) == 4
 
     del _trie['aaaaaaaaaaaaaaaaaaaaaa']
+    assert len(_trie) == 3
     assert 'aaa' in _trie
     assert 'aaaaaaa' not in _trie
     assert 'aaaaaaaaaaaaaaaaaaaaaa' not in _trie
@@ -900,9 +923,11 @@ def self_test():
 
     del _trie['aaa':'bbb']
     assert _trie.to_regex() == '(?:aa)'
+    assert len(_trie) == 1
 
     # fromkeys
     _trie = Trie.fromkeys('mad gas scar madagascar scare care car career error err are'.split())
+    assert len(_trie) == 11
 
     test = 'madagascareerror'
     print(_trie.findall(test))
@@ -912,6 +937,7 @@ def self_test():
                                                                  'are', 'career', 'err', 'error']
 
     _trie = Trie.fromkeys('to toga get her here there gather together hear the he ear'.split())
+    assert len(_trie) == 12
 
     test = 'togethere'
     assert list(_trie.findall(test)) == ['together']
@@ -924,10 +950,12 @@ def self_test():
 
     # test special characters
     _trie = Trie.fromkeys('| \\ \\| |\\ [ () (][) ||| *** *.* **| \\\'\\\' (?:?) \0'.split())
+    assert len(_trie) == 14
     assert re.findall(_trie.to_regex(), '***|\\||||') == ['***', '|\\', '|||', '|']
 
     # test finditer
     _trie = Trie.fromkeys(['asdf'])
+    assert len(_trie) == 1
     res = list(_trie.finditer('asdfasdfqweasdf'))
     assert len(res) == 3
     assert res[0].span() == (0, 4)

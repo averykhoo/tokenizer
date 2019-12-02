@@ -99,16 +99,22 @@ print(output)  # 'I have a orange... I have an orange...'
 ##  To-Do
 -   refactor code into multiple files?
 -   parallelize file processing to make processing faster, sharing a single trie
--   find a way to convert trie to DFA by computing suffix/failure links,
-    while still allowing in-place updates to the trie
+
+-   find a way to convert trie to DFA by computing suffix/failure links
+    -   while still allowing in-place updates to the trie
+    -   checked the literature, doesn't seem possible to implement in a simple way
+    -   requires inverted failure link map
+
 -   check why flashtext algo is faster
     -   because it does't handle unicode? (unlikely)
     -   because the simpler algo has fewer branches? (likely)
         -   with bugs (if input ends with space)
         -   loads everything into memory to work with, assumes no IO bound
         -   has an illegal word "_keyword_" to simplify the algo
+    -   doesn't support find all overlapping
+    - 
     -   because it favors average case (short matches) and ignores the psychopathic worst case? (true but not too bad)
-    
+
 -   fix case insensitive replacement
 -   maybe mimic flashtext for average case
     -   welp lesson learned here, better big O may not mean better overall performance
@@ -120,7 +126,16 @@ print(output)  # 'I have a orange... I have an orange...'
 -   max (key)
 -   predecessor (key)
 -   successor (key)
--   test len: delete, setdefault, set, update many, set existing
+-   match should be in string indices, not token indices
+-   findall case insensitive should return case sensitive matches
+-   test len in the following cases:
+    -   delete
+    -   setdefault
+    -   set
+    -   update many (including existing)
+    -   set existing
+-   slice on integer indices
+-   index of string (e.g. `['a', 'b', 'c'].index('b')`)
 
 ##  Notes on Aho Corasick string search
 ```python
@@ -147,4 +162,4 @@ class Node:  # todo: implement `__slots__`, subclass `dict`
     -   `node.next[char].fail = node.fail.next[char] or root_node.next[char]`
     -   or `node.fail = node.parent.fail[char]`
     -   can be done dfs or bfs, no difference
-- 
+-
