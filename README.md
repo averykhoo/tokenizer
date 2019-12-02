@@ -162,4 +162,4 @@ class Node:  # todo: implement `__slots__`, subclass `dict`
     -   `node.next[char].fail = node.fail.next[char] or root_node.next[char]`
     -   or `node.fail = node.parent.fail[char]`
     -   can be done dfs or bfs, no difference
--
+-   can't actually use dataclass because not compatible with slots
