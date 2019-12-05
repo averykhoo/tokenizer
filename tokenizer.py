@@ -292,7 +292,3 @@ def char_group_tokenize(text, token_max_len=65535):
     # finally, yield the last chunk
     if temp:
         yield temp
-
-
-if __name__ == '__main__':
-    print(list(unicode_tokenize('test test (test-test)')))
