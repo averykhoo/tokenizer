@@ -136,6 +136,8 @@ print(output)  # 'I have a orange... I have an orange...'
     -   set existing
 -   slice on integer indices
 -   index of string (e.g. `['a', 'b', 'c'].index('b')`)
+-   support for word boundaries without tokenizer?
+    -   but this would slow down the algo since we might be checking for boundaries twice
 
 ##  Notes on Aho Corasick string search
 ```python

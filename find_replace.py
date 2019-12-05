@@ -22,10 +22,10 @@ from typing import Union
 import psutil
 
 try:
-    from tokenizer import _is_punctuation_char, _is_space_char
+    from tokenizer import is_punctuation_char, is_space_char
 
 except ImportError:
-    def _is_punctuation_char(char):
+    def is_punctuation_char(char):
         return char in {
             # COMMON PUNCTUATION
             '!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?',
@@ -39,7 +39,7 @@ except ImportError:
             '\u0019', '\u001a', '\u001b', '\u007f', '\uffef', '\ufffd'}
 
 
-    def _is_space_char(char):
+    def is_space_char(char):
         return char in {'\t', '\n', '\v', '\f', '\r', ' ', '\x85', '\xa0', '\x1c', '\x1d', '\x1e', '\x1f', '\ufeff',
                         '\u1680', '\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005', '\u2006', '\u2007',
                         '\u2008', '\u2009', '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000', '\u180e',
@@ -145,7 +145,7 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=
     # main loop over all text
     for char in text:
         # 1) spaces
-        if _is_space_char(char):
+        if is_space_char(char):
             if char == space_char and len(text_buffer) < token_max_len:
                 text_buffer.append(char)
             else:
@@ -158,7 +158,7 @@ def space_tokenize(text, token_max_len=65535, emit_space=True, emit_punctuation=
                     space_char = ''
 
         # 2) punctuation
-        elif _is_punctuation_char(char):
+        elif is_punctuation_char(char):
             if text_buffer:
                 yield ''.join(text_buffer)
             if emit_punctuation:
