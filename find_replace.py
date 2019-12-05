@@ -22,7 +22,7 @@ from typing import Union
 import psutil
 
 try:
-    from tokenizer import is_punctuation_char, is_space_char
+    from .tokenizer import is_punctuation_char, is_space_char
 
 except ImportError:
     def is_punctuation_char(char):
