@@ -8,13 +8,6 @@ from typing import Type
 
 class Match:
     def __init__(self, start, end, match):
-        """
-        match result (similar to re.Match, but currently using token indices because of how tokenization works)
-
-        :param start: index of start TOKEN (not char)
-        :param end: index after end token
-        :param match: string matched
-        """
         self.regs = ((start, end),)  # mimic the re.Match object
         self.str = match  # re.Match stores a reference to the ENTIRE ORIGINAL STRING, let's not do that
 
@@ -57,14 +50,17 @@ class Node:  # todo: implement `__slots__`, subclass `dict`
 
 
 class Trie(ABC):
+    len: int
+    root: Node
+
+    __slots__ = ('len', 'root')
 
     @abstractmethod
     def __contains__(self, key):
         pass
 
-    @abstractmethod
     def __len__(self):
-        pass
+        return self.len
 
     @abstractmethod
     def keys(self):

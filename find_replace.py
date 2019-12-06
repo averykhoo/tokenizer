@@ -208,7 +208,7 @@ _SENTINEL = object()  # todo: rename to `NOTHING`?
 
 
 class Trie(object):
-    __slots__ = ('head', 'tokenizer', 'detokenizer', 'length')
+    __slots__ = ('root', 'tokenizer', 'detokenizer', 'length')
 
     @staticmethod
     def fromkeys(keys, default='', verbose=False, case_sensitive=True):
@@ -232,7 +232,7 @@ class Trie(object):
         :param detokenizer: function to combine tokens back into a string
         :param lowercase: if True, lowercase all the things (including output)
         """
-        self.head = self.Node()  # todo: rename to `root`?
+        self.root = self.Node()
         self.length = 0
 
         if tokenizer is None:
@@ -269,7 +269,7 @@ class Trie(object):
             self.update(replacements)
 
     def __contains__(self, key):
-        head = self.head
+        head = self.root
         for token in self.tokenizer(key):
             if token not in head:
                 return False
@@ -294,7 +294,7 @@ class Trie(object):
     def __getitem__(self, key):
         if type(key) is slice:
             return [value for key, value in self._item_slice(key.start, key.stop, key.step)]
-        head = self.head
+        head = self.root
         for token in self.tokenizer(key):
             if token not in head:
                 raise KeyError(key)
@@ -310,7 +310,7 @@ class Trie(object):
             return default
 
     def setdefault(self, key, value):
-        head = self.head
+        head = self.root
         for token in self.tokenizer(key):
             head = head.setdefault(token, self.Node())
         if head.REPLACEMENT is not _SENTINEL:
@@ -320,7 +320,7 @@ class Trie(object):
         return value
 
     def __setitem__(self, key, value):
-        head = self.head
+        head = self.root
         for token in self.tokenizer(key):
             head = head.setdefault(token, self.Node())
         if head.REPLACEMENT is _SENTINEL:
@@ -330,14 +330,14 @@ class Trie(object):
 
     def pop(self, key=None):
         # empty Trie, so behave like an empty set
-        if not self.head.keys():
+        if not self.root.keys():
             raise KeyError(key)
 
         # pop first item if key not specified
         if key is None:
             key = next(self.keys())
 
-        head = self.head
+        head = self.root
         breadcrumbs = [(None, head)]
 
         # trace through trie
@@ -381,7 +381,7 @@ class Trie(object):
 
     def items(self):
         _path = []
-        _stack = [(self.head, sorted(self.head.keys(), reverse=True))]
+        _stack = [(self.root, sorted(self.root.keys(), reverse=True))]
         while _stack:
             head, keys = _stack.pop(-1)
             if keys:
@@ -411,7 +411,7 @@ class Trie(object):
         assert list(self.tokenizer('test-test test')) == list('test-test test'), "shouldn't use a tokenizer"
 
         _parts = [[], []]
-        _stack = [(self.head, sorted(self.head.keys(), reverse=True))]
+        _stack = [(self.root, sorted(self.root.keys(), reverse=True))]
         while _stack:
             head, keys = _stack.pop(-1)
             if keys:
@@ -607,7 +607,7 @@ class Trie(object):
             output_buffer.append((index, input_item))
 
             # append new span to queue
-            spans[index] = self.head
+            spans[index] = self.root
 
             # reset lists of things to remove
             matches_to_remove.clear()  # clearing is faster than creating a new set
@@ -692,7 +692,7 @@ class Trie(object):
 
         for index, input_item in enumerate(self.tokenizer(input_sequence)):
             # append new span to queue
-            spans[index] = (self.head, [])
+            spans[index] = (self.root, [])
 
             # reset lists of things to remove
             matches_to_remove.clear()  # clearing is faster than creating a new set
@@ -900,7 +900,7 @@ def self_test():
     assert ''.join(_trie.translate('a' * 60)) == '~~772'
 
     del _trie['bbbb']
-    assert 'b' not in _trie.head
+    assert 'b' not in _trie.root
     assert len(_trie) == 4
 
     del _trie['aaaaaaa']
@@ -918,8 +918,8 @@ def self_test():
     assert 'aaaaaaa' not in _trie
     assert 'aaaaaaaaaaaaaaaaaaaaaa' not in _trie
 
-    assert len(_trie.head['a']['a']['a']) == 1
-    assert len(_trie.head['a']['a']['a']['a']) == 0
+    assert len(_trie.root['a']['a']['a']) == 1
+    assert len(_trie.root['a']['a']['a']['a']) == 0
 
     del _trie['aaa':'bbb']
     assert _trie.to_regex() == '(?:aa)'
