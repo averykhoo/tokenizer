@@ -140,20 +140,6 @@ print(output)  # 'I have a orange... I have an orange...'
     -   but this would slow down the algo since we might be checking for boundaries twice
 
 ##  Notes on Aho Corasick string search
-```python
-from __future__ import annotations  # allow self-referential types
-from dataclasses import dataclass
-from typing import Dict, Optional
-
-
-@dataclass
-class Node:  # todo: implement `__slots__`, subclass `dict`   
-    length: int 
-    next: Dict[str, Node]
-    replacement: Optional[str]
-    fail: Optional[Node] = None
-    match: Optional[Node] = None
-```
 -   to implement incremental AC, we need an inverse failure link tree
 -   we can't implement failure links on a DAWG
 -   if failure links are implemented just right, we can probably get a DFA
