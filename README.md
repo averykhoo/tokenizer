@@ -5,6 +5,7 @@
     but modified to perform replacements
     -   Uses a [trie](https://en.wikipedia.org/wiki/Trie) structure *without* suffix links, 
         so that you can dynamically add/remove stuff
+-   If you only want to search, use another library (e.g. [`pyahocorasick`](https://pypi.org/project/pyahocorasick/) or [`python-hyperscan`](https://pypi.org/project/hyperscan/))
 
 
 ##  TL;DR
