@@ -1,10 +1,41 @@
 import string
+from typing import Any
 from typing import Generator
+from typing import Union
 
 import unicodedata
 
 ALPHABET = set(string.ascii_lowercase + string.ascii_uppercase)
 DIGITS = set(string.digits)
+
+CLOSING_PUNCTUATION = {
+    '!',
+    '.',
+    ':',
+    '?',
+    '\u00a1',  # upside down -> '¡'
+    '\u00bf',  # upside down -> '¿'
+    '\u0589',  # armenian full stop -> '։'
+    '\u06d4',  # arabic full stop = -> '۔'
+    '\u2026',  # ellipsis -> '…'
+    '\u203c',  # double -> '‼'
+    '\u2047',  # double -> '⁇'
+    '\u2048',  # double -> '⁈'
+    '\u2049',  # double -> '⁉'
+    '\u3002',  # chinese -> '。'
+    '\ufe12',  # chinese presentation form -> '︒'
+    '\ufe15',  # presentation form -> '︕'
+    '\ufe16',  # presentation form -> '︖'
+    '\ufe52',  # small form -> '﹒'
+    '\ufe55',  # small form -> '﹕'
+    '\ufe56',  # small form -> '﹖'
+    '\ufe57',  # small form -> '﹗'
+    '\uff01',  # full width -> '！'
+    '\uff0e',  # full width -> '．'
+    '\uff1a',  # full width -> '：'
+    '\uff1f',  # full width -> '？'
+    '\uff61',  # half width chinese -> '｡'
+}
 
 # refer to: https://en.wikipedia.org/wiki/Whitespace_character
 UNICODE_SPACES = {
@@ -122,7 +153,7 @@ is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each toke
 is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, None, None]:
+def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, Any, None]:
     """
     based on fts5 but merges spaces and allows diacritics
 
@@ -205,6 +236,46 @@ def _unicode_tokenize_words(text):
     # yield remainder
     if text_buffer:
         yield ''.join(text_buffer)
+
+
+def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
+    """
+    good-enough sentence splitting
+    optional splitting on newlines to ensure sentences don't span paragraphs
+    split_newline can be a string on which to split (e.g. '\r\n\r\n')
+
+    :param text: to split in sentences
+    :param split_newline: split paragraphs before sentence splitting
+    :return:
+    """
+    if split_newline is True:
+        paragraphs = [para.strip() for para in text.split('\n')]
+    elif split_newline:
+        assert isinstance(split_newline, str)
+        paragraphs = [para.strip() for para in text.split(split_newline)]
+    else:
+        paragraphs = [text.strip()]
+
+    for para in paragraphs:
+        buffer = []
+        closed = False
+        for token in unicode_tokenize(para):
+            buffer.append(token)
+
+            if closed and is_space_char(token[0]):
+                sentence = ''.join(buffer).strip()
+                if sentence:
+                    yield sentence
+                buffer = []
+                closed = False
+                continue
+
+            if token not in {'"', '\uff02', ')', '\uff09', '>', '\uff1e', ']', '\uff3d', '}', '\uff5d', '\u201d'}:
+                closed = token in CLOSING_PUNCTUATION
+
+        sentence = ''.join(buffer).strip()
+        if sentence:
+            yield sentence
 
 
 def char_group_tokenize(text, token_max_len=65535):
