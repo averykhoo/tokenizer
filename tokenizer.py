@@ -302,9 +302,9 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
 
 def char_group_tokenize(text, token_max_len=65535):
     """
-    unused function
+    DEPRECATED
     tokenizes alphabet, numbers, and other unicode separately
-    about 10% slower than the simpler tokenizer
+    about 10% slower than the simpler tokenizer, because of string appending
 
     :param text:
     :param token_max_len:
@@ -315,7 +315,7 @@ def char_group_tokenize(text, token_max_len=65535):
     is_space = ''
     is_num = False
     is_alpha = False
-    temp = ''
+    temp = ''  # not using a list makes this tokenizer VERY slow when long tokens exist
 
     # main loop over all text
     for char in text:
