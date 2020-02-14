@@ -1,6 +1,7 @@
 import string
 from typing import Any
 from typing import Generator
+from typing import Tuple
 from typing import Union
 
 import unicodedata
@@ -276,6 +277,27 @@ def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> G
         sentence = ''.join(buffer).strip()
         if sentence:
             yield sentence
+
+
+def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generator[Tuple[str, str], Any, None]:
+    """
+    yield n-grams of words (works ONLY for space-delimited languages)
+    note that split_sentences will also split paragraphs by default
+
+    :param text:
+    :param n:
+    :param split_sentences:
+    :return:
+    """
+    if split_sentences:
+        sentences = list(sentence_split(text))
+    else:
+        sentences = [text]
+
+    for sentence in sentences:
+        words = list(unicode_tokenize(sentence, words_only=True))
+        for n_gram in zip(*[words[i:] for i in range(n)]):
+            yield n_gram
 
 
 def char_group_tokenize(text, token_max_len=65535):
