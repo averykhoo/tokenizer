@@ -1,4 +1,3 @@
-import string
 from typing import Any
 from typing import Generator
 from typing import Tuple
@@ -6,40 +5,7 @@ from typing import Union
 
 import unicodedata
 
-ALPHABET = set(string.ascii_lowercase + string.ascii_uppercase)
-DIGITS = set(string.digits)
-
-CLOSING_PUNCTUATION = {
-    '!',
-    '.',
-    ':',
-    '?',
-    '\u00a1',  # upside down -> '¡'
-    '\u00bf',  # upside down -> '¿'
-    '\u0589',  # armenian full stop -> '։'
-    '\u06d4',  # arabic full stop = -> '۔'
-    '\u2026',  # ellipsis -> '…'
-    '\u203c',  # double -> '‼'
-    '\u2047',  # double -> '⁇'
-    '\u2048',  # double -> '⁈'
-    '\u2049',  # double -> '⁉'
-    '\u3002',  # chinese -> '。'
-    '\ufe12',  # chinese presentation form -> '︒'
-    '\ufe15',  # presentation form -> '︕'
-    '\ufe16',  # presentation form -> '︖'
-    '\ufe52',  # small form -> '﹒'
-    '\ufe55',  # small form -> '﹕'
-    '\ufe56',  # small form -> '﹖'
-    '\ufe57',  # small form -> '﹗'
-    '\uff01',  # full width -> '！'
-    '\uff0e',  # full width -> '．'
-    '\uff1a',  # full width -> '：'
-    '\uff1f',  # full width -> '？'
-    '\uff61',  # half width chinese -> '｡'
-}
-
-# refer to: https://en.wikipedia.org/wiki/Whitespace_character
-UNICODE_SPACES = {
+UNICODE_SPACES = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
     # unicode whitespace
     '\u0009',  # horizontal tab == '\t'
     '\u000a',  # line feed (new line) == '\n'
@@ -121,6 +87,35 @@ UNPRINTABLE_CHARS = {
     '\ufffd',  # unicode replacement char
 }
 
+CLOSING_PUNCTUATION = {
+    '!',
+    '.',
+    ':',
+    '?',
+    '\u00a1',  # upside down -> '¡'
+    '\u00bf',  # upside down -> '¿'
+    '\u0589',  # armenian full stop -> '։'
+    '\u06d4',  # arabic full stop = -> '۔'
+    '\u2026',  # ellipsis -> '…'
+    '\u203c',  # double -> '‼'
+    '\u2047',  # double -> '⁇'
+    '\u2048',  # double -> '⁈'
+    '\u2049',  # double -> '⁉'
+    '\u3002',  # chinese -> '。'
+    '\ufe12',  # chinese presentation form -> '︒'
+    '\ufe15',  # presentation form -> '︕'
+    '\ufe16',  # presentation form -> '︖'
+    '\ufe52',  # small form -> '﹒'
+    '\ufe55',  # small form -> '﹕'
+    '\ufe56',  # small form -> '﹖'
+    '\ufe57',  # small form -> '﹗'
+    '\uff01',  # full width -> '！'
+    '\uff0e',  # full width -> '．'
+    '\uff1a',  # full width -> '：'
+    '\uff1f',  # full width -> '？'
+    '\uff61',  # half width chinese -> '｡'
+}
+
 
 class _IsTextChar(dict):
     def __missing__(self, char):
@@ -154,25 +149,10 @@ is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each toke
 is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
-def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, Any, None]:
-    """
-    based on fts5 but merges spaces and allows diacritics
-
-    :param text: string to be tokenized
-    :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
-    """
-    if words_only:
-        for token, start_idx in _unicode_tokenize_words(text):
-            yield token
-    else:
-        for token, start_idx in _unicode_tokenize_all(text):
-            yield token
-
-
 def _unicode_tokenize_all(text):
     text_buffer = []
     last_space = None
-    start_idx = 0
+    start_idx = None
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
@@ -185,6 +165,8 @@ def _unicode_tokenize_all(text):
             # buffer contains word / is empty
             else:
                 text_buffer.append(char)
+                if start_idx is None:
+                    start_idx = idx
 
         # char is space
         elif is_space_char(char):
@@ -216,13 +198,13 @@ def _unicode_tokenize_all(text):
                 yield ''.join(text_buffer), start_idx
                 last_space = None
                 text_buffer = []
-                start_idx = idx + 1
+                start_idx = None
 
             # buffer is text
             elif text_buffer:
                 yield ''.join(text_buffer), start_idx
                 text_buffer = []
-                start_idx = idx + 1
+                start_idx = None
 
             yield char, idx
 
@@ -250,6 +232,21 @@ def _unicode_tokenize_words(text):
     # yield remainder
     if text_buffer:
         yield ''.join(text_buffer), start_idx
+
+
+def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, Any, None]:
+    """
+    similar to fts5's unicode61 tokenizer, but merges spaces and allows diacritics
+
+    :param text: string to be tokenized
+    :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
+    """
+    if words_only:
+        for token, start_idx in _unicode_tokenize_words(text):
+            yield token
+    else:
+        for token, start_idx in _unicode_tokenize_all(text):
+            yield token
 
 
 def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
@@ -311,90 +308,3 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
         words = list(unicode_tokenize(sentence, words_only=True))
         for n_gram in zip(*[words[i:] for i in range(n)]):
             yield n_gram
-
-
-def char_group_tokenize(text, token_max_len=65535):
-    """
-    DEPRECATED
-    tokenizes alphabet, numbers, and other unicode separately
-    about 10% slower than the simpler tokenizer, because of string appending
-
-    :param text:
-    :param token_max_len:
-    """
-    # character classes
-
-    # init
-    is_space = ''
-    is_num = False
-    is_alpha = False
-    temp = ''  # not using a list makes this tokenizer VERY slow when long tokens exist
-
-    # main loop over all text
-    for char in text:
-
-        # 1) chunks of ASCII alphabets (most common case first)
-        if char in ALPHABET:
-            if is_alpha and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = char
-                is_space = ''
-                is_alpha = True
-                is_num = False
-
-        # 2) numbers tokenized as chunks of ASCII digits
-        elif char in DIGITS:
-            if is_num and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = char
-                is_space = ''
-                is_alpha = False
-                is_num = True
-
-        # 3) spaces tokenized in groups of the same char
-        elif is_space_char(char):
-            if char == is_space and len(temp) < token_max_len:
-                temp += char
-            else:
-                if temp:
-                    yield temp
-                temp = is_space = char
-                is_alpha = False
-                is_num = False
-
-        # 4) punctuation tokenized as individual chars
-        elif is_punctuation_char(char):
-            if temp:
-                yield temp
-            yield char
-            temp = is_space = ''
-            is_alpha = False
-            is_num = False
-
-        # 5) arbitrary unicode, first token
-        elif is_space or is_num or is_alpha:
-            if temp:
-                yield temp
-            temp = char
-            is_space = ''
-            is_num = False
-            is_alpha = False
-
-        # 6) arbitrary unicode, next token
-        elif len(temp) < token_max_len:
-            temp += char
-
-        # 7) arbitrary unicode, max token
-        else:
-            yield temp
-            temp = char
-
-    # finally, yield the last chunk
-    if temp:
-        yield temp
