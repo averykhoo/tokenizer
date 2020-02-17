@@ -162,22 +162,26 @@ def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, Any,
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     """
     if words_only:
-        return _unicode_tokenize_words(text)
+        for token, start_idx in _unicode_tokenize_words(text):
+            yield token
     else:
-        return _unicode_tokenize_all(text)
+        for token, start_idx in _unicode_tokenize_all(text):
+            yield token
 
 
 def _unicode_tokenize_all(text):
     text_buffer = []
     last_space = None
-    for char in text:
+    start_idx = 0
+    for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
             # buffer contains space
             if last_space is not None:
-                yield ''.join(text_buffer)
+                yield ''.join(text_buffer), start_idx
                 last_space = None
                 text_buffer = [char]
+                start_idx = idx
             # buffer contains word / is empty
             else:
                 text_buffer.append(char)
@@ -189,54 +193,61 @@ def _unicode_tokenize_all(text):
                 if last_space == char:
                     text_buffer.append(char)
                 else:
-                    yield ''.join(text_buffer)
+                    yield ''.join(text_buffer), start_idx
                     last_space = char
                     text_buffer = [char]
+                    start_idx = idx
             # buffer contains word
             elif text_buffer:
-                yield ''.join(text_buffer)
+                yield ''.join(text_buffer), start_idx
                 last_space = char
                 text_buffer = [char]
+                start_idx = idx
             # buffer is empty
             else:
                 last_space = char
                 text_buffer = [char]
+                start_idx = idx
 
         # char is punctuation/symbols/unprintable
         else:
             # buffer is space
             if last_space:
-                yield ''.join(text_buffer)
+                yield ''.join(text_buffer), start_idx
                 last_space = None
                 text_buffer = []
+                start_idx = idx + 1
 
             # buffer is text
             elif text_buffer:
-                yield ''.join(text_buffer)
+                yield ''.join(text_buffer), start_idx
                 text_buffer = []
+                start_idx = idx + 1
 
-            yield char
+            yield char, idx
 
     # yield remainder
     if text_buffer:
-        yield ''.join(text_buffer)
+        yield ''.join(text_buffer), start_idx
 
 
 def _unicode_tokenize_words(text):
     text_buffer = []
-    for char in text:
+    start_idx = 0
+    for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
             text_buffer.append(char)
 
         # char is non-text AND buffer is text
         elif text_buffer:
-            yield ''.join(text_buffer)
+            yield ''.join(text_buffer), start_idx
             text_buffer = []
+            start_idx = idx + 1
 
     # yield remainder
     if text_buffer:
-        yield ''.join(text_buffer)
+        yield ''.join(text_buffer), start_idx
 
 
 def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
