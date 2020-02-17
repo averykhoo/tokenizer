@@ -281,10 +281,7 @@ def unicode_tokenize(text: str,
         return _unicode_tokenize_all_strings(text)
 
 
-def sentence_split_tokens(text: str,
-                          split_newline: Union[str, bool, None] = True,
-                          words_only: bool = False
-                          ) -> Generator[List[Token], Any, None]:
+def sentence_split_tokens(text: str, split_newline: Union[str, bool, None] = True) -> Generator[List[Token], Any, None]:
     """
     good-enough sentence splitting
     optional splitting on newlines to ensure sentences don't span paragraphs
@@ -311,26 +308,23 @@ def sentence_split_tokens(text: str,
         for token in unicode_tokenize(para, as_tokens=True):
             buffer.append(token)
 
+            # sentence has ended iff whitespace follows the closing punctuation
             if closed and token.category is TokenCategory.WHITESPACE:
-                if words_only:
-                    buffer = [token for token in buffer if token.category is TokenCategory.WORD]
                 if buffer:
                     yield buffer
                 buffer = []
                 closed = False
                 continue
 
-            if token.category is TokenCategory.PUNCTUATION:
-                if token.text not in {'"', '\uff02',
-                                      ')', '\uff09',
-                                      '>', '\uff1e',
-                                      ']', '\uff3d',
-                                      '}', '\uff5d',
-                                      '\u201d'}:
-                    closed = token.text in CLOSING_PUNCTUATION
+            # note that this can also un-close a sentence, e.g. for "192.168.1.1"
+            if token.text not in {'"', '\uff02',
+                                  ')', '\uff09',
+                                  '>', '\uff1e',
+                                  ']', '\uff3d',
+                                  '}', '\uff5d',
+                                  '\u201d'}:
+                closed = token.text in CLOSING_PUNCTUATION
 
-        if words_only:
-            buffer = [token for token in buffer if token.category is TokenCategory.WORD]
         if buffer:
             yield buffer
 
@@ -354,11 +348,12 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
     :return:
     """
     if split_sentences:
-        sentences_tokens = list(sentence_split_tokens(text, words_only=True))
-    else:
-        sentences_tokens = [list(unicode_tokenize(text, words_only=True, as_tokens=True))]
+        for sentence_tokens in sentence_split_tokens(text):
+            words = [token.text for token in sentence_tokens if token.category is TokenCategory.WORD]
+            for n_gram in zip(*[words[i:] for i in range(n)]):
+                yield n_gram
 
-    for sentence_tokens in sentences_tokens:
-        words = [token.text for token in sentence_tokens]
+    else:
+        words = list(unicode_tokenize(text, words_only=True))
         for n_gram in zip(*[words[i:] for i in range(n)]):
             yield n_gram
