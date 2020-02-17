@@ -161,7 +161,7 @@ class TokenCategory(Enum):
 Token = namedtuple('Token', ['text', 'start_pos', 'category'])
 
 
-def _unicode_tokenize_all(text):
+def _unicode_tokenize_merge_spaces(text: str):
     text_buffer = []  # stores chars for previous whitespace/word sequence
     start_idx = None
     category = None
@@ -219,31 +219,69 @@ def _unicode_tokenize_all(text):
         yield ''.join(text_buffer), start_idx, category
 
 
-def _unicode_tokenize_words(text):
-    text_buffer = []
+def _unicode_tokenize_all(text: str):
+    word_buffer = []  # buffer is ALWAYS text
     start_idx = None
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
-            if not text_buffer:
-                text_buffer = [char]
+            # buffer is empty
+            if not word_buffer:
+                word_buffer = [char]
                 start_idx = idx
+            # buffer contains word
             else:
-                text_buffer.append(char)
+                word_buffer.append(char)
 
-        # char is non-text AND buffer is text
-        elif text_buffer:
-            yield ''.join(text_buffer), start_idx, TokenCategory.WORD
-            text_buffer = []
+        # char is whitespace
+        elif is_space_char(char):
+            if word_buffer:
+                yield ''.join(word_buffer), start_idx, TokenCategory.WORD
+                word_buffer = []
+
+            yield char, idx, TokenCategory.WHITESPACE
+
+        # char is punctuation/symbol/unprintable
+        else:
+            if word_buffer:
+                yield ''.join(word_buffer), start_idx, TokenCategory.WORD
+                word_buffer = []
+
+            yield char, idx, TokenCategory.PUNCTUATION
 
     # yield remainder
-    if text_buffer:
-        yield ''.join(text_buffer), start_idx, TokenCategory.WORD
+    if word_buffer:
+        yield ''.join(word_buffer), start_idx, TokenCategory.WORD
 
 
-def unicode_tokenize(text: str, words_only: bool = False, as_tokens=False) -> Generator[Union[str, Token], Any, None]:
+def _unicode_tokenize_words(text):
+    word_buffer = []
+    start_idx = None
+    for idx, char in enumerate(text):
+        # char is part of word
+        if is_text_char(char):
+            if not word_buffer:
+                word_buffer = [char]
+                start_idx = idx
+            else:
+                word_buffer.append(char)
+
+        # char is non-text AND buffer is text
+        elif word_buffer:
+            yield ''.join(word_buffer), start_idx, TokenCategory.WORD
+            word_buffer = []
+
+    # yield remainder
+    if word_buffer:
+        yield ''.join(word_buffer), start_idx, TokenCategory.WORD
+
+
+def unicode_tokenize(text: str,
+                     words_only: bool = False,
+                     as_tokens: bool = False
+                     ) -> Generator[Union[str, Token], Any, None]:
     """
-    similar to fts5's unicode61 tokenizer, but merges spaces and allows diacritics
+    similar to fts5's unicode61 tokenizer, but allows diacritics
 
     :param text: string to be tokenized
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
@@ -252,11 +290,11 @@ def unicode_tokenize(text: str, words_only: bool = False, as_tokens=False) -> Ge
     if words_only:
         _tokenizer = _unicode_tokenize_words
     else:
-        _tokenizer = _unicode_tokenize_all
+        _tokenizer = _unicode_tokenize_all  # use `_unicode_tokenize_merge_spaces` if you want to merge spaces
 
     if as_tokens:
         for token, start_idx, category in _tokenizer(text):
-            yield Token(token, start_idx, category)
+            yield Token(text=token, start_pos=start_idx, category=category)
     else:
         for token, *_ in _tokenizer(text):
             yield token
