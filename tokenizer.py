@@ -1,3 +1,6 @@
+from collections import namedtuple
+from enum import Enum
+from enum import auto
 from typing import Any
 from typing import Generator
 from typing import Tuple
@@ -149,68 +152,71 @@ is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each toke
 is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
 
 
+class TokenCategory(Enum):
+    WORD = auto()
+    WHITESPACE = auto()
+    PUNCTUATION = auto()
+
+
+Token = namedtuple('Token', ['text', 'start_pos', 'category'])
+
+
 def _unicode_tokenize_all(text):
-    text_buffer = []
-    last_space = None
+    text_buffer = []  # stores chars for previous whitespace/word sequence
     start_idx = None
+    category = None
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
-            # buffer contains space
-            if last_space is not None:
-                yield ''.join(text_buffer), start_idx
-                last_space = None
+            # buffer is empty
+            if not text_buffer:
                 text_buffer = [char]
                 start_idx = idx
-            # buffer contains word / is empty
-            else:
+                category = TokenCategory.WORD
+            # buffer contains word
+            elif category is TokenCategory.WORD:
                 text_buffer.append(char)
-                if start_idx is None:
-                    start_idx = idx
+            # buffer contains space
+            else:
+                yield ''.join(text_buffer), start_idx, category
+                text_buffer = [char]
+                start_idx = idx
+                category = TokenCategory.WORD
 
         # char is space
         elif is_space_char(char):
-            # buffer contains space
-            if last_space is not None:
-                if last_space == char:
-                    text_buffer.append(char)
-                else:
-                    yield ''.join(text_buffer), start_idx
-                    last_space = char
-                    text_buffer = [char]
-                    start_idx = idx
-            # buffer contains word
-            elif text_buffer:
-                yield ''.join(text_buffer), start_idx
-                last_space = char
-                text_buffer = [char]
-                start_idx = idx
             # buffer is empty
-            else:
-                last_space = char
+            if not text_buffer:
+                text_buffer = [char]
+                start_idx = idx
+                category = TokenCategory.WHITESPACE
+            # buffer contains word
+            elif category is TokenCategory.WORD:
+                yield ''.join(text_buffer), start_idx, category
+                text_buffer = [char]
+                start_idx = idx
+                category = TokenCategory.WHITESPACE
+            # buffer contains same space
+            elif text_buffer[-1] == char:
+                text_buffer.append(char)
+            # buffer contains different space
+            else:  # category is already WHITESPACE, don't need to set again
+                yield ''.join(text_buffer), start_idx, category
                 text_buffer = [char]
                 start_idx = idx
 
-        # char is punctuation/symbols/unprintable
+        # char is punctuation/symbol/unprintable
         else:
-            # buffer is space
-            if last_space:
-                yield ''.join(text_buffer), start_idx
-                last_space = None
+            # buffer is text or whitespace
+            if text_buffer:
+                yield ''.join(text_buffer), start_idx, category
                 text_buffer = []
-                start_idx = None
 
-            # buffer is text
-            elif text_buffer:
-                yield ''.join(text_buffer), start_idx
-                text_buffer = []
-                start_idx = None
-
-            yield char, idx
+            yield char, idx, TokenCategory.PUNCTUATION
 
     # yield remainder
     if text_buffer:
-        yield ''.join(text_buffer), start_idx
+        yield ''.join(text_buffer), start_idx, category
 
 
 def _unicode_tokenize_words(text):
@@ -219,33 +225,40 @@ def _unicode_tokenize_words(text):
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
-            if start_idx is None:
+            if not text_buffer:
+                text_buffer = [char]
                 start_idx = idx
-            text_buffer.append(char)
+            else:
+                text_buffer.append(char)
 
         # char is non-text AND buffer is text
         elif text_buffer:
-            yield ''.join(text_buffer), start_idx
+            yield ''.join(text_buffer), start_idx, TokenCategory.WORD
             text_buffer = []
-            start_idx = None
 
     # yield remainder
     if text_buffer:
-        yield ''.join(text_buffer), start_idx
+        yield ''.join(text_buffer), start_idx, TokenCategory.WORD
 
 
-def unicode_tokenize(text: str, words_only: bool = False) -> Generator[str, Any, None]:
+def unicode_tokenize(text: str, words_only: bool = False, as_tokens=False) -> Generator[Union[str, Token], Any, None]:
     """
     similar to fts5's unicode61 tokenizer, but merges spaces and allows diacritics
 
     :param text: string to be tokenized
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
+    :param as_tokens: return as Token namedtuple (includes start_position and token_category)
     """
     if words_only:
-        for token, start_idx in _unicode_tokenize_words(text):
-            yield token
+        _tokenizer = _unicode_tokenize_words
     else:
-        for token, start_idx in _unicode_tokenize_all(text):
+        _tokenizer = _unicode_tokenize_all
+
+    if as_tokens:
+        for token, start_idx, category in _tokenizer(text):
+            yield Token(token, start_idx, category)
+    else:
+        for token, *_ in _tokenizer(text):
             yield token
 
 
