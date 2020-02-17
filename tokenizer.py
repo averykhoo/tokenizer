@@ -233,17 +233,19 @@ def _unicode_tokenize_all(text):
 
 def _unicode_tokenize_words(text):
     text_buffer = []
-    start_idx = 0
+    start_idx = None
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
+            if start_idx is None:
+                start_idx = idx
             text_buffer.append(char)
 
         # char is non-text AND buffer is text
         elif text_buffer:
             yield ''.join(text_buffer), start_idx
             text_buffer = []
-            start_idx = idx + 1
+            start_idx = None
 
     # yield remainder
     if text_buffer:
