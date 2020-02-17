@@ -347,6 +347,9 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
     :param split_sentences:
     :return:
     """
+    # if n == 1, you're using the wrong function
+    assert n >= 2
+
     if split_sentences:
         for sentence_tokens in sentence_split_tokens(text):
             words = [token.text for token in sentence_tokens if token.category is TokenCategory.WORD]
