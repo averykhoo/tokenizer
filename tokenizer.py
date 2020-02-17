@@ -281,7 +281,7 @@ def unicode_tokenize(text: str,
         return _unicode_tokenize_all_strings(text)
 
 
-def sentence_split_tokens(text: str, split_newline: Union[str, bool, None] = True) -> Generator[List[Token], Any, None]:
+def sentence_split_tokens(text: str, split_newline: Union[str, bool] = True) -> Generator[List[Token], Any, None]:
     """
     good-enough sentence splitting
     optional splitting on newlines to ensure sentences don't span paragraphs
@@ -329,7 +329,7 @@ def sentence_split_tokens(text: str, split_newline: Union[str, bool, None] = Tru
             yield buffer
 
 
-def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
+def sentence_split(text: str, split_newline: Union[str, bool] = True) -> Generator[str, Any, None]:
     for sentence_tokens in sentence_split_tokens(text, split_newline=split_newline):
         sentence = ''.join(token.text for token in sentence_tokens).strip()
         if sentence:
