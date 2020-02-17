@@ -3,6 +3,7 @@ from enum import Enum
 from enum import auto
 from typing import Any
 from typing import Generator
+from typing import List
 from typing import Tuple
 from typing import Union
 
@@ -280,7 +281,10 @@ def unicode_tokenize(text: str,
         return _unicode_tokenize_all_strings(text)
 
 
-def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
+def sentence_split_tokens(text: str,
+                          split_newline: Union[str, bool, None] = True,
+                          words_only: bool = False
+                          ) -> Generator[List[Token], Any, None]:
     """
     good-enough sentence splitting
     optional splitting on newlines to ensure sentences don't span paragraphs
@@ -288,8 +292,11 @@ def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> G
 
     :param text: to split in sentences
     :param split_newline: split paragraphs before sentence splitting
-    :return:
+    :param words_only: don't return non-word tokens
+    :return: list of Token objects
     """
+    token: Token
+
     if split_newline is True:
         paragraphs = [para.strip() for para in text.split('\n')]
     elif split_newline:
@@ -301,21 +308,36 @@ def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> G
     for para in paragraphs:
         buffer = []
         closed = False
-        for token in unicode_tokenize(para):
+        for token in unicode_tokenize(para, as_tokens=True):
             buffer.append(token)
 
-            if closed and is_space_char(token[0]):
-                sentence = ''.join(buffer).strip()
-                if sentence:
-                    yield sentence
+            if closed and token.category is TokenCategory.WHITESPACE:
+                if words_only:
+                    buffer = [token for token in buffer if token.category is TokenCategory.WORD]
+                if buffer:
+                    yield buffer
                 buffer = []
                 closed = False
                 continue
 
-            if token not in {'"', '\uff02', ')', '\uff09', '>', '\uff1e', ']', '\uff3d', '}', '\uff5d', '\u201d'}:
-                closed = token in CLOSING_PUNCTUATION
+            if token.category is TokenCategory.PUNCTUATION:
+                if token.text not in {'"', '\uff02',
+                                      ')', '\uff09',
+                                      '>', '\uff1e',
+                                      ']', '\uff3d',
+                                      '}', '\uff5d',
+                                      '\u201d'}:
+                    closed = token.text in CLOSING_PUNCTUATION
 
-        sentence = ''.join(buffer).strip()
+        if words_only:
+            buffer = [token for token in buffer if token.category is TokenCategory.WORD]
+        if buffer:
+            yield buffer
+
+
+def sentence_split(text: str, split_newline: Union[str, bool, None] = True) -> Generator[str, Any, None]:
+    for sentence_tokens in sentence_split_tokens(text, split_newline=split_newline):
+        sentence = ''.join(token.text for token in sentence_tokens).strip()
         if sentence:
             yield sentence
 
@@ -324,6 +346,7 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
     """
     yield n-grams of words (works ONLY for space-delimited languages)
     note that split_sentences will also split paragraphs by default
+    WARNING: if there are less than N tokens, no n-grams will be returned for the sentence
 
     :param text:
     :param n:
@@ -331,69 +354,11 @@ def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generat
     :return:
     """
     if split_sentences:
-        sentences = list(sentence_split(text))
+        sentences_tokens = list(sentence_split_tokens(text, words_only=True))
     else:
-        sentences = [text]
+        sentences_tokens = [list(unicode_tokenize(text, words_only=True, as_tokens=True))]
 
-    for sentence in sentences:
-        words = list(unicode_tokenize(sentence, words_only=True))
+    for sentence_tokens in sentences_tokens:
+        words = [token.text for token in sentence_tokens]
         for n_gram in zip(*[words[i:] for i in range(n)]):
             yield n_gram
-
-
-def _unicode_tokenize_merge_spaces(text: str) -> Generator[Token, Any, None]:
-    text_buffer = []  # stores chars for previous whitespace/word sequence
-    start_idx = None
-    category = None
-    for idx, char in enumerate(text):
-        # char is part of word
-        if is_text_char(char):
-            # buffer is empty
-            if not text_buffer:
-                text_buffer = [char]
-                start_idx = idx
-                category = TokenCategory.WORD
-            # buffer contains word
-            elif category is TokenCategory.WORD:
-                text_buffer.append(char)
-            # buffer contains space
-            else:
-                yield Token(''.join(text_buffer), start_idx, category)
-                text_buffer = [char]
-                start_idx = idx
-                category = TokenCategory.WORD
-
-        # char is space
-        elif is_space_char(char):
-            # buffer is empty
-            if not text_buffer:
-                text_buffer = [char]
-                start_idx = idx
-                category = TokenCategory.WHITESPACE
-            # buffer contains word
-            elif category is TokenCategory.WORD:
-                yield Token(''.join(text_buffer), start_idx, category)
-                text_buffer = [char]
-                start_idx = idx
-                category = TokenCategory.WHITESPACE
-            # buffer contains same space
-            elif text_buffer[-1] == char:
-                text_buffer.append(char)
-            # buffer contains different space
-            else:  # category is already WHITESPACE, don't need to set again
-                yield Token(''.join(text_buffer), start_idx, category)
-                text_buffer = [char]
-                start_idx = idx
-
-        # char is punctuation/symbol/unprintable
-        else:
-            # buffer is text or whitespace
-            if text_buffer:
-                yield Token(''.join(text_buffer), start_idx, category)
-                text_buffer = []
-
-            yield Token(char, idx, TokenCategory.PUNCTUATION)
-
-    # yield remainder
-    if text_buffer:
-        yield Token(''.join(text_buffer), start_idx, category)
