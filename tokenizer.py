@@ -131,36 +131,42 @@ CLOSING_PUNCTUATION = {
 }
 
 
-class _IsTextChar(dict):
-    def __missing__(self, char):
-        ret = self[char] = unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
-                                                          'Nd', 'Nl', 'No',  # numbers
-                                                          'Mn', 'Mc', 'Me',  # diacritics, etc
-                                                          'Co',  # private use char class
-                                                          }
-        return ret
+def memoize(f):
+    """
+    memoization decorator for a function taking ONLY a single argument
+    src: http://code.activestate.com/recipes/578231-probably-the-fastest-memoization-decorator-in-the-/
+    """
+
+    class MemoDict(dict):
+        def __missing__(self, key):
+            ret = self[key] = f(key)
+            return ret
+
+    return MemoDict().__getitem__
 
 
-class _IsPunctuationChar(dict):
-    def __missing__(self, char):
-        if char in UNPRINTABLE_CHARS:
-            ret = self[char] = True
-        else:
-            ret = self[char] = unicodedata.category(char) in {'Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po',
-                                                              'Sm', 'Sc', 'Sk', 'So',
-                                                              }
-        return ret
+@memoize
+def is_text_char(char):
+    return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
+                                          'Nd', 'Nl', 'No',  # numbers
+                                          'Mn', 'Mc', 'Me',  # diacritics, etc
+                                          'Co',  # private use char class
+                                          }
 
 
-class _IsSpaceChar(dict):
-    def __missing__(self, char):
-        ret = self[char] = char in UNICODE_SPACES
-        return ret
+@memoize
+def is_punctuation_char(char):
+    if char in UNPRINTABLE_CHARS:
+        return True
+    else:
+        return unicodedata.category(char) in {'Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po',
+                                              'Sm', 'Sc', 'Sk', 'So',
+                                              }
 
 
-is_text_char = _IsTextChar().__getitem__  # new item for each tokenizer
-is_punctuation_char = _IsPunctuationChar().__getitem__  # new item for each tokenizer
-is_space_char = _IsSpaceChar().__getitem__  # new item for each tokenizer
+@memoize
+def is_space_char(char):
+    return char in UNICODE_SPACES
 
 
 def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
