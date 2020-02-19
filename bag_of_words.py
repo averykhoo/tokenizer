@@ -214,16 +214,19 @@ class BagOfWordsCorpus:
     def num_unique_words_(self, document_index: int) -> int:
         return len(self._corpus[document_index][0])
 
+    def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]:
+        # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
+        return self._corpus, self.vocabulary
+
+    def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]):
+        self._corpus = state[0]
+        self.vocabulary = state[1]
+        self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
+
     def to_pickle(self, path, protocol_level=2):
         # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
         with open(path, 'wb') as f:
             pickle.dump((self.corpus, self.vocabulary), f, protocol=protocol_level)
-            return f.tell()
-
-    def to_pickle_(self, path, protocol_level=2):
-        # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
-        with open(path, 'wb') as f:
-            pickle.dump((self._corpus, self.vocabulary), f, protocol=protocol_level)
             return f.tell()
 
     @staticmethod
@@ -232,14 +235,5 @@ class BagOfWordsCorpus:
             corpus, vocabulary = pickle.load(f)
 
             return BagOfWordsCorpus(corpus=corpus,
-                                    vocabulary=vocabulary,
-                                    _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)})
-
-    @staticmethod
-    def from_pickle_(path):
-        with open(path, 'rb') as f:
-            corpus, vocabulary = pickle.load(f)
-
-            return BagOfWordsCorpus(_corpus=corpus,
                                     vocabulary=vocabulary,
                                     _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)})
