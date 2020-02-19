@@ -1,4 +1,6 @@
+import math
 import pickle
+import warnings
 from collections import Counter
 from dataclasses import dataclass
 from dataclasses import field
@@ -7,6 +9,7 @@ from typing import Dict
 from typing import Generator
 from typing import Iterable
 from typing import List
+from typing import Set
 from typing import Tuple
 
 
@@ -45,22 +48,65 @@ class BagOfWordsCorpus:
         self.corpus.append(tuple(c.most_common()))
         return len(self.corpus) - 1  # this is the document index
 
-    def words(self, document_index: int) -> Generator[str, Any, None]:
+    def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
+        if normalize:
+            total_words = self.num_words(document_index)
+            return {self._vocabulary[word_idx]: count / total_words for word_idx, count in self.corpus[document_index]}
+        else:
+            return {self._vocabulary[word_idx]: count for word_idx, count in self.corpus[document_index]}
+
+    def idf(self, document_indices: Iterable[int], add_one_smoothing: bool = True) -> Dict[str, float]:
+
+        # count words
+        _idx_idf = Counter()
+        n_docs = 0
+        for document_idx in document_indices:
+            n_docs += 1
+            _idx_idf.update(word_idx for word_idx, _ in self.corpus[document_idx])
+
+        # smoothing for idf
+        add_smooth = 1 if add_one_smoothing else 0
+        n_docs += add_smooth
+
+        # log + 1 helps avoid idf == 0 for words that exist in all docs
+        return {self._vocabulary[word_idx]: math.log(n_docs / (count + add_smooth)) + 1
+                for word_idx, count in _idx_idf.most_common()}
+
+    def stopwords(self, document_indices: Iterable[int], stopword_df=0.85) -> Set[str]:
+        assert 0.0 < stopword_df <= 1.0
+
+        # no stopwords if no limit
+        if stopword_df == 1.0:
+            return set()
+
+        # count words
+        _idx_idf = Counter()
+        n_docs = 0
+        for document_idx in document_indices:
+            n_docs += 1
+            _idx_idf.update(word_idx for word_idx, _ in self.corpus[document_idx])
+
+        # find stopwords
+        n_docs *= stopword_df
+        n_words = 0
+        stopwords = set()
+        for word_idx, count in _idx_idf.most_common():
+            if count > n_docs:
+                stopwords.add(self._vocabulary[word_idx])
+            else:
+                n_words += 1
+
+        # warn if all words became stopwords (i.e. no words are allowed)
+        if n_words == 0:
+            warnings.warn(f'all {len(stopwords)} words are stopwords,'
+                          f' perhaps try a lower stopword_df (currently {stopword_df})')
+        return stopwords
+
+    def all_words(self, document_index: int) -> Generator[str, Any, None]:
         for word_idx, count in self.corpus[document_index]:
             word = self._vocabulary[word_idx]
             for _ in range(count):
                 yield word
-
-    def tf(self, document_index: int) -> Dict[str, int]:
-        # todo: smoothing like TfidfVectorizer
-        return {self._vocabulary[word_idx]: count for word_idx, count in self.corpus[document_index]}
-
-    def idf(self, document_indices: Iterable[int]) -> Dict[str, int]:
-        # todo: smoothing like TfidfVectorizer
-        _idx_idf = Counter()
-        for document_idx in document_indices:
-            _idx_idf.update(word_idx for word_idx, _ in self.corpus[document_idx])
-        return {self._vocabulary[word_idx]: count for word_idx, count in _idx_idf}
 
     def unique_words(self, document_index: int) -> Generator[str, Any, None]:
         for word_idx, count in self.corpus[document_index]:
