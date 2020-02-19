@@ -44,6 +44,8 @@ class BagOfWordsCorpus:
         return self.vocabulary[word_index]
 
     def add_document(self, document_words: Iterable[str]) -> int:
+        # todo:dedupe bows
+
         # not thread safe!
         c = Counter(self.word_to_index(word) for word in document_words)
         self.corpus.append(tuple(c.most_common()))
