@@ -86,6 +86,10 @@ class BagOfWordsCorpus:
             n_docs += 1
             _idx_idf.update(word_idx for word_idx, _ in self.corpus[document_idx])
 
+        # warn if not enough docs are given
+        if 1 <= n_docs <= 10:
+            warnings.warn(f'there are only {n_docs} documents, stopwords may not be statistically valid')
+
         # find stopwords
         n_docs *= stopword_df
         n_words = 0
@@ -96,10 +100,18 @@ class BagOfWordsCorpus:
             else:
                 n_words += 1
 
-        # warn if all words became stopwords (i.e. no words are allowed)
-        if n_words == 0:
+        # warn if stopwords don't make sense
+        if len(stopwords) > n_words == 0 and n_docs <= 2:
+            warnings.warn(f'min_n_docs for stopwords is {n_docs},'
+                          f' so all {len(stopwords)} words are stopwords,'
+                          f' you should try a lower stopword_df (currently {stopword_df})')
+        elif len(stopwords) > n_words == 0:
             warnings.warn(f'all {len(stopwords)} words are stopwords,'
-                          f' perhaps try a lower stopword_df (currently {stopword_df})')
+                          f' you should try a lower stopword_df (currently {stopword_df})')
+        elif len(stopwords) > n_words * 2:
+            warnings.warn(f'there are at least 2x more stopwords ({len(stopwords)}) than non-stopwords ({n_words}),'
+                          f' you may want to try a lower stopword_df (currently {stopword_df})')
+
         return stopwords
 
     def all_words(self, document_index: int) -> Generator[str, Any, None]:
