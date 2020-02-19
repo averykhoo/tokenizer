@@ -17,6 +17,7 @@ from typing import Tuple
 class BagOfWordsCorpus:
     # actual documents bags-of-words stored here, as tuples of (word_idx, word_count), sorted by word_count descending
     corpus: List[Tuple[Tuple[int, int], ...]] = field(default_factory=list)
+    _corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
 
     # vocabulary: word <-> word_index
     vocabulary: List[str] = field(default_factory=list)
@@ -46,7 +47,8 @@ class BagOfWordsCorpus:
         # not thread safe!
         c = Counter(self.word_to_index(word) for word in document_words)
         self.corpus.append(tuple(c.most_common()))
-        return len(self.corpus) - 1  # this is the document index
+        self._corpus.append(tuple(zip(*c.most_common())))
+        return len(self._corpus) - 1  # this is the document index
 
     def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
         if normalize:
