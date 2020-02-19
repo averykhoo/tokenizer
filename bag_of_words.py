@@ -220,11 +220,26 @@ class BagOfWordsCorpus:
             pickle.dump((self.corpus, self.vocabulary), f, protocol=protocol_level)
             return f.tell()
 
+    def to_pickle_(self, path, protocol_level=2):
+        # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
+        with open(path, 'wb') as f:
+            pickle.dump((self._corpus, self.vocabulary), f, protocol=protocol_level)
+            return f.tell()
+
     @staticmethod
     def from_pickle(path):
         with open(path, 'rb') as f:
             corpus, vocabulary = pickle.load(f)
 
             return BagOfWordsCorpus(corpus=corpus,
+                                    vocabulary=vocabulary,
+                                    _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)})
+
+    @staticmethod
+    def from_pickle_(path):
+        with open(path, 'rb') as f:
+            corpus, vocabulary = pickle.load(f)
+
+            return BagOfWordsCorpus(_corpus=corpus,
                                     vocabulary=vocabulary,
                                     _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)})
