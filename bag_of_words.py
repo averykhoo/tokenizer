@@ -9,8 +9,6 @@ from typing import Iterable
 from typing import List
 from typing import Tuple
 
-from tokenizer import unicode_tokenize
-
 
 @dataclass
 class BagOfWordsCorpus:
@@ -44,12 +42,6 @@ class BagOfWordsCorpus:
     def add_document(self, document_words: Iterable[str]) -> int:
         # not thread safe!
         c = Counter(self.word_to_index(word) for word in document_words)
-        self.corpus.append(tuple(c.most_common()))
-        return len(self.corpus) - 1  # this is the document index
-
-    def add_document_text(self, document: str) -> int:
-        # not thread safe!
-        c = Counter(self.word_to_index(word) for word in unicode_tokenize(document, words_only=True))
         self.corpus.append(tuple(c.most_common()))
         return len(self.corpus) - 1  # this is the document index
 
