@@ -19,8 +19,8 @@ class BagOfWordsCorpus:
     corpus: List[Tuple[Tuple[int, int], ...]] = field(default_factory=list)
 
     # vocabulary: word <-> word_index
+    vocabulary: List[str] = field(default_factory=list)
     _vocabulary_to_idx: Dict[str, int] = field(default_factory=dict)
-    _vocabulary: List[str] = field(default_factory=list)
 
     def word_to_index(self, word: str) -> int:
         # not thread safe!
@@ -31,16 +31,16 @@ class BagOfWordsCorpus:
 
         # add word
         assert isinstance(word, str), word
-        _idx = self._vocabulary_to_idx[word] = len(self._vocabulary)
-        self._vocabulary.append(word)
+        _idx = self._vocabulary_to_idx[word] = len(self.vocabulary)
+        self.vocabulary.append(word)
 
         # double-check invariants before returning
-        assert len(self._vocabulary_to_idx) == len(self._vocabulary) == _idx + 1
-        assert self._vocabulary[_idx] == word, (self._vocabulary[_idx], word)  # check race condition
+        assert len(self._vocabulary_to_idx) == len(self.vocabulary) == _idx + 1
+        assert self.vocabulary[_idx] == word, (self.vocabulary[_idx], word)  # check race condition
         return _idx
 
     def index_to_word(self, word_index: int) -> str:
-        return self._vocabulary[word_index]
+        return self.vocabulary[word_index]
 
     def add_document(self, document_words: Iterable[str]) -> int:
         # not thread safe!
@@ -51,9 +51,9 @@ class BagOfWordsCorpus:
     def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
         if normalize:
             total_words = self.num_words(document_index)
-            return {self._vocabulary[word_idx]: count / total_words for word_idx, count in self.corpus[document_index]}
+            return {self.vocabulary[word_idx]: count / total_words for word_idx, count in self.corpus[document_index]}
         else:
-            return {self._vocabulary[word_idx]: count for word_idx, count in self.corpus[document_index]}
+            return {self.vocabulary[word_idx]: count for word_idx, count in self.corpus[document_index]}
 
     def idf(self, document_indices: Iterable[int], add_one_smoothing: bool = True) -> Dict[str, float]:
 
@@ -69,7 +69,7 @@ class BagOfWordsCorpus:
         n_docs += add_smooth
 
         # log + 1 helps avoid idf == 0 for words that exist in all docs
-        return {self._vocabulary[word_idx]: math.log(n_docs / (count + add_smooth)) + 1
+        return {self.vocabulary[word_idx]: math.log(n_docs / (count + add_smooth)) + 1
                 for word_idx, count in _idx_idf.most_common()}
 
     def stopwords(self, document_indices: Iterable[int], stopword_df=0.85) -> Set[str]:
@@ -92,7 +92,7 @@ class BagOfWordsCorpus:
         stopwords = set()
         for word_idx, count in _idx_idf.most_common():
             if count > n_docs:
-                stopwords.add(self._vocabulary[word_idx])
+                stopwords.add(self.vocabulary[word_idx])
             else:
                 n_words += 1
 
@@ -104,21 +104,23 @@ class BagOfWordsCorpus:
 
     def all_words(self, document_index: int) -> Generator[str, Any, None]:
         for word_idx, count in self.corpus[document_index]:
-            word = self._vocabulary[word_idx]
+            word = self.vocabulary[word_idx]
             for _ in range(count):
                 yield word
 
-    def unique_words(self, document_index: int) -> Generator[str, Any, None]:
-        for word_idx, count in self.corpus[document_index]:
-            yield self._vocabulary[word_idx]
+    def unique_words(self, document_index: int) -> List[str]:
+        return [self.vocabulary[word_idx] for word_idx, count in self.corpus[document_index]]
 
     def num_words(self, document_index: int) -> int:
         return sum(count for _, count in self.corpus[document_index])
 
+    def num_unique_words(self, document_index: int) -> int:
+        return len(self.corpus[document_index])
+
     def to_pickle(self, path, protocol_level=2):
         # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
         with open(path, 'wb') as f:
-            pickle.dump((self.corpus, self._vocabulary), f, protocol=protocol_level)
+            pickle.dump((self.corpus, self.vocabulary), f, protocol=protocol_level)
             return f.tell()
 
     @staticmethod
@@ -127,5 +129,5 @@ class BagOfWordsCorpus:
             corpus, vocabulary = pickle.load(f)
 
             return BagOfWordsCorpus(corpus=corpus,
-                                    _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)},
-                                    _vocabulary=vocabulary)
+                                    vocabulary=vocabulary,
+                                    _vocabulary_to_idx={word: idx for idx, word in enumerate(vocabulary)})
