@@ -3,9 +3,7 @@ import warnings
 from collections import Counter
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Any
 from typing import Dict
-from typing import Generator
 from typing import Iterable
 from typing import List
 from typing import Set
@@ -14,8 +12,9 @@ from typing import Tuple
 
 @dataclass
 class BagOfWordsCorpus:
-    # actual documents bags-of-words stored here, as tuples of (word_idx, word_count), sorted by word_count descending
+    # bags-of-words stored as tuples of (bow_word_ids, bow_word_counts), ordered by bow_word_count desc
     _corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
+    _seen: Dict[int, Set[int]] = field(default_factory=dict)
 
     # vocabulary: word <-> word_index
     vocabulary: List[str] = field(default_factory=list)
@@ -42,15 +41,21 @@ class BagOfWordsCorpus:
         return self.vocabulary[word_index]
 
     def add_document(self, document_words: Iterable[str]) -> int:
-        # todo:dedupe bows
-
         # not thread safe!
         c = Counter(self.word_to_index(word) for word in document_words)
-        if c:
-            self._corpus.append(tuple(zip(*c.most_common())))
-        else:
-            self._corpus.append(((), ()))
-        return len(self._corpus) - 1  # this is the document index
+        _bow = tuple(zip(*c.most_common())) if c else ((), ())
+
+        # find duplicate if exists, and don't re-add
+        h = hash(_bow)
+        for document_idx in self._seen.get(h, []):
+            if self._corpus[document_idx] == _bow:
+                return document_idx
+
+        # add new unseen doc
+        document_idx = len(self._corpus)
+        self._corpus.append(_bow)
+        self._seen.setdefault(h, set()).add(document_idx)
+        return document_idx
 
     def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
         if normalize:
@@ -120,26 +125,33 @@ class BagOfWordsCorpus:
 
         return stopwords
 
-    def all_words(self, document_index: int) -> Generator[str, Any, None]:
+    def words(self, document_index: int) -> List[str]:
+        document_words = []
         for word_idx, count in zip(*self._corpus[document_index]):
             word = self.vocabulary[word_idx]
             for _ in range(count):
-                yield word
-
-    def unique_words(self, document_index: int) -> List[str]:
-        return [self.vocabulary[word_idx] for word_idx in self._corpus[document_index][0]]
+                document_words.append(word)
+        return document_words
 
     def num_words(self, document_index: int) -> int:
         return sum(self._corpus[document_index][1])
 
+    def unique_words(self, document_index: int) -> List[str]:
+        return [self.vocabulary[word_idx] for word_idx in self._corpus[document_index][0]]
+
     def num_unique_words(self, document_index: int) -> int:
-        return len(self._corpus[document_index][0])
+        return len(self._corpus[document_index][1])
 
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]:
-        # not necessary to store `_vocabulary_to_idx` as it's just a reverse lookup table for `_vocabulary`
         return self._corpus, self.vocabulary
 
     def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]):
-        self._corpus = state[0]
-        self.vocabulary = state[1]
+        self._corpus, self.vocabulary = state
+
+        # rebuild _seen: hash of bow -> doc_idx
+        self._seen = dict()
+        for _idx, _bow in enumerate(self._corpus):
+            self._seen.setdefault(hash(_bow), set()).add(_idx)
+
+        # rebuild vocab reverse lookup
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
