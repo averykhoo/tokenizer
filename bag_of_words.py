@@ -80,7 +80,7 @@ class BagOfWordsCorpus:
         return {self.vocabulary[word_idx]: math.log(_n_docs / (count + _smooth)) + 1
                 for word_idx, count in _idx_idf.most_common()}
 
-    def stopwords(self, document_indices: Iterable[int], stopword_df=0.85) -> Set[str]:
+    def stopwords(self, document_indices: Iterable[int], stopword_df: float = 0.85) -> Set[str]:
         assert 0.0 < stopword_df <= 1.0
 
         # no stopwords if no limit
@@ -125,9 +125,7 @@ class BagOfWordsCorpus:
     def words(self, document_index: int) -> List[str]:
         _words = []
         for word_idx, count in zip(*self._corpus[document_index]):
-            word = self.vocabulary[word_idx]
-            for _ in range(count):
-                _words.append(word)
+            _words.extend([self.vocabulary[word_idx]] * count)
         return _words
 
     def num_words(self, document_index: int) -> int:
