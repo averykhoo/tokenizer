@@ -15,6 +15,7 @@ class BagOfWordsCorpus:
     # bags-of-words stored as tuples of (bow_word_ids, bow_word_counts), ordered by bow_word_count desc
     _corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
     _seen: Dict[int, Set[int]] = field(default_factory=dict)
+    _dedupe_hint: Dict[str, int] = field(default_factory=dict)
 
     # vocabulary: word <-> word_index
     vocabulary: List[str] = field(default_factory=list)
@@ -137,11 +138,11 @@ class BagOfWordsCorpus:
     def num_unique_words(self, document_index: int) -> int:
         return len(self._corpus[document_index][1])
 
-    def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]:
-        return self._corpus, self.vocabulary
+    def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]:
+        return self._corpus, self.vocabulary, self._dedupe_hint
 
-    def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str]]):
-        self._corpus, self.vocabulary = state
+    def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]):
+        self._corpus, self.vocabulary, self._dedupe_hint = state
 
         # rebuild _seen: hash of bow -> doc_idx
         self._seen = dict()
