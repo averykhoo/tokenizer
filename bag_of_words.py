@@ -37,16 +37,13 @@ class BagOfWordsCorpus:
         assert self.vocabulary[_idx] == word, (self.vocabulary[_idx], word)  # check race condition
         return _idx
 
-    def index_to_word(self, word_index: int) -> str:
-        return self.vocabulary[word_index]
-
     def add_document(self, document_words: Iterable[str]) -> int:
         # not thread safe!
         _word_counts = Counter(self.word_to_index(word) for word in document_words)
         _bow = tuple(zip(*_word_counts.most_common())) if _word_counts else ((), ())
 
         # find duplicate if exists, and don't re-add
-        _bow_hash = hash(tuple(_bow))
+        _bow_hash = hash(_bow)
         for _idx in self._seen.get(_bow_hash, []):
             if self._corpus[_idx] == _bow:
                 return _idx
@@ -151,7 +148,7 @@ class BagOfWordsCorpus:
         # rebuild _seen: hash of bow -> doc_idx
         self._seen = dict()
         for _idx, _bow in enumerate(self._corpus):
-            self._seen.setdefault(hash(tuple(_bow)), set()).add(_idx)
+            self._seen.setdefault(hash(_bow), set()).add(_idx)
 
         # rebuild vocab reverse lookup
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
