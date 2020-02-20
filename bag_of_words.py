@@ -42,25 +42,25 @@ class BagOfWordsCorpus:
 
     def add_document(self, document_words: Iterable[str]) -> int:
         # not thread safe!
-        c = Counter(self.word_to_index(word) for word in document_words)
-        _bow = tuple(zip(*c.most_common())) if c else ((), ())
+        _word_counts = Counter(self.word_to_index(word) for word in document_words)
+        _bow = tuple(zip(*_word_counts.most_common())) if _word_counts else ((), ())
 
         # find duplicate if exists, and don't re-add
-        h = hash(_bow)
-        for document_idx in self._seen.get(h, []):
-            if self._corpus[document_idx] == _bow:
-                return document_idx
+        _bow_hash = hash(tuple(_bow))
+        for _idx in self._seen.get(_bow_hash, []):
+            if self._corpus[_idx] == _bow:
+                return _idx
 
         # add new unseen doc
-        document_idx = len(self._corpus)
+        _idx = len(self._corpus)
         self._corpus.append(_bow)
-        self._seen.setdefault(h, set()).add(document_idx)
-        return document_idx
+        self._seen.setdefault(_bow_hash, set()).add(_idx)
+        return _idx
 
     def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
         if normalize:
-            total_words = self.num_words(document_index)
-            return {self.vocabulary[word_idx]: count / total_words
+            _total_words = self.num_words(document_index)
+            return {self.vocabulary[word_idx]: count / _total_words
                     for word_idx, count in zip(*self._corpus[document_index])}
         else:
             return {self.vocabulary[word_idx]: count
@@ -70,17 +70,17 @@ class BagOfWordsCorpus:
 
         # count words
         _idx_idf = Counter()
-        n_docs = 0
+        _n_docs = 0
         for document_idx in document_indices:
-            n_docs += 1
+            _n_docs += 1
             _idx_idf.update(word_idx for word_idx in self._corpus[document_idx][0])
 
         # smoothing for idf
-        add_smooth = 1 if add_one_smoothing else 0
-        n_docs += add_smooth
+        _smooth = 1 if add_one_smoothing else 0
+        _n_docs += _smooth
 
         # log + 1 helps avoid idf == 0 for words that exist in all docs
-        return {self.vocabulary[word_idx]: math.log(n_docs / (count + add_smooth)) + 1
+        return {self.vocabulary[word_idx]: math.log(_n_docs / (count + _smooth)) + 1
                 for word_idx, count in _idx_idf.most_common()}
 
     def stopwords(self, document_indices: Iterable[int], stopword_df=0.85) -> Set[str]:
@@ -92,46 +92,46 @@ class BagOfWordsCorpus:
 
         # count words
         _idx_idf = Counter()
-        n_docs = 0
+        _n_docs = 0
         for document_idx in document_indices:
-            n_docs += 1
+            _n_docs += 1
             _idx_idf.update(word_idx for word_idx in self._corpus[document_idx][0])
 
         # warn if not enough docs are given
-        if 1 <= n_docs <= 10:
-            warnings.warn(f'there are only {n_docs} documents, stopwords may not be statistically valid')
+        if 1 <= _n_docs <= 10:
+            warnings.warn(f'there are only {_n_docs} documents, stopwords may not be statistically valid')
 
         # find stopwords
-        n_docs *= stopword_df
-        n_words = 0
-        stopwords = set()
+        _n_docs *= stopword_df
+        _n_words = 0
+        _stopwords = set()
         for word_idx, count in _idx_idf.most_common():
-            if count > n_docs:
-                stopwords.add(self.vocabulary[word_idx])
+            if count > _n_docs:
+                _stopwords.add(self.vocabulary[word_idx])
             else:
-                n_words += 1
+                _n_words += 1
 
         # warn if stopwords don't make sense
-        if len(stopwords) > n_words == 0 and n_docs <= 2:
-            warnings.warn(f'min_n_docs for stopwords is {n_docs},'
-                          f' so all {len(stopwords)} words are stopwords,'
+        if len(_stopwords) > _n_words == 0 and _n_docs <= 2:
+            warnings.warn(f'min_n_docs for stopwords is {_n_docs},'
+                          f' so all {len(_stopwords)} words are stopwords,'
                           f' you should try a lower stopword_df (currently {stopword_df})')
-        elif len(stopwords) > n_words == 0:
-            warnings.warn(f'all {len(stopwords)} words are stopwords,'
+        elif len(_stopwords) > _n_words == 0:
+            warnings.warn(f'all {len(_stopwords)} words are stopwords,'
                           f' you should try a lower stopword_df (currently {stopword_df})')
-        elif len(stopwords) > n_words * 2:
-            warnings.warn(f'there are at least 2x more stopwords ({len(stopwords)}) than non-stopwords ({n_words}),'
+        elif len(_stopwords) > _n_words * 2:
+            warnings.warn(f'there are at least 2x more stopwords ({len(_stopwords)}) than non-stopwords ({_n_words}),'
                           f' you may want to try a lower stopword_df (currently {stopword_df})')
 
-        return stopwords
+        return _stopwords
 
     def words(self, document_index: int) -> List[str]:
-        document_words = []
+        _words = []
         for word_idx, count in zip(*self._corpus[document_index]):
             word = self.vocabulary[word_idx]
             for _ in range(count):
-                document_words.append(word)
-        return document_words
+                _words.append(word)
+        return _words
 
     def num_words(self, document_index: int) -> int:
         return sum(self._corpus[document_index][1])
@@ -151,7 +151,7 @@ class BagOfWordsCorpus:
         # rebuild _seen: hash of bow -> doc_idx
         self._seen = dict()
         for _idx, _bow in enumerate(self._corpus):
-            self._seen.setdefault(hash(_bow), set()).add(_idx)
+            self._seen.setdefault(hash(tuple(_bow)), set()).add(_idx)
 
         # rebuild vocab reverse lookup
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
