@@ -12,13 +12,23 @@ from bag_of_words import BagOfWordsCorpus
 bow = BagOfWordsCorpus()
 
 # add document 1
-d1_index = bow.add_document('the quick brown fox jumped over the lazy dog'.split())
+d1_index = bow.add_document('the quick brown fox jumped over'.split())
 
-# add document 2 (with a document id)
-bow.add_document('the quick brown fox jumped over the lazy dog'.split(), document_id='d2')
+# add document 2 (with a doc_id)
+d2_index = bow.add_document('the lazy dog'.split(), document_id='d2')
 
 # calculate idf
-idf = bow.idf([d1_index, 'd2', 'd2'])  # you can mix and duplicate ids and indices
+# note: you can mix and duplicate doc_ids and indices
+idf = bow.idf([d1_index, 'd2', 'd2'])
+
+# set doc_id, or duplicate a bow from its doc_id
+bow.set_document_id('d1', d1_index)
+
+# duplicate a bow to a new doc_id
+bow.set_document_id('d3', d1_index)
+
+# re-calculate idf with new doc_ids
+idf2 = bow.idf(['d1', 'd2', 'd2', 'd3'])
 ```
 
 ### Other things
