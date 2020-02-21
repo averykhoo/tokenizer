@@ -1,4 +1,5 @@
 import math
+import pickle
 import warnings
 from collections import Counter
 from dataclasses import dataclass
@@ -73,7 +74,7 @@ class BagOfWordsCorpus:
         # build bow (ordered by count desc, word_idx asc)
         _word_idx_counts = Counter(self.word_to_index(word) for word in document_words)
         if _word_idx_counts:
-            _bow = tuple(zip(*sorted(_word_idx_counts.most_common(), key=lambda w, c: (-c, w))))
+            _bow = tuple(zip(*sorted(_word_idx_counts.most_common(), key=lambda x: (-x[1], x[0]))))
         else:
             _bow = ((), ())
 
@@ -111,14 +112,14 @@ class BagOfWordsCorpus:
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
 
         # count words
-        _idx_idf = Counter()
+        _idx_df = Counter()
         _n_docs = 0
         for _document_idx in document_indices:
             _n_docs += 1
-            _idx_idf.update(word_idx for word_idx in self._corpus[_document_idx][0])
+            _idx_df.update(word_idx for word_idx in self._corpus[_document_idx][0])
 
         # no docs, or no words
-        if len(_idx_idf) == 0:
+        if len(_idx_df) == 0:
             return dict()
 
         # smoothing for idf
@@ -127,7 +128,7 @@ class BagOfWordsCorpus:
 
         # log + 1 helps avoid idf == 0 for words that exist in all docs
         return {self.vocabulary[word_idx]: math.log(_n_docs / (count + _smooth)) + 1
-                for word_idx, count in _idx_idf.most_common()}
+                for word_idx, count in _idx_df.most_common()}
 
     def stopwords(self, document_indices: Iterable[int], stopword_df: float = 0.85) -> Set[str]:
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
@@ -138,11 +139,11 @@ class BagOfWordsCorpus:
             return set()
 
         # count words
-        _idx_idf = Counter()
+        _idx_df = Counter()
         _n_docs = 0
         for _document_idx in document_indices:
             _n_docs += 1
-            _idx_idf.update(word_idx for word_idx in self._corpus[_document_idx][0])
+            _idx_df.update(word_idx for word_idx in self._corpus[_document_idx][0])
 
         # warn if not enough docs are given
         if 1 <= _n_docs <= 10:
@@ -152,7 +153,7 @@ class BagOfWordsCorpus:
         _n_docs *= stopword_df
         _n_words = 0
         _stopwords = set()
-        for word_idx, count in _idx_idf.most_common():
+        for word_idx, count in _idx_df.most_common():
             if count > _n_docs:
                 _stopwords.add(self.vocabulary[word_idx])
             else:
@@ -241,3 +242,13 @@ class BagOfWordsCorpus:
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
 
         return self
+
+    def to_pickle(self, path, **kwargs) -> int:
+        with open(path, 'wb') as f:
+            pickle.dump(self, f, **kwargs)
+            return f.tell()
+
+    @staticmethod
+    def from_pickle(path, **kwargs) -> 'BagOfWordsCorpus':
+        with open(path, 'rb') as f:
+            return pickle.load(f, **kwargs)
