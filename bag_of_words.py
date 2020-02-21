@@ -88,9 +88,9 @@ class BagOfWordsCorpus:
 
         # check for existing document
         if document_id is not None:
-            assert isinstance(document_id, str), document_id
             if document_id in self._doc_id_to_idx:
                 return self._doc_id_to_idx[document_id]
+            assert isinstance(document_id, str), document_id
 
         # build bow (ordered by count desc, word_idx asc)
         _word_idx_counts = Counter(self._resolve_word_index(word) for word in document_words)
