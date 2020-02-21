@@ -193,19 +193,38 @@ class BagOfWordsCorpus:
         return len(self._corpus[document_index][1])
 
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]:
-        # todo: pack `_document_id_to_idx` into List[Union[None, str, Tuple[str, ...]]]
+        _id_to_idx: List = [[] for _ in range(len(self._corpus))]
+        for _document_id, _document_idx in self._document_id_to_idx.items():
+            _id_to_idx[_document_idx].append(_document_id)
+
+        for _idx, _ids in enumerate(_id_to_idx):
+            if len(_ids) == 0:
+                _id_to_idx[_idx] = None
+            elif len(_ids) == 1:
+                _id_to_idx[_idx] = _id_to_idx[_idx][0]
+            else:
+                _id_to_idx[_idx] = tuple(_id_to_idx[_idx])
 
         return self._corpus, self.vocabulary, self._document_id_to_idx
 
     def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]):
-        # todo: unpack `_document_id_to_idx` from List[Union[None, str, Tuple[str, ...]]]
-
-        self._corpus, self.vocabulary, self._document_id_to_idx = state
+        self._corpus, self.vocabulary, _id_to_idx = state
 
         # rebuild _seen: hash of bow -> doc_idx
         self._seen = dict()
         for _idx, _bow in enumerate(self._corpus):
             self._seen.setdefault(hash(_bow), set()).add(_idx)
+
+        # rebuild document id lookup
+        self._document_id_to_idx = dict()
+        for _idx, _ids in enumerate(_id_to_idx):
+            if isinstance(_ids, str):
+                self.set_document_id(_ids, _idx)
+            elif isinstance(_ids, tuple):
+                for _id in _ids:
+                    self.set_document_id(_id, _idx)
+            else:
+                assert _ids is None
 
         # rebuild vocab reverse lookup
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
