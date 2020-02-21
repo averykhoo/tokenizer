@@ -197,13 +197,17 @@ class BagOfWordsCorpus:
         for _document_id, _document_idx in self._document_id_to_idx.items():
             _id_to_idx[_document_idx].append(_document_id)
 
+        _last_non_none = -1
         for _idx, _ids in enumerate(_id_to_idx):
             if len(_ids) == 0:
                 _id_to_idx[_idx] = None
             elif len(_ids) == 1:
                 _id_to_idx[_idx] = _id_to_idx[_idx][0]
+                _last_non_none = _idx
             else:
                 _id_to_idx[_idx] = tuple(_id_to_idx[_idx])
+                _last_non_none = _idx
+        _id_to_idx = _id_to_idx[:_last_non_none + 1]
 
         return self._corpus, self.vocabulary, self._document_id_to_idx
 
