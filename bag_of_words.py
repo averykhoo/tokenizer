@@ -15,37 +15,37 @@ from typing import Union
 
 @dataclass
 class BagOfWordsCorpus:
-    # bags-of-words stored as tuples of (bow_word_ids, bow_word_counts), ordered by bow_word_count desc
-    _corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
-    _seen: Dict[int, Set[int]] = field(default_factory=dict)
-    _document_id_to_idx: Dict[str, int] = field(default_factory=dict)
-
     # vocabulary: word <-> word_index
     vocabulary: List[str] = field(default_factory=list)
-    _vocabulary_to_idx: Dict[str, int] = field(default_factory=dict)
+    _vocab_indices: Dict[str, int] = field(default_factory=dict)
 
-    def word_to_index(self, word: str) -> int:
+    # bags-of-words stored as tuples of (bow_word_indices, bow_word_counts), ordered by bow_word_count desc
+    _bow_corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
+    _bow_hash_to_idx: Dict[int, Set[int]] = field(default_factory=dict)
+    _doc_id_to_idx: Dict[str, int] = field(default_factory=dict)
+
+    def _resolve_word_index(self, word: str) -> int:
 
         # return if known word
-        if word in self._vocabulary_to_idx:
-            return self._vocabulary_to_idx[word]
+        if word in self._vocab_indices:
+            return self._vocab_indices[word]
 
         # add if unknown word
         assert isinstance(word, str), word
-        _idx = self._vocabulary_to_idx[word] = len(self.vocabulary)
+        _idx = self._vocab_indices[word] = len(self.vocabulary)
         self.vocabulary.append(word)
 
         # double-check invariants before returning
-        assert len(self._vocabulary_to_idx) == len(self.vocabulary) == _idx + 1
+        assert len(self._vocab_indices) == len(self.vocabulary) == _idx + 1
         assert self.vocabulary[_idx] == word, (self.vocabulary[_idx], word)  # check race condition
         return _idx
 
     def set_document_id(self, document_id: str, document_index: int) -> int:
         assert isinstance(document_id, str), document_id
         assert isinstance(document_index, int), document_index
-        assert document_index < len(self._corpus)
+        assert document_index < len(self._bow_corpus)
 
-        _document_index = self._document_id_to_idx.setdefault(document_id, document_index)
+        _document_index = self._doc_id_to_idx.setdefault(document_id, document_index)
         if _document_index != document_index:
             raise KeyError(document_id, document_index, _document_index)
 
@@ -55,17 +55,23 @@ class BagOfWordsCorpus:
 
         # does document id exist?
         if isinstance(document_id, str):
-            if document_id in self._document_id_to_idx:
-                return self._document_id_to_idx[document_id]
+            if document_id in self._doc_id_to_idx:
+                return self._doc_id_to_idx[document_id]
             raise KeyError(document_id)
 
         # maybe its a document index?
         if isinstance(document_id, int):
-            if document_id < len(self._corpus):
+            if document_id < len(self._bow_corpus):
                 return document_id
             raise KeyError(document_id)
 
         raise TypeError(document_id)
+
+    def _resolve_document_ids(self, document_ids: Union[str, int, Iterable[Union[str, int]]]) -> List[int]:
+        if isinstance(document_ids, (str, int)):
+            return [self._resolve_document_id(document_ids)]
+        else:
+            return [self._resolve_document_id(document_idx) for document_idx in document_ids]
 
     def add_document(self, document_words: Iterable[str], document_id: Optional[str] = None) -> int:
         if isinstance(document_words, str):
@@ -74,11 +80,11 @@ class BagOfWordsCorpus:
             assert isinstance(document_id, str), document_id
 
             # if we the doc already exists
-            if document_id in self._document_id_to_idx:
-                return self._document_id_to_idx[document_id]
+            if document_id in self._doc_id_to_idx:
+                return self._doc_id_to_idx[document_id]
 
         # build bow (ordered by count desc, word_idx asc)
-        _word_idx_counts = Counter(self.word_to_index(word) for word in document_words)
+        _word_idx_counts = Counter(self._resolve_word_index(word) for word in document_words)
         if _word_idx_counts:
             _bow = tuple(zip(*sorted(_word_idx_counts.most_common(), key=lambda x: (-x[1], x[0]))))
         else:
@@ -86,16 +92,16 @@ class BagOfWordsCorpus:
 
         # find duplicate if exists, and don't re-add
         _bow_hash = hash(_bow)
-        for _document_idx in self._seen.get(_bow_hash, []):
-            if self._corpus[_document_idx] == _bow:
+        for _document_idx in self._bow_hash_to_idx.get(_bow_hash, []):
+            if self._bow_corpus[_document_idx] == _bow:
                 if document_id is not None:
                     self.set_document_id(document_id, _document_idx)
                 return _document_idx
 
         # add new unseen doc
-        _document_idx = len(self._corpus)
-        self._corpus.append(_bow)
-        self._seen.setdefault(_bow_hash, set()).add(_document_idx)
+        _document_idx = len(self._bow_corpus)
+        self._bow_corpus.append(_bow)
+        self._bow_hash_to_idx.setdefault(_bow_hash, set()).add(_document_idx)
         if document_id is not None:
             self.set_document_id(document_id, _document_idx)
         return _document_idx
@@ -104,15 +110,12 @@ class BagOfWordsCorpus:
                     normalize: bool = False
                     ) -> Dict[str, int]:
 
-        if isinstance(document_indices, (str, int)):
-            document_indices = [self._resolve_document_id(document_indices)]
-        else:
-            document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
+        document_indices = self._resolve_document_ids(document_indices)
 
         # sum over all word_idx counts
         _idx_counts = Counter()
         for _document_idx in document_indices:
-            for _word_idx, _count in zip(*self._corpus[_document_idx]):
+            for _word_idx, _count in zip(*self._bow_corpus[_document_idx]):
                 _idx_counts[_word_idx] += _count
 
         # calculate normalized word count (sums to 1)
@@ -127,18 +130,17 @@ class BagOfWordsCorpus:
                     for word_idx, count in _idx_counts.most_common()}
 
     def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
-        if isinstance(document_indices, (str, int)):
-            raise TypeError(document_indices)
-        document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
+        document_indices = self._resolve_document_ids(document_indices)
 
         # count words
         _idx_df = Counter()
         _n_docs = 0
         for _document_idx in document_indices:
             _n_docs += 1
-            _idx_df.update(word_idx for word_idx in self._corpus[_document_idx][0])
+            _idx_df.update(word_idx for word_idx in self._bow_corpus[_document_idx][0])
 
         # no docs, or no words
+        # todo: warn?
         if len(_idx_df) == 0:
             return dict()
 
@@ -151,9 +153,7 @@ class BagOfWordsCorpus:
                 for word_idx, count in _idx_df.most_common()}
 
     def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
-        if isinstance(document_indices, (str, int)):
-            raise TypeError(document_indices)
-        document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
+        document_indices = self._resolve_document_ids(document_indices)
         assert 0.0 < stopword_df <= 1.0
 
         # no stopwords if no limit
@@ -165,7 +165,7 @@ class BagOfWordsCorpus:
         _n_docs = 0
         for _document_idx in document_indices:
             _n_docs += 1
-            _idx_df.update(word_idx for word_idx in self._corpus[_document_idx][0])
+            _idx_df.update(word_idx for word_idx in self._bow_corpus[_document_idx][0])
 
         # warn if not enough docs are given
         if 1 <= _n_docs <= 10:
@@ -196,30 +196,34 @@ class BagOfWordsCorpus:
         return _stopwords
 
     def words(self, document_index: Union[str, int]) -> List[str]:
+        # todo: apply to multiple docs?
         document_index = self._resolve_document_id(document_index)
 
         _words = []
-        for word_idx, count in zip(*self._corpus[document_index]):
+        for word_idx, count in zip(*self._bow_corpus[document_index]):
             _words.extend([self.vocabulary[word_idx]] * count)
         return _words
 
     def num_words(self, document_index: Union[str, int]) -> int:
+        # todo: apply to multiple docs?
         document_index = self._resolve_document_id(document_index)
-        return sum(self._corpus[document_index][1])
+        return sum(self._bow_corpus[document_index][1])
 
     def unique_words(self, document_index: Union[str, int]) -> List[str]:
+        # todo: apply to multiple docs?
         document_index = self._resolve_document_id(document_index)
-        return [self.vocabulary[word_idx] for word_idx in self._corpus[document_index][0]]
+        return [self.vocabulary[word_idx] for word_idx in self._bow_corpus[document_index][0]]
 
     def num_unique_words(self, document_index: Union[str, int]) -> int:
+        # todo: apply to multiple docs?
         document_index = self._resolve_document_id(document_index)
-        return len(self._corpus[document_index][1])
+        return len(self._bow_corpus[document_index][1])
 
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
                                     List[str],
                                     List[Union[None, str, Tuple[str, ...]]]]:
-        _id_to_idx: List = [[] for _ in range(len(self._corpus))]
-        for _document_id, _document_idx in self._document_id_to_idx.items():
+        _id_to_idx: List = [[] for _ in range(len(self._bow_corpus))]
+        for _document_id, _document_idx in self._doc_id_to_idx.items():
             _id_to_idx[_document_idx].append(_document_id)
 
         _last_non_none = -1
@@ -234,7 +238,7 @@ class BagOfWordsCorpus:
                 _last_non_none = _idx
         _id_to_idx = _id_to_idx[:_last_non_none + 1]
 
-        return self._corpus, self.vocabulary, _id_to_idx
+        return self._bow_corpus, self.vocabulary, _id_to_idx
 
     def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
                                         List[str],
@@ -242,15 +246,15 @@ class BagOfWordsCorpus:
                      ) -> 'BagOfWordsCorpus':
 
         # set corpus and vocab, need to unpack the id-to-idx mapping
-        self._corpus, self.vocabulary, _id_to_idx = state
+        self._bow_corpus, self.vocabulary, _id_to_idx = state
 
         # rebuild _seen: hash of bow -> doc_idx
-        self._seen = dict()
-        for _idx, _bow in enumerate(self._corpus):
-            self._seen.setdefault(hash(_bow), set()).add(_idx)
+        self._bow_hash_to_idx = dict()
+        for _idx, _bow in enumerate(self._bow_corpus):
+            self._bow_hash_to_idx.setdefault(hash(_bow), set()).add(_idx)
 
         # unpack document id to idx lookup
-        self._document_id_to_idx = dict()
+        self._doc_id_to_idx = dict()
         for _idx, _ids in enumerate(_id_to_idx):
             if isinstance(_ids, str):
                 self.set_document_id(_ids, _idx)
@@ -261,7 +265,7 @@ class BagOfWordsCorpus:
                 assert _ids is None
 
         # rebuild vocab reverse lookup
-        self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
+        self._vocab_indices = {word: idx for idx, word in enumerate(state[1])}
 
         return self
 
