@@ -45,6 +45,7 @@ class BagOfWordsCorpus:
         assert isinstance(document_index, int), document_index
         assert document_index < len(self._bow_corpus)
 
+        # assert that document_id does not already resolve to a different document_index
         _document_index = self._doc_id_to_idx.setdefault(document_id, document_index)
         if _document_index != document_index:
             raise KeyError(document_id, document_index, _document_index)
@@ -53,13 +54,13 @@ class BagOfWordsCorpus:
 
     def _resolve_document_id(self, document_id: Union[str, int]) -> int:
 
-        # does document id exist?
+        # document id exists?
         if isinstance(document_id, str):
             if document_id in self._doc_id_to_idx:
                 return self._doc_id_to_idx[document_id]
             raise KeyError(document_id)
 
-        # maybe its a document index?
+        # document index exists?
         if isinstance(document_id, int):
             if document_id < len(self._bow_corpus):
                 return document_id
@@ -68,18 +69,26 @@ class BagOfWordsCorpus:
         raise TypeError(document_id)
 
     def _resolve_document_ids(self, document_ids: Union[str, int, Iterable[Union[str, int]]]) -> List[int]:
+
+        # single id, convert to list of one item
         if isinstance(document_ids, (str, int)):
             return [self._resolve_document_id(document_ids)]
-        else:
+
+        # multiple ids (duplicate indices must be allowed because of de-duplicated bow corpus!)
+        if isinstance(document_ids, Iterable):  # note that str is Iterable
             return [self._resolve_document_id(document_idx) for document_idx in document_ids]
 
+        raise TypeError
+
     def add_document(self, document_words: Iterable[str], document_id: Optional[str] = None) -> int:
+
+        # forgot to tokenize?
         if isinstance(document_words, str):
             raise TypeError(document_words)
+
+        # check for existing document
         if document_id is not None:
             assert isinstance(document_id, str), document_id
-
-            # if we the doc already exists
             if document_id in self._doc_id_to_idx:
                 return self._doc_id_to_idx[document_id]
 
@@ -90,8 +99,8 @@ class BagOfWordsCorpus:
         else:
             _bow = ((), ())
 
-        # find duplicate if exists, and don't re-add
-        _bow_hash = hash(_bow)
+        # if duplicate exists, return existing bow
+        _bow_hash = hash(_bow)  # don't trust the hash to be unique, use linear probing later
         for _document_idx in self._bow_hash_to_idx.get(_bow_hash, []):
             if self._bow_corpus[_document_idx] == _bow:
                 if document_id is not None:
@@ -109,7 +118,6 @@ class BagOfWordsCorpus:
     def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]],
                     normalize: bool = False
                     ) -> Dict[str, int]:
-
         document_indices = self._resolve_document_ids(document_indices)
 
         # sum over all word_idx counts
@@ -129,95 +137,121 @@ class BagOfWordsCorpus:
             return {self.vocabulary[word_idx]: count
                     for word_idx, count in _idx_counts.most_common()}
 
-    def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
+    def words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[str]:
+        _words = []
+        for _word, _count in self.word_counts(document_indices, normalize=False):
+            _words.extend([_word] * _count)
+        return _words
+
+    def num_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> int:
         document_indices = self._resolve_document_ids(document_indices)
+
+        _num_words = 0
+        for _document_idx in document_indices:
+            _num_words += sum(self._bow_corpus[_document_idx][1])
+        return _num_words
+
+    def unique_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[str]:
+        document_indices = self._resolve_document_ids(document_indices)
+
+        _unique_word_indices = set()
+        for _document_idx in document_indices:
+            _unique_word_indices.update(self._bow_corpus[_document_idx][0])
+        return [self.vocabulary[word_idx] for word_idx in _unique_word_indices]
+
+    def num_unique_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> int:
+        document_indices = self._resolve_document_ids(document_indices)
+
+        _unique_word_indices = set()
+        for _document_idx in document_indices:
+            _unique_word_indices.update(self._bow_corpus[_document_idx][0])
+        return len(_unique_word_indices)
+
+    def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
+        if isinstance(document_indices, (str, int)):
+            raise TypeError(document_indices)
+        document_indices = self._resolve_document_ids(document_indices)
+
+        # no docs
+        if len(document_indices) == 0:
+            warnings.warn('no docs specified, empty idf will be returned')
+            return dict()
+
+        # only one doc, idf doesn't make sense since that's just the unique words
+        if len(document_indices) == 1:
+            warnings.warn(f'only one doc specified, idf is not useful')
+            return {word: 1 for word in self.unique_words(document_indices[0])}  # idf == 1 with or without smoothing
 
         # count words
         _idx_df = Counter()
-        _n_docs = 0
         for _document_idx in document_indices:
-            _n_docs += 1
             _idx_df.update(word_idx for word_idx in self._bow_corpus[_document_idx][0])
 
-        # no docs, or no words
-        # todo: warn?
+        # no words, empty idf (should warn?)
         if len(_idx_df) == 0:
             return dict()
 
         # smoothing for idf
         _smooth = 1 if add_one_smoothing else 0
-        _n_docs += _smooth
 
         # log + 1 helps avoid idf == 0 for words that exist in all docs
-        return {self.vocabulary[word_idx]: math.log(_n_docs / (count + _smooth)) + 1
+        return {self.vocabulary[word_idx]: math.log((len(document_indices) + _smooth) / (count + _smooth)) + 1
                 for word_idx, count in _idx_df.most_common()}
 
     def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
+        if isinstance(document_indices, (str, int)):
+            raise TypeError(document_indices)
         document_indices = self._resolve_document_ids(document_indices)
-        assert 0.0 < stopword_df <= 1.0
+        if not 0.0 < stopword_df <= 1.0:
+            raise ValueError(stopword_df)
 
         # no stopwords if no limit
         if stopword_df == 1.0:
+            warnings.warn('setting STOPWORD_DF to 1.0 means no words are stopwords')
             return set()
+
+        # no docs
+        if len(document_indices) == 0:
+            warnings.warn('no docs specified, no stopwords will be returned')
+            return set()
+
+        # only one doc, idf doesn't make sense since that's just the unique words
+        if len(document_indices) == 1:
+            warnings.warn(f'only one doc specified, so all words are stopwords, so stopwords are not useful')
+            return set(self.unique_words(document_indices[0]))
+
+        # warn if not enough docs are given
+        if len(document_indices) <= 10:
+            warnings.warn(f'there are only {len(document_indices)} documents, stopwords may not be statistically valid')
 
         # count words
         _idx_df = Counter()
-        _n_docs = 0
         for _document_idx in document_indices:
-            _n_docs += 1
             _idx_df.update(word_idx for word_idx in self._bow_corpus[_document_idx][0])
 
-        # warn if not enough docs are given
-        if 1 <= _n_docs <= 10:
-            warnings.warn(f'there are only {_n_docs} documents, stopwords may not be statistically valid')
-
         # find stopwords
-        _n_docs *= stopword_df
+        _min_n_docs = len(document_indices) * stopword_df
         _n_words = 0
         _stopwords = set()
         for word_idx, count in _idx_df.most_common():
-            if count > _n_docs:
+            if count > _min_n_docs:
                 _stopwords.add(self.vocabulary[word_idx])
             else:
                 _n_words += 1
 
         # warn if stopwords don't make sense
-        if len(_stopwords) > _n_words == 0 and _n_docs <= 2:
-            warnings.warn(f'min_n_docs for stopwords is {_n_docs},'
+        if len(_stopwords) > _n_words == 0 and _min_n_docs <= 2:
+            warnings.warn(f'min_n_docs for stopwords is {_min_n_docs},'
                           f' so all {len(_stopwords)} words are stopwords,'
-                          f' you should try a lower stopword_df (currently {stopword_df})')
+                          f' you may want to try a higher stopword_df (currently {stopword_df}) or add more docs')
         elif len(_stopwords) > _n_words == 0:
             warnings.warn(f'all {len(_stopwords)} words are stopwords,'
-                          f' you should try a lower stopword_df (currently {stopword_df})')
+                          f' you should try a higher stopword_df (currently {stopword_df}) or add more docs')
         elif len(_stopwords) > _n_words * 2:
             warnings.warn(f'there are at least 2x more stopwords ({len(_stopwords)}) than non-stopwords ({_n_words}),'
-                          f' you may want to try a lower stopword_df (currently {stopword_df})')
+                          f' you may want to try a higher stopword_df (currently {stopword_df}) or add more docs')
 
         return _stopwords
-
-    def words(self, document_index: Union[str, int]) -> List[str]:
-        # todo: apply to multiple docs?
-        document_index = self._resolve_document_id(document_index)
-
-        _words = []
-        for word_idx, count in zip(*self._bow_corpus[document_index]):
-            _words.extend([self.vocabulary[word_idx]] * count)
-        return _words
-
-    def num_words(self, document_index: Union[str, int]) -> int:
-        # todo: apply to multiple docs?
-        document_index = self._resolve_document_id(document_index)
-        return sum(self._bow_corpus[document_index][1])
-
-    def unique_words(self, document_index: Union[str, int]) -> List[str]:
-        # todo: apply to multiple docs?
-        document_index = self._resolve_document_id(document_index)
-        return [self.vocabulary[word_idx] for word_idx in self._bow_corpus[document_index][0]]
-
-    def num_unique_words(self, document_index: Union[str, int]) -> int:
-        # todo: apply to multiple docs?
-        document_index = self._resolve_document_id(document_index)
-        return len(self._bow_corpus[document_index][1])
 
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
                                     List[str],
