@@ -192,7 +192,9 @@ class BagOfWordsCorpus:
         document_index = self._resolve_document_id(document_index)
         return len(self._corpus[document_index][1])
 
-    def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]:
+    def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
+                                    List[str],
+                                    List[Union[None, str, Tuple[str, ...]]]]:
         _id_to_idx: List = [[] for _ in range(len(self._corpus))]
         for _document_id, _document_idx in self._document_id_to_idx.items():
             _id_to_idx[_document_idx].append(_document_id)
@@ -209,9 +211,14 @@ class BagOfWordsCorpus:
                 _last_non_none = _idx
         _id_to_idx = _id_to_idx[:_last_non_none + 1]
 
-        return self._corpus, self.vocabulary, self._document_id_to_idx
+        return self._corpus, self.vocabulary, _id_to_idx
 
-    def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]], List[str], Dict[str, int]]):
+    def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
+                                        List[str],
+                                        List[Union[None, str, Tuple[str, ...]]]]
+                     ) -> 'BagOfWordsCorpus':
+
+        # set corpus and vocab, need to unpack the id-to-idx mapping
         self._corpus, self.vocabulary, _id_to_idx = state
 
         # rebuild _seen: hash of bow -> doc_idx
@@ -219,7 +226,7 @@ class BagOfWordsCorpus:
         for _idx, _bow in enumerate(self._corpus):
             self._seen.setdefault(hash(_bow), set()).add(_idx)
 
-        # rebuild document id lookup
+        # unpack document id to idx lookup
         self._document_id_to_idx = dict()
         for _idx, _ids in enumerate(_id_to_idx):
             if isinstance(_ids, str):
@@ -232,3 +239,5 @@ class BagOfWordsCorpus:
 
         # rebuild vocab reverse lookup
         self._vocabulary_to_idx = {word: idx for idx, word in enumerate(state[1])}
+
+        return self
