@@ -1,3 +1,4 @@
+import gzip
 import math
 import pickle
 import warnings
@@ -256,10 +257,13 @@ class BagOfWordsCorpus:
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
                                     List[str],
                                     List[Union[None, str, Tuple[str, ...]]]]:
+
+        # shuffle the `_doc_id_to_idx` lookup table into a list (matching the corpus index)
         _id_to_idx: List = [[] for _ in range(len(self._bow_corpus))]
         for _document_id, _document_idx in self._doc_id_to_idx.items():
             _id_to_idx[_document_idx].append(_document_id)
 
+        # more compact representation than a list of lists,  andtruncated as short as possible
         _last_non_none = -1
         for _idx, _ids in enumerate(_id_to_idx):
             if len(_ids) == 0:
@@ -272,6 +276,7 @@ class BagOfWordsCorpus:
                 _last_non_none = _idx
         _id_to_idx = _id_to_idx[:_last_non_none + 1]
 
+        # don't need the other lookup tables
         return self._bow_corpus, self.vocabulary, _id_to_idx
 
     def __setstate__(self, state: Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
@@ -303,12 +308,24 @@ class BagOfWordsCorpus:
 
         return self
 
-    def to_pickle(self, path, **kwargs) -> int:
-        with open(path, 'wb') as f:
-            pickle.dump(self, f, **kwargs)
+    def to_gzip(self, path_pkl_gz, *, pickle_protocol=0) -> int:
+        with gzip.open(path_pkl_gz, 'wb') as f:
+            pickle.dump(self, f, protocol=pickle_protocol)
             return f.tell()
 
     @staticmethod
-    def from_pickle(path, **kwargs) -> 'BagOfWordsCorpus':
-        with open(path, 'rb') as f:
-            return pickle.load(f, **kwargs)
+    def from_gzip(path_pkl_gz) -> 'BagOfWordsCorpus':
+
+        # determine whether to use gzip using magic string
+        with open(str(path_pkl_gz), mode='rb') as f:
+            b = f.read(2)
+
+        # load as gzip
+        if b == b'\x1f\x8b':
+            with gzip.open(path_pkl_gz, 'rb') as f:
+                return pickle.load(f)
+
+        # load pickle normally
+        else:
+            with open(path_pkl_gz, 'rb') as f:
+                return pickle.load(f)
