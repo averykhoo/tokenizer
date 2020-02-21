@@ -94,21 +94,32 @@ class BagOfWordsCorpus:
             self.set_document_id(document_id, _document_idx)
         return _document_idx
 
-    def word_counts(self, document_index: int, normalize: bool = False) -> Dict[str, int]:
-        document_index = self._resolve_document_id(document_index)
+    def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]], normalize: bool = False
+                    ) -> Dict[str, int]:
+
+        if isinstance(document_indices, (str, int)):
+            document_indices = [self._resolve_document_id(document_indices)]
+        else:
+            document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
+
+        # sum over all word_idx counts
+        _idx_counts = Counter()
+        for _document_idx in document_indices:
+            for _word_idx, _count in zip(*self._corpus[_document_idx]):
+                _idx_counts[_word_idx] += _count
 
         # calculate normalized word count (sums to 1)
         if normalize:
-            _total_words = self.num_words(document_index)
+            _total_words = sum(_idx_counts.values())
             return {self.vocabulary[word_idx]: count / _total_words
-                    for word_idx, count in zip(*self._corpus[document_index])}
+                    for word_idx, count in _idx_counts.most_common()}
 
         # calculate word count
         else:
             return {self.vocabulary[word_idx]: count
-                    for word_idx, count in zip(*self._corpus[document_index])}
+                    for word_idx, count in _idx_counts.most_common()}
 
-    def idf(self, document_indices: Iterable[int], add_one_smoothing: bool = True) -> Dict[str, float]:
+    def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
 
         # count words
@@ -130,7 +141,7 @@ class BagOfWordsCorpus:
         return {self.vocabulary[word_idx]: math.log(_n_docs / (count + _smooth)) + 1
                 for word_idx, count in _idx_df.most_common()}
 
-    def stopwords(self, document_indices: Iterable[int], stopword_df: float = 0.85) -> Set[str]:
+    def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
         assert 0.0 < stopword_df <= 1.0
 
@@ -173,7 +184,7 @@ class BagOfWordsCorpus:
 
         return _stopwords
 
-    def words(self, document_index: int) -> List[str]:
+    def words(self, document_index: Union[str, int]) -> List[str]:
         document_index = self._resolve_document_id(document_index)
 
         _words = []
@@ -181,15 +192,15 @@ class BagOfWordsCorpus:
             _words.extend([self.vocabulary[word_idx]] * count)
         return _words
 
-    def num_words(self, document_index: int) -> int:
+    def num_words(self, document_index: Union[str, int]) -> int:
         document_index = self._resolve_document_id(document_index)
         return sum(self._corpus[document_index][1])
 
-    def unique_words(self, document_index: int) -> List[str]:
+    def unique_words(self, document_index: Union[str, int]) -> List[str]:
         document_index = self._resolve_document_id(document_index)
         return [self.vocabulary[word_idx] for word_idx in self._corpus[document_index][0]]
 
-    def num_unique_words(self, document_index: int) -> int:
+    def num_unique_words(self, document_index: Union[str, int]) -> int:
         document_index = self._resolve_document_id(document_index)
         return len(self._corpus[document_index][1])
 
