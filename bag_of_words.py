@@ -54,16 +54,22 @@ class BagOfWordsCorpus:
     def _resolve_document_id(self, document_id: Union[str, int]) -> int:
 
         # does document id exist?
-        if isinstance(document_id, str) and document_id in self._document_id_to_idx:
-            return self._document_id_to_idx[document_id]
+        if isinstance(document_id, str):
+            if document_id in self._document_id_to_idx:
+                return self._document_id_to_idx[document_id]
+            raise KeyError(document_id)
 
         # maybe its a document index?
-        if isinstance(document_id, int) and document_id < len(self._corpus):
-            return document_id
+        if isinstance(document_id, int):
+            if document_id < len(self._corpus):
+                return document_id
+            raise KeyError(document_id)
 
-        raise KeyError(document_id)
+        raise TypeError(document_id)
 
     def add_document(self, document_words: Iterable[str], document_id: Optional[str] = None) -> int:
+        if isinstance(document_words, str):
+            raise TypeError(document_words)
         if document_id is not None:
             assert isinstance(document_id, str), document_id
 
@@ -94,7 +100,8 @@ class BagOfWordsCorpus:
             self.set_document_id(document_id, _document_idx)
         return _document_idx
 
-    def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]], normalize: bool = False
+    def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]],
+                    normalize: bool = False
                     ) -> Dict[str, int]:
 
         if isinstance(document_indices, (str, int)):
@@ -120,6 +127,8 @@ class BagOfWordsCorpus:
                     for word_idx, count in _idx_counts.most_common()}
 
     def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
+        if isinstance(document_indices, (str, int)):
+            raise TypeError(document_indices)
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
 
         # count words
@@ -142,6 +151,8 @@ class BagOfWordsCorpus:
                 for word_idx, count in _idx_df.most_common()}
 
     def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
+        if isinstance(document_indices, (str, int)):
+            raise TypeError(document_indices)
         document_indices = [self._resolve_document_id(document_idx) for document_idx in document_indices]
         assert 0.0 < stopword_df <= 1.0
 
