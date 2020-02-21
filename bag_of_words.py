@@ -3,8 +3,6 @@ import math
 import pickle
 import warnings
 from collections import Counter
-from dataclasses import dataclass
-from dataclasses import field
 from typing import Dict
 from typing import Iterable
 from typing import List
@@ -14,16 +12,24 @@ from typing import Tuple
 from typing import Union
 
 
-@dataclass
 class BagOfWordsCorpus:
+    __slots__ = ('vocabulary', '_vocab_indices', '_bow_corpus', '_bow_hash_to_idx', '_doc_id_to_idx')
+
     # vocabulary: word <-> word_index
-    vocabulary: List[str] = field(default_factory=list)
-    _vocab_indices: Dict[str, int] = field(default_factory=dict)
+    vocabulary: List[str]
+    _vocab_indices: Dict[str, int]
 
     # bags-of-words stored as tuples of (bow_word_indices, bow_word_counts), ordered by bow_word_count desc
-    _bow_corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]] = field(default_factory=list)
-    _bow_hash_to_idx: Dict[int, Set[int]] = field(default_factory=dict)
-    _doc_id_to_idx: Dict[str, int] = field(default_factory=dict)
+    _bow_corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]]
+    _bow_hash_to_idx: Dict[int, Set[int]]
+    _doc_id_to_idx: Dict[str, int]
+
+    def __init__(self):
+        self.vocabulary = []
+        self._vocab_indices = dict()
+        self._bow_corpus = []
+        self._bow_hash_to_idx = dict()
+        self._doc_id_to_idx = dict()
 
     def _resolve_word_index(self, word: str) -> int:
 
