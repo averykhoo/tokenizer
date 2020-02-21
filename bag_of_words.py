@@ -122,9 +122,9 @@ class BagOfWordsCorpus:
             self.set_document_id(document_id, _document_idx)
         return _document_idx
 
-    def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]],
-                    normalize: bool = False
-                    ) -> Dict[str, int]:
+    def word_counts_(self, document_indices: Union[str, int, Iterable[Union[str, int]]],
+                     normalize: bool = False
+                     ) -> Dict[int, int]:
         document_indices = self._resolve_document_ids(document_indices)
 
         # sum over all word_idx counts
@@ -136,13 +136,17 @@ class BagOfWordsCorpus:
         # calculate normalized word count (sums to 1)
         if normalize:
             _total_words = sum(_idx_counts.values())
-            return {self.vocabulary[word_idx]: count / _total_words
-                    for word_idx, count in _idx_counts.most_common()}
+            for _word_idx, _count in _idx_counts.most_common():
+                _idx_counts[_word_idx] = _count / _total_words
 
-        # calculate word count
-        else:
-            return {self.vocabulary[word_idx]: count
-                    for word_idx, count in _idx_counts.most_common()}
+        return _idx_counts  # technically this is a Counter
+
+    def word_counts(self, document_indices: Union[str, int, Iterable[Union[str, int]]],
+                    normalize: bool = False
+                    ) -> Dict[str, int]:
+        _idx_counts = self.word_counts_(document_indices=document_indices, normalize=normalize)
+        return {self.vocabulary[word_idx]: count
+                for word_idx, count in _idx_counts.items()}
 
     def words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[str]:
         _words = []
@@ -158,13 +162,16 @@ class BagOfWordsCorpus:
             _num_words += sum(self._bow_corpus[_document_idx][1])
         return _num_words
 
-    def unique_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[str]:
+    def unique_words_(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[int]:
         document_indices = self._resolve_document_ids(document_indices)
 
         _unique_word_indices = set()
         for _document_idx in document_indices:
             _unique_word_indices.update(self._bow_corpus[_document_idx][0])
-        return [self.vocabulary[word_idx] for word_idx in _unique_word_indices]
+        return sorted(_unique_word_indices)
+
+    def unique_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> List[str]:
+        return [self.vocabulary[word_idx] for word_idx in self.unique_words_(document_indices)]
 
     def num_unique_words(self, document_indices: Union[str, int, Iterable[Union[str, int]]]) -> int:
         document_indices = self._resolve_document_ids(document_indices)
@@ -174,7 +181,7 @@ class BagOfWordsCorpus:
             _unique_word_indices.update(self._bow_corpus[_document_idx][0])
         return len(_unique_word_indices)
 
-    def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
+    def idf_(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[int, float]:
         if isinstance(document_indices, (str, int)):
             raise TypeError(document_indices)
         document_indices = self._resolve_document_ids(document_indices)
@@ -200,12 +207,19 @@ class BagOfWordsCorpus:
 
         # smoothing for idf
         _smooth = 1 if add_one_smoothing else 0
+        _n_docs = len(document_indices) + _smooth
 
         # log + 1 helps avoid idf == 0 for words that exist in all docs
-        return {self.vocabulary[word_idx]: math.log((len(document_indices) + _smooth) / (count + _smooth)) + 1
-                for word_idx, count in _idx_df.most_common()}
+        for _word_idx, _count in _idx_df.most_common():
+            _idx_df[_word_idx] = math.log(_n_docs / (_count + _smooth)) + 1
 
-    def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
+        return _idx_df  # technically this is a Counter
+
+    def idf(self, document_indices: Iterable[Union[str, int]], add_one_smoothing: bool = True) -> Dict[str, float]:
+        _idf = self.idf_(document_indices=document_indices, add_one_smoothing=add_one_smoothing)
+        return {self.vocabulary[word_idx]: word_idf for word_idx, word_idf in _idf.items()}
+
+    def stopwords_(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[int]:
         if isinstance(document_indices, (str, int)):
             raise TypeError(document_indices)
         document_indices = self._resolve_document_ids(document_indices)
@@ -225,7 +239,7 @@ class BagOfWordsCorpus:
         # only one doc, idf doesn't make sense since that's just the unique words
         if len(document_indices) == 1:
             warnings.warn(f'only one doc specified, so all words are stopwords, so stopwords are not useful')
-            return set(self.unique_words(document_indices[0]))
+            return set(self.unique_words_(document_indices[0]))
 
         # warn if not enough docs are given
         if len(document_indices) <= 10:
@@ -242,7 +256,7 @@ class BagOfWordsCorpus:
         _stopwords = set()
         for word_idx, count in _idx_df.most_common():
             if count > _min_n_docs:
-                _stopwords.add(self.vocabulary[word_idx])
+                _stopwords.add(word_idx)
             else:
                 _n_words += 1
 
@@ -259,6 +273,10 @@ class BagOfWordsCorpus:
                           f' you may want to try a higher stopword_df (currently {stopword_df}) or add more docs')
 
         return _stopwords
+
+    def stopwords(self, document_indices: Iterable[Union[str, int]], stopword_df: float = 0.85) -> Set[str]:
+        _stopword_indices = self.stopwords_(document_indices=document_indices, stopword_df=stopword_df)
+        return set(self.vocabulary[word_idx] for word_idx in _stopword_indices)
 
     def __getstate__(self) -> Tuple[List[Tuple[Tuple[int, ...], Tuple[int, ...]]],
                                     List[str],

@@ -39,3 +39,9 @@ idf2 = bow.idf(['d1', 'd2', 'd2', 'd3'])
 -   `bow.num_unique_words(<doc_ids>)` : number of words in `unique_words`
 -   `bow.stopwords(<doc_ids>, <stopword_df>)` : find stopwords by how frequently they occur
     -   `stopword_df` is the fraction of documents a word has to appear in to become a stopword
+
+### the same as above, but for word indices instead of words
+-   `bow.word_counts_(<doc_ids>)`
+-   `bow.idf_(<doc_ids>)`
+-   `bow.stopwords_(<doc_ids>)`
+-   `bow.unique_words_(<doc_ids>)`
