@@ -16,13 +16,13 @@ class BagOfWordsCorpus:
     __slots__ = ('vocabulary', '_vocab_indices', '_bow_corpus', '_bow_hash_to_idx', '_doc_id_to_idx')
 
     # vocabulary: word <-> word_index
-    vocabulary: List[str]
-    _vocab_indices: Dict[str, int]
+    vocabulary: List[str]  # word_index -> word
+    _vocab_indices: Dict[str, int]  # word -> word_index
 
     # bags-of-words stored as tuples of (bow_word_indices, bow_word_counts), ordered by bow_word_count desc
-    _bow_corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]]
-    _bow_hash_to_idx: Dict[int, Set[int]]
-    _doc_id_to_idx: Dict[str, int]
+    _bow_corpus: List[Tuple[Tuple[int, ...], Tuple[int, ...]]]  # doc_idx -> doc_bow
+    _bow_hash_to_idx: Dict[int, Set[int]]  # bow_hash -> doc_idx
+    _doc_id_to_idx: Dict[str, int]  # doc_id -> doc_idx
 
     def __init__(self):
         self.vocabulary = []
