@@ -332,7 +332,7 @@ class BagOfWordsCorpus:
 
         return self
 
-    def to_gzip(self, path_pkl_gz, *, pickle_protocol=0) -> int:
+    def to_gzip(self, path_pkl_gz, *, pickle_protocol=None) -> int:
         with gzip.open(path_pkl_gz, 'wb') as f:
             pickle.dump(self, f, protocol=pickle_protocol)
             return f.tell()
