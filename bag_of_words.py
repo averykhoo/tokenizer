@@ -75,6 +75,12 @@ class BagOfWordsCorpus:
 
         raise TypeError(document_id)
 
+    def resolve_document_id(self, document_id: str) -> Optional[int]:
+        try:
+            return self._resolve_document_id(document_id=document_id)
+        except KeyError:
+            return None
+
     def _resolve_document_ids(self, document_ids: Union[str, int, Iterable[Union[str, int]]]) -> List[int]:
 
         # single id, convert to list of one item
