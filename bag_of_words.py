@@ -338,24 +338,12 @@ class BagOfWordsCorpus:
 
         return self
 
-    def to_gzip(self, path_pkl_gz, *, pickle_protocol=None) -> int:
-        with gzip.open(path_pkl_gz, 'wb') as f:
+    def to_gzip(self, path, *, pickle_protocol=4) -> int:
+        with gzip.open(path, 'wb') as f:
             pickle.dump(self, f, protocol=pickle_protocol)
             return f.tell()
 
     @staticmethod
-    def from_gzip(path_pkl_gz) -> 'BagOfWordsCorpus':
-
-        # determine whether to use gzip using magic string
-        with open(str(path_pkl_gz), mode='rb') as f:
-            b = f.read(2)
-
-        # load as gzip
-        if b == b'\x1f\x8b':
-            with gzip.open(path_pkl_gz, 'rb') as f:
-                return pickle.load(f)
-
-        # load pickle normally
-        else:
-            with open(path_pkl_gz, 'rb') as f:
-                return pickle.load(f)
+    def from_gzip(path) -> 'BagOfWordsCorpus':
+        with gzip.open(path, 'rb') as f:
+            return pickle.load(f)
