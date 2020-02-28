@@ -10,3 +10,5 @@ from .tokenizer import sentence_split_tokens
 from .tokenizer import is_text_char
 from .tokenizer import is_space_char
 from .tokenizer import is_punctuation_char
+
+from .remove_html_tags import remove_html_tags
