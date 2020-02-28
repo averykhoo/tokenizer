@@ -1,5 +1,4 @@
 #   tokenizer
--   this tokenizes things
 ```python
 from tokenizer import unicode_tokenize
 from tokenizer import word_n_grams
@@ -23,5 +22,8 @@ sentence_split_tokens('the quick brown fox. the lazy dog.')  # yields each sente
 ```
 
 
-#   Updating submodules
+#   Git submodules
+##  Add
+-   `git submodule add https://github.com/averykhoo/tokenizer.git`
+##  Update
 -   `git submodule update --init --recursive --remote --merge`
