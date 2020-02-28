@@ -158,6 +158,8 @@ def is_text_char(char):
 def is_punctuation_char(char):
     if char in UNPRINTABLE_CHARS:
         return True
+    elif char in CLOSING_PUNCTUATION:
+        return True  # this should always be caught by the unicode category check below, but why not
     else:
         return unicodedata.category(char) in {'Pc', 'Pd', 'Ps', 'Pe', 'Pi', 'Pf', 'Po',
                                               'Sm', 'Sc', 'Sk', 'So',
