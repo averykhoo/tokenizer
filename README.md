@@ -25,5 +25,6 @@ sentence_split_tokens('the quick brown fox. the lazy dog.')  # yields each sente
 #   Git submodules
 ##  Add
 -   `git submodule add https://github.com/averykhoo/tokenizer.git`
+-   `git add tokenizer`  (is this needed?)
 ##  Update
 -   `git submodule update --init --recursive --remote --force`
