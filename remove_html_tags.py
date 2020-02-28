@@ -153,8 +153,8 @@ _PATTERN_TAG = '(?:(?:!doctype|a(?:bbr|cronym|ddress|pplet|r(?:ea|ticle)|side|ud
                'le|body|d|e(?:mplate|xtarea)|foot|h(?:ead)?|i(?:me|tle)|r(?:ack)?|t)|ul?|v(?:ar|ideo)|wbr))'
 
 RE_COMMENT = re.compile(f'(?:<!--(?P<comment>.*)-->)', flags=re.I | re.U)
-RE_SCRIPT = re.compile(f'(?:<script(?:\s+[^<>]+)?>.*</script>)', flags=re.I | re.U)
-RE_TAG = re.compile(fr'(?:</?{_PATTERN_TAG}(?:\s+[^<>]+)?/?>)', flags=re.I | re.U)
+RE_SCRIPT = re.compile(f'(?:<script(?:\s+[^<>]*)?>.*</script\s*>)', flags=re.I | re.U)
+RE_TAG = re.compile(fr'(?:</?{_PATTERN_TAG}(?:\s+[^<>]*)?/?>)', flags=re.I | re.U)
 
 
 def remove_html_tags(text: str, replacement: str = ' ') -> str:

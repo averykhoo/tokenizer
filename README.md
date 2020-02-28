@@ -21,6 +21,9 @@ sentence_split('the quick brown fox. the lazy dog.')  # yields each sentence as 
 sentence_split_tokens('the quick brown fox. the lazy dog.')  # yields each sentence as a list of Token objects
 ```
 
+-   `remove_html_tags(text: str, replacement: str = ' ')`
+    -   removes html comments, scripts, and all tags
+    -   replaces them with a single space by default
 
 #   Git submodules
 ##  Add
