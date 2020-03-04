@@ -165,4 +165,4 @@ def remove_html_tags(text: str, replacement: str = ' ') -> str:
 
 
 def get_comments(text: str) -> List[str]:
-    return [m.group('comment') for m in RE_COMMENT.search(text)]
+    return [m.group('comment') for m in RE_COMMENT.finditer(text)]
