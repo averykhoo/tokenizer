@@ -360,10 +360,21 @@ def unicode_tokenize(text: str,
     """
     similar to fts5's unicode61 tokenizer, but allows diacritics
 
+    merge_apostrophe_word puts apostrophes back into the middle of a word (max one apostrophe)
+    use with caution because it might not be what you want, and also it's slower
+    handles full-width quotes and right curly quotes
+    examples:
+    (1)                   [O] ['] [reilly]    ->  [O'reilly]                  (likely desirable)
+    (2)                   [O] [’] [reilly]    ->  [O’reilly]                  (likely desirable)
+    (3)                [wasn] [’] [t]         ->  [wasn’t]                    (maybe desirable)
+    (4)                [wasn] [‘] [t]         ->  [wasn] [‘] [t]              (maybe mistake)
+    (5)                   [l] ['] [ensemble]  ->  [l'ensemble]                (likely undesirable)
+    (6) [‘] [test] [ ] [test] [’] [oops]      ->  [‘] [test] [ ] [test’oops]  (100% undesirable)
+
     :param text: string to be tokenized
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     :param as_tokens: return as Token namedtuple (includes start_position and token_category)
-    :param merge_apostrophe_word: WARNING SLOW! e.g. "isn't" (maybe desirable) AND "l'ensemble" (likely undesirable)
+    :param merge_apostrophe_word: WARNING SLOW! e.g. "isn't" and "l'ensemble"
     """
 
     # use optimized functions for the un-merged cases
