@@ -1,9 +1,12 @@
+from collections import Callable
 from collections import namedtuple
 from enum import Enum
 from enum import auto
 from typing import Any
 from typing import Generator
+from typing import Iterable
 from typing import List
+from typing import Set
 from typing import Tuple
 from typing import Union
 
@@ -18,7 +21,7 @@ class TokenCategory(Enum):
 
 Token = namedtuple('Token', ['text', 'start_pos', 'category'])
 
-UNICODE_SPACES = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
+UNICODE_SPACES: Set[str] = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
     # unicode whitespace
     '\u0009',  # horizontal tab == '\t'
     '\u000a',  # line feed (new line) == '\n'
@@ -71,7 +74,7 @@ UNICODE_SPACES = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_charact
     '\u2800',  # braille blank (NOT WHITESPACE)
 }
 
-UNPRINTABLE_CHARS = {
+UNPRINTABLE_CHARS: Set[str] = {
     '\u0000',  # null
     '\u0001',  # start of heading
     '\u0002',  # start of text
@@ -100,13 +103,15 @@ UNPRINTABLE_CHARS = {
     '\ufffd',  # unicode replacement char
 }
 
-CLOSING_PUNCTUATION = {
+CLOSING_PUNCTUATION: Set[str] = {
     '!',
     '.',
-    # ':',
+    ':',
+    ';',
     '?',
     '\u00a1',  # upside down -> '¡'
     '\u00bf',  # upside down -> '¿'
+    '\u037e',  # greek question mark -> ';'
     '\u0589',  # armenian full stop -> '։'
     '\u06d4',  # arabic full stop = -> '۔'
     '\u2026',  # ellipsis -> '…'
@@ -117,21 +122,30 @@ CLOSING_PUNCTUATION = {
     '\u2049',  # double -> '⁉'
     '\u3002',  # chinese -> '。'
     '\ufe12',  # chinese presentation form -> '︒'
+    '\ufe14',  # presentation form -> '︔'
     '\ufe15',  # presentation form -> '︕'
     '\ufe16',  # presentation form -> '︖'
     '\ufe52',  # small form -> '﹒'
-    # '\ufe55',  # small form -> '﹕'
+    '\ufe54',  # small form -> '﹔'
+    '\ufe55',  # small form -> '﹕'
     '\ufe56',  # small form -> '﹖'
     '\ufe57',  # small form -> '﹗'
     '\uff01',  # full width -> '！'
     '\uff0e',  # full width -> '．'
-    # '\uff1a',  # full width -> '：'
+    '\uff1a',  # full width -> '：'
+    '\uff1b',  # full width -> '；'
     '\uff1f',  # full width -> '？'
     '\uff61',  # half width chinese -> '｡'
 }
 
+APOSTROPHES: Set[str] = {
+    "'",
+    '\u2019',  # curly quote (&rsquo;) -> '’'
+    '\uff07',  # full width -> '＇'
+}
 
-def memoize(f):
+
+def memoize(f: Callable) -> Callable:
     """
     memoization decorator for a function taking ONLY a single argument
     src: http://code.activestate.com/recipes/578231-probably-the-fastest-memoization-decorator-in-the-/
@@ -146,7 +160,7 @@ def memoize(f):
 
 
 @memoize
-def is_text_char(char):
+def is_text_char(char: str) -> bool:
     return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
                                           'Nd', 'Nl', 'No',  # numbers
                                           'Mn', 'Mc', 'Me',  # diacritics, etc
@@ -155,7 +169,7 @@ def is_text_char(char):
 
 
 @memoize
-def is_punctuation_char(char):
+def is_punctuation_char(char: str) -> bool:
     if char in UNPRINTABLE_CHARS:
         return True
     elif char in CLOSING_PUNCTUATION:
@@ -167,8 +181,81 @@ def is_punctuation_char(char):
 
 
 @memoize
-def is_space_char(char):
+def is_space_char(char: str) -> bool:
     return char in UNICODE_SPACES
+
+
+def _merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, Any, None]:
+    wait = False
+    _1 = None  # word
+    _2 = None  # apos
+    _3 = None  # word
+
+    for token in tokens:
+        # stuck in the middle of an invalid word, all buffers cleared
+        if wait:
+            wait = (token.category is TokenCategory.WORD) or (token.text in APOSTROPHES)
+            yield token
+
+        # first token: word
+        elif _1 is None:
+            if token.category is TokenCategory.WORD:
+                _1 = token
+            else:
+                wait = token.text in APOSTROPHES
+                yield token
+
+        # second token: apostrophe
+        elif _2 is None:
+            assert token.category is not TokenCategory.WORD  # since _1 is a WORD, this cannot be a word
+            if token.text in APOSTROPHES:
+                _2 = token
+            else:
+                yield _1
+                _1 = None
+                yield token
+
+        # third token: word
+        elif _3 is None:
+            if token.category is TokenCategory.WORD:
+                _3 = token
+            else:
+                wait = token.text in APOSTROPHES
+                yield _1
+                _1 = None
+                yield _2
+                _2 = None
+                yield token
+
+        # have all 3 tokens, now check if word has ended
+        else:
+            assert token.category is not TokenCategory.WORD  # since _3 is a WORD, this cannot be a word
+            if token.text not in APOSTROPHES:
+                yield Token(text=(_1.text + _2.text + _3.text),
+                            start_pos=_1.start_pos,
+                            category=TokenCategory.WORD)
+            else:
+                wait = True
+                yield _1
+                yield _2
+                yield _3
+
+            # clear buffers
+            _1 = None
+            _2 = None
+            _3 = None
+            yield token  # space or punctuation (but not apostrophe)
+
+    # end of loop
+    if _3 is not None:
+        yield Token(text=(_1.text + _2.text + _3.text),
+                    start_pos=_1.start_pos,
+                    category=TokenCategory.WORD)
+    elif _2 is not None:
+        yield _1
+        yield _2
+    elif _1 is not None:
+        yield _1
 
 
 def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
@@ -267,34 +354,58 @@ def _unicode_tokenize_word_tokens(text: str) -> Generator[Token, Any, None]:
 
 def unicode_tokenize(text: str,
                      words_only: bool = False,
-                     as_tokens: bool = False
+                     as_tokens: bool = False,
+                     merge_apostrophe_word: bool = False,
                      ) -> Generator[Union[str, Token], Any, None]:
     """
     similar to fts5's unicode61 tokenizer, but allows diacritics
 
+    merge_apostrophe_word puts apostrophes back into the middle of a word (max one apostrophe)
+    use with caution because it might not be what you want, and also it's slower
+    handles full-width quotes and right curly quotes
+    examples:
+    (1)                   [O] ['] [reilly]    ->  [O'reilly]                  (likely desirable)
+    (2)                   [O] [’] [reilly]    ->  [O’reilly]                  (likely desirable)
+    (3)                [wasn] [’] [t]         ->  [wasn’t]                    (maybe desirable)
+    (4)                [wasn] [‘] [t]         ->  [wasn] [‘] [t]              (maybe mistake)
+    (5)                   [l] ['] [ensemble]  ->  [l'ensemble]                (likely undesirable)
+    (6) [‘] [test] [ ] [test] [’] [oops]      ->  [‘] [test] [ ] [test’oops]  (100% undesirable)
+
     :param text: string to be tokenized
     :param words_only: whether or not to return punctuation/symbols/unprintable/whitespace
     :param as_tokens: return as Token namedtuple (includes start_position and token_category)
+    :param merge_apostrophe_word: WARNING SLOW! e.g. "isn't" and "l'ensemble"
     """
 
-    if as_tokens and words_only:
-        return _unicode_tokenize_word_tokens(text)
+    # use optimized functions for the un-merged cases
+    if not merge_apostrophe_word:
+        if as_tokens and words_only:
+            return _unicode_tokenize_word_tokens(text)
 
-    elif as_tokens:
-        return _unicode_tokenize_all_tokens(text)  # use `_unicode_tokenize_merge_spaces` if you want to merge spaces
+        elif as_tokens:
+            return _unicode_tokenize_all_tokens(text)  # use `_unicode_tokenize_merge_spaces` to merge spaces
 
-    elif words_only:
-        return _unicode_tokenize_word_strings(text)
+        elif words_only:
+            return _unicode_tokenize_word_strings(text)  # probably fastest
 
-    else:
-        return _unicode_tokenize_all_strings(text)
+        else:
+            return _unicode_tokenize_all_strings(text)
+
+    # merging in the apostrophe is probably very slow
+    _generator = _merge_apostrophes_into_words(_unicode_tokenize_all_tokens(text))
+    if words_only:
+        _generator = (token for token in _generator if token.category is TokenCategory.WORD)
+    if not as_tokens:
+        _generator = (token.text for token in _generator)
+    return _generator
 
 
-def sentence_split_tokens(text: str, split_newline: Union[str, bool] = True) -> Generator[List[Token], Any, None]:
+def sentence_split_tokens(text: str,
+                          split_newline: Union[str, bool] = True,
+                          merge_apostrophe_word: bool = False,
+                          ) -> Generator[List[Token], Any, None]:
     """
-    good-enough sentence splitting
-    optional splitting on newlines to ensure sentences don't span paragraphs
-    split_newline can be a string on which to split (e.g. '\r\n\r\n')
+    like sentence_split, but yields a list of Tokens which can be processed further
 
     :param text: to split in sentences
     :param split_newline: split paragraphs before sentence splitting
@@ -314,7 +425,7 @@ def sentence_split_tokens(text: str, split_newline: Union[str, bool] = True) -> 
     for para in paragraphs:
         buffer = []
         closed = False
-        for token in unicode_tokenize(para, as_tokens=True):
+        for token in unicode_tokenize(para, as_tokens=True, merge_apostrophe_word=merge_apostrophe_word):
             buffer.append(token)
 
             # sentence has ended iff whitespace follows the closing punctuation
@@ -338,34 +449,54 @@ def sentence_split_tokens(text: str, split_newline: Union[str, bool] = True) -> 
             yield buffer
 
 
-def sentence_split(text: str, split_newline: Union[str, bool] = True) -> Generator[str, Any, None]:
-    for sentence_tokens in sentence_split_tokens(text, split_newline=split_newline):
+def sentence_split(text: str,
+                   split_newline: Union[str, bool] = True,
+                   merge_apostrophe_word: bool = False,
+                   ) -> Generator[str, Any, None]:
+    """
+    good-enough sentence splitting
+    optional splitting on newlines to ensure sentences don't span paragraphs
+    split_newline can be a string on which to split (e.g. '\r\n\r\n')
+
+    :param text:
+    :param split_newline:
+    :param merge_apostrophe_word:
+    :return:
+    """
+    for sentence_tokens in sentence_split_tokens(text,
+                                                 split_newline=split_newline,
+                                                 merge_apostrophe_word=merge_apostrophe_word):
         sentence = ''.join(token.text for token in sentence_tokens).strip()
         if sentence:
             yield sentence
 
 
-def word_n_grams(text: str, n: int = 2, split_sentences: bool = True) -> Generator[Tuple[str, str], Any, None]:
+def word_n_grams(text: str,
+                 n: int = 2,
+                 split_sentences: bool = True,
+                 merge_apostrophe_word: bool = False,
+                 ) -> Generator[Tuple[str, ...], Any, None]:
     """
     yield n-grams of words (works ONLY for space-delimited languages)
     note that split_sentences will also split paragraphs by default
     WARNING: if there are less than N tokens, no n-grams will be returned for the sentence
 
-    :param text:
-    :param n:
-    :param split_sentences:
+    :param text: to split
+    :param n: how long is the n-gram
+    :param split_sentences: don't allow n-grams to span sentences
+    :param merge_apostrophe_word: WARNING SLOW! see tokenize function
     :return:
     """
     # if n == 1, you're using the wrong function
     assert n >= 2
 
     if split_sentences:
-        for sentence_tokens in sentence_split_tokens(text):
+        for sentence_tokens in sentence_split_tokens(text, merge_apostrophe_word=merge_apostrophe_word):
             words = [token.text for token in sentence_tokens if token.category is TokenCategory.WORD]
             for n_gram in zip(*[words[i:] for i in range(n)]):
                 yield n_gram
 
     else:
-        words = list(unicode_tokenize(text, words_only=True))
+        words = list(unicode_tokenize(text, words_only=True, merge_apostrophe_word=merge_apostrophe_word))
         for n_gram in zip(*[words[i:] for i in range(n)]):
             yield n_gram
