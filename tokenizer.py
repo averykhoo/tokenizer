@@ -1,9 +1,12 @@
+from collections import Callable
 from collections import namedtuple
 from enum import Enum
 from enum import auto
 from typing import Any
 from typing import Generator
+from typing import Iterable
 from typing import List
+from typing import Set
 from typing import Tuple
 from typing import Union
 
@@ -18,7 +21,7 @@ class TokenCategory(Enum):
 
 Token = namedtuple('Token', ['text', 'start_pos', 'category'])
 
-UNICODE_SPACES = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
+UNICODE_SPACES: Set[str] = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
     # unicode whitespace
     '\u0009',  # horizontal tab == '\t'
     '\u000a',  # line feed (new line) == '\n'
@@ -71,7 +74,7 @@ UNICODE_SPACES = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_charact
     '\u2800',  # braille blank (NOT WHITESPACE)
 }
 
-UNPRINTABLE_CHARS = {
+UNPRINTABLE_CHARS: Set[str] = {
     '\u0000',  # null
     '\u0001',  # start of heading
     '\u0002',  # start of text
@@ -100,7 +103,7 @@ UNPRINTABLE_CHARS = {
     '\ufffd',  # unicode replacement char
 }
 
-CLOSING_PUNCTUATION = {
+CLOSING_PUNCTUATION: Set[str] = {
     '!',
     '.',
     ':',
@@ -135,8 +138,14 @@ CLOSING_PUNCTUATION = {
     '\uff61',  # half width chinese -> '｡'
 }
 
+APOSTROPHES: Set[str] = {
+    "'",
+    '\u2019',  # curly quote (&rsquo;) -> '’'
+    '\uff07',  # full width -> '＇'
+}
 
-def memoize(f):
+
+def memoize(f: Callable) -> Callable:
     """
     memoization decorator for a function taking ONLY a single argument
     src: http://code.activestate.com/recipes/578231-probably-the-fastest-memoization-decorator-in-the-/
@@ -151,7 +160,7 @@ def memoize(f):
 
 
 @memoize
-def is_text_char(char):
+def is_text_char(char: str) -> bool:
     return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
                                           'Nd', 'Nl', 'No',  # numbers
                                           'Mn', 'Mc', 'Me',  # diacritics, etc
@@ -160,7 +169,7 @@ def is_text_char(char):
 
 
 @memoize
-def is_punctuation_char(char):
+def is_punctuation_char(char: str) -> bool:
     if char in UNPRINTABLE_CHARS:
         return True
     elif char in CLOSING_PUNCTUATION:
@@ -172,8 +181,81 @@ def is_punctuation_char(char):
 
 
 @memoize
-def is_space_char(char):
+def is_space_char(char: str) -> bool:
     return char in UNICODE_SPACES
+
+
+def merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, Any, None]:
+    wait = False
+    _1 = None  # word
+    _2 = None  # apos
+    _3 = None  # word
+
+    for token in tokens:
+        # stuck in the middle of an invalid word, all buffers cleared
+        if wait:
+            wait = (token.category is TokenCategory.WORD) or (token.text in APOSTROPHES)
+            yield token
+
+        # first token: word
+        elif _1 is None:
+            if token.category is TokenCategory.WORD:
+                _1 = token
+            else:
+                wait = token.text in APOSTROPHES
+                yield token
+
+        # second token: apostrophe
+        elif _2 is None:
+            assert token.category is not TokenCategory.WORD  # since _1 is a WORD, this cannot be a word
+            if token.text in APOSTROPHES:
+                _2 = token
+            else:
+                yield _1
+                _1 = None
+                yield token
+
+        # third token: word
+        elif _3 is None:
+            if token.category is TokenCategory.WORD:
+                _3 = token
+            else:
+                wait = token.text in APOSTROPHES
+                yield _1
+                _1 = None
+                yield _2
+                _2 = None
+                yield token
+
+        # have all 3 tokens, now check if word has ended
+        else:
+            assert token.category is not TokenCategory.WORD  # since _3 is a WORD, this cannot be a word
+            if token.text not in APOSTROPHES:
+                yield Token(text=(_1.text + _2.text + _3.text),
+                            start_pos=_1.start_pos,
+                            category=TokenCategory.WORD)
+            else:
+                wait = True
+                yield _1
+                yield _2
+                yield _3
+
+            # clear buffers
+            _1 = None
+            _2 = None
+            _3 = None
+            yield token  # space or punctuation (but not apostrophe)
+
+    # end of loop
+    if _3 is not None:
+        yield Token(text=(_1.text + _2.text + _3.text),
+                    start_pos=_1.start_pos,
+                    category=TokenCategory.WORD)
+    elif _2 is not None:
+        yield _1
+        yield _2
+    elif _1 is not None:
+        yield _1
 
 
 def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
