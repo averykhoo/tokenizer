@@ -103,10 +103,12 @@ UNPRINTABLE_CHARS = {
 CLOSING_PUNCTUATION = {
     '!',
     '.',
-    # ':',
+    ':',
+    ';',
     '?',
     '\u00a1',  # upside down -> '¡'
     '\u00bf',  # upside down -> '¿'
+    '\u037e',  # greek question mark -> ';'
     '\u0589',  # armenian full stop -> '։'
     '\u06d4',  # arabic full stop = -> '۔'
     '\u2026',  # ellipsis -> '…'
@@ -117,15 +119,18 @@ CLOSING_PUNCTUATION = {
     '\u2049',  # double -> '⁉'
     '\u3002',  # chinese -> '。'
     '\ufe12',  # chinese presentation form -> '︒'
+    '\ufe14',  # presentation form -> '︔'
     '\ufe15',  # presentation form -> '︕'
     '\ufe16',  # presentation form -> '︖'
     '\ufe52',  # small form -> '﹒'
-    # '\ufe55',  # small form -> '﹕'
+    '\ufe54',  # small form -> '﹔'
+    '\ufe55',  # small form -> '﹕'
     '\ufe56',  # small form -> '﹖'
     '\ufe57',  # small form -> '﹗'
     '\uff01',  # full width -> '！'
     '\uff0e',  # full width -> '．'
-    # '\uff1a',  # full width -> '：'
+    '\uff1a',  # full width -> '：'
+    '\uff1b',  # full width -> '；'
     '\uff1f',  # full width -> '？'
     '\uff61',  # half width chinese -> '｡'
 }
