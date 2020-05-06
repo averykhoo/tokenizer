@@ -391,7 +391,7 @@ def unicode_tokenize(text: str,
         else:
             return _unicode_tokenize_all_strings(text)
 
-    # merging in the apostrophe is probably very slow
+    # merging in the apostrophe is probably very slow (also it will break naive string search)
     _generator = _merge_apostrophes_into_words(_unicode_tokenize_all_tokens(text))
     if words_only:
         _generator = (token for token in _generator if token.category is TokenCategory.WORD)
