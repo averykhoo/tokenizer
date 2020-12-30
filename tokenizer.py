@@ -1,7 +1,7 @@
-from collections import Callable
 from collections import namedtuple
 from enum import Enum
 from enum import auto
+from functools import lru_cache
 from typing import Any
 from typing import Generator
 from typing import Iterable
@@ -24,13 +24,13 @@ Token = namedtuple('Token', ['text', 'start_pos', 'category'])
 UNICODE_SPACES: Set[str] = {  # refer to: https://en.wikipedia.org/wiki/Whitespace_character
     # unicode whitespace
     '\u0009',  # horizontal tab == '\t'
-    '\u000a',  # line feed (new line) == '\n'
-    '\u000b',  # vertical tab == '\v'
-    '\u000c',  # form feed (new page) == '\f'
-    '\u000d',  # carriage return == '\r'
+    '\u000A',  # line feed (new line) == '\n'
+    '\u000B',  # vertical tab == '\v'
+    '\u000C',  # form feed (new page) == '\f'
+    '\u000D',  # carriage return == '\r'
     '\u0020',  # space == ' '
     '\u0085',  # next line
-    '\u00a0',  # non-breaking space (alt+0160)
+    '\u00A0',  # non-breaking space (alt+0160)
     '\u1680',  # ogham space
     '\u2000',  # en quad
     '\u2001',  # em quad
@@ -42,30 +42,30 @@ UNICODE_SPACES: Set[str] = {  # refer to: https://en.wikipedia.org/wiki/Whitespa
     '\u2007',  # figure space
     '\u2008',  # punctuation space
     '\u2009',  # thin space
-    '\u200a',  # hair space
+    '\u200A',  # hair space
     '\u2028',  # line separator
     '\u2029',  # paragraph separator
-    '\u202f',  # narrow non-breaking space
-    '\u205f',  # medium mathematical space
+    '\u202F',  # narrow non-breaking space
+    '\u205F',  # medium mathematical space
     '\u3000',  # ideographic space
 
     # technically not whitespace, but they are blank and usage of these characters is a bug
-    '\u001c',  # file separator
-    '\u001d',  # group separator
-    '\u001e',  # record separator
-    '\u001f',  # unit separator
+    '\u001C',  # file separator
+    '\u001D',  # group separator
+    '\u001E',  # record separator
+    '\u001F',  # unit separator
 
     # technically not whitespace, but render as blank
-    '\u180e',  # mongolian vowel separator (NOT WHITESPACE)
-    '\u200b',  # zero width space (NOT WHITESPACE)
-    '\u200c',  # zero width non-joiner (NOT WHITESPACE)
-    '\u200d',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
+    '\u180E',  # mongolian vowel separator (NOT WHITESPACE)
+    '\u200B',  # zero width space (NOT WHITESPACE)
+    '\u200C',  # zero width non-joiner (NOT WHITESPACE)
+    '\u200D',  # zero width joiner (NOT WHITESPACE) (splitting on this will break some emoji!)
     '\u2060',  # word joiner (NOT WHITESPACE)
-    '\ufeff',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
+    '\uFEFF',  # zero width non-breaking space (also byte order mark) (NOT WHITESPACE)
 
     # # unicode space-illustrating characters (visible and NOT WHITESPACE)
-    # '\u00b7',  # middle dot (non-blank symbol used to represent whitespace)
-    # '\u273d',  # shouldered open box (non-blank symbol used to represent whitespace)
+    # '\u00B7',  # middle dot (non-blank symbol used to represent whitespace)
+    # '\u273D',  # shouldered open box (non-blank symbol used to represent whitespace)
     # '\u2420',  # symbol for space (non-blank symbol used to represent whitespace)
     # '\u2422',  # blank open symbol (non-blank symbol used to represent whitespace)
     # '\u2423',  # open box (non-blank symbol used to represent whitespace)
@@ -84,8 +84,8 @@ UNPRINTABLE_CHARS: Set[str] = {
     '\u0006',  # acknowledge (ACK)
     '\u0007',  # bell (also used as bullet point)
     '\u0008',  # backspace
-    '\u000e',  # shift out
-    '\u000f',  # shift in
+    '\u000E',  # shift out
+    '\u000F',  # shift in
     '\u0010',  # data link escape
     '\u0011',  # device control 1
     '\u0012',  # device control 2
@@ -96,11 +96,11 @@ UNPRINTABLE_CHARS: Set[str] = {
     '\u0017',  # end of transmission block
     '\u0018',  # cancel
     '\u0019',  # end of medium
-    '\u001a',  # substitute
-    '\u001b',  # escape (ESC)
-    '\u007f',  # delete (DEL)
-    '\uffef',  # unicode invalid char (should never exist)
-    '\ufffd',  # unicode replacement char
+    '\u001A',  # substitute
+    '\u001B',  # escape (ESC)
+    '\u007F',  # delete (DEL)
+    '\uFFEF',  # unicode invalid char (should never exist)
+    '\uFFFD',  # unicode replacement char
 }
 
 CLOSING_PUNCTUATION: Set[str] = {
@@ -109,57 +109,50 @@ CLOSING_PUNCTUATION: Set[str] = {
     ':',
     ';',
     '?',
-    '\u00a1',  # upside down -> '¡'
-    '\u00bf',  # upside down -> '¿'
-    '\u037e',  # greek question mark -> ';'
+    '\u00A1',  # upside down -> '¡'
+    '\u00BF',  # upside down -> '¿'
+    '\u037E',  # greek question mark -> ';'
     '\u0589',  # armenian full stop -> '։'
-    '\u06d4',  # arabic full stop = -> '۔'
+    '\u06D4',  # arabic full stop = -> '۔'
     '\u2026',  # ellipsis -> '…'
-    '\u203c',  # double -> '‼'
-    '\u203d',  # interrobang -> '‽'
+    '\u203C',  # double -> '‼'
+    '\u203D',  # interrobang -> '‽'
     '\u2047',  # double -> '⁇'
     '\u2048',  # double -> '⁈'
     '\u2049',  # double -> '⁉'
     '\u3002',  # chinese -> '。'
-    '\ufe12',  # chinese presentation form -> '︒'
-    '\ufe14',  # presentation form -> '︔'
-    '\ufe15',  # presentation form -> '︕'
-    '\ufe16',  # presentation form -> '︖'
-    '\ufe52',  # small form -> '﹒'
-    '\ufe54',  # small form -> '﹔'
-    '\ufe55',  # small form -> '﹕'
-    '\ufe56',  # small form -> '﹖'
-    '\ufe57',  # small form -> '﹗'
-    '\uff01',  # full width -> '！'
-    '\uff0e',  # full width -> '．'
-    '\uff1a',  # full width -> '：'
-    '\uff1b',  # full width -> '；'
-    '\uff1f',  # full width -> '？'
-    '\uff61',  # half width chinese -> '｡'
+    '\uFE12',  # chinese presentation form -> '︒'
+    '\uFE14',  # presentation form -> '︔'
+    '\uFE15',  # presentation form -> '︕'
+    '\uFE16',  # presentation form -> '︖'
+    '\uFE52',  # small form -> '﹒'
+    '\uFE54',  # small form -> '﹔'
+    '\uFE55',  # small form -> '﹕'
+    '\uFE56',  # small form -> '﹖'
+    '\uFE57',  # small form -> '﹗'
+    '\uFF01',  # full width -> '！'
+    '\uFF0E',  # full width -> '．'
+    '\uFF1A',  # full width -> '：'
+    '\uFF1B',  # full width -> '；'
+    '\uFF1F',  # full width -> '？'
+    '\uFF61',  # half width chinese -> '｡'
 }
 
 APOSTROPHES: Set[str] = {
     "'",
     '\u2019',  # curly quote (&rsquo;) -> '’'
-    '\uff07',  # full width -> '＇'
+    '\uFF07',  # full width -> '＇'
 }
 
 
-def memoize(f: Callable) -> Callable:
-    """
-    memoization decorator for a function taking ONLY a single argument
-    src: http://code.activestate.com/recipes/578231-probably-the-fastest-memoization-decorator-in-the-/
-    """
-
-    class MemoDict(dict):
-        def __missing__(self, key):
-            ret = self[key] = f(key)
-            return ret
-
-    return MemoDict().__getitem__
+@lru_cache(maxsize=None)
+def is_word_char(char: str) -> bool:
+    return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
+                                          'Mn', 'Mc', 'Me',  # diacritics, etc
+                                          }
 
 
-@memoize
+@lru_cache(maxsize=None)
 def is_text_char(char: str) -> bool:
     return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
                                           'Nd', 'Nl', 'No',  # numbers
@@ -168,7 +161,7 @@ def is_text_char(char: str) -> bool:
                                           }
 
 
-@memoize
+@lru_cache(maxsize=None)
 def is_punctuation_char(char: str) -> bool:
     if char in UNPRINTABLE_CHARS:
         return True
@@ -180,7 +173,7 @@ def is_punctuation_char(char: str) -> bool:
                                               }
 
 
-@memoize
+@lru_cache(maxsize=None)
 def is_space_char(char: str) -> bool:
     return char in UNICODE_SPACES
 
@@ -259,6 +252,8 @@ def _merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, A
 
 
 def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
+    # todo: special handling for U+00AD (Soft Hyphen)?
+
     word_buffer = []
     for idx, char in enumerate(text):
         # char is part of word
@@ -409,7 +404,7 @@ def sentence_split_tokens(text: str,
 
     :param text: to split in sentences
     :param split_newline: split paragraphs before sentence splitting
-    :param words_only: don't return non-word tokens
+    :param merge_apostrophe_word: slow and potentially undesirable, merges words with apostrophes
     :return: list of Token objects
     """
     token: Token
@@ -437,12 +432,12 @@ def sentence_split_tokens(text: str,
                 continue
 
             # note that this can also un-close a sentence, e.g. for "192.168.1.1"
-            if token.text not in {'"', '\uff02',
-                                  ')', '\uff09',
-                                  '>', '\uff1e',
-                                  ']', '\uff3d',
-                                  '}', '\uff5d',
-                                  '\u201d'}:
+            if token.text not in {'"', '\uFF02',
+                                  ')', '\uFF09',
+                                  '>', '\uFF1E',
+                                  ']', '\uFF3D',
+                                  '}', '\uFF5D',
+                                  '\u201D'}:
                 closed = token.text in CLOSING_PUNCTUATION
 
         if buffer:
@@ -469,6 +464,14 @@ def sentence_split(text: str,
         sentence = ''.join(token.text for token in sentence_tokens).strip()
         if sentence:
             yield sentence
+
+
+def text_n_grams(text: str,
+                 n: int = 2) -> List[str]:
+    """
+    fast ngram generator
+    """
+    return [text[i:i + n] for i in range(len(text) - n + 1)]
 
 
 def word_n_grams(text: str,
