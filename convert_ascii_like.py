@@ -1,6 +1,7 @@
 import json
 import string
 import warnings
+from collections import Counter
 from functools import lru_cache
 from typing import Dict
 
@@ -19,6 +20,8 @@ def get_ascii_alike_chars() -> Dict[int, str]:
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
+
+        c = Counter()
         for codepoint in range(0x10FFFF):
             char = chr(codepoint)
 
@@ -35,10 +38,17 @@ def get_ascii_alike_chars() -> Dict[int, str]:
             if alpha not in alpha_alike_codepoints:
                 continue
 
-            # add codepoints for latin-like scripts, but skip cyrillic since that's a bit different
-            if any(lang in unicodedata.name(char) for lang in ('LATIN', 'GREEK', 'ROMAN', 'MODIFIER', 'MATHEMATICAL')):
+            # add codepoints for latin-like scripts, but skip armenian/cyrillic since that's a bit different
+            if any(lang in unicodedata.name(char) for lang in ('LATIN', 'GREEK', 'ROMAN', 'MODIFIER',
+                                                               'MATHEMATICAL', 'DOUBLE-STRUCK', 'SCRIPT SMALL',
+                                                               'SCRIPT CAPITAL', 'BLACK-LETTER')):
                 alpha_alike_codepoints[alpha].append(codepoint)
+                # print(chr(codepoint), f'U+{codepoint:04x}', unicodedata.name(char))
+            else:
+                c.update(unicodedata.name(char).split())
 
+    # print(c.most_common(100))
+    # print({chr(codepoint): char for char, codepoints in alpha_alike_codepoints.items() for codepoint in codepoints})
     return {codepoint: char for char, codepoints in alpha_alike_codepoints.items() for codepoint in codepoints}
 
 
@@ -56,4 +66,3 @@ if __name__ == '__main__':
     print(json.dumps(convert_ascii_alike('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
     print(json.dumps(convert_ascii_alike('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
     print(json.dumps(convert_ascii_alike('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
-
