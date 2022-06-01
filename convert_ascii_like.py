@@ -55,6 +55,22 @@ def get_ascii_alike_chars() -> Dict[int, str]:
 def convert_ascii_alike(text: str) -> str:
     """
     Convert a string of characters that look like ASCII to a string of actual ASCII
+    
+    todo: try out some unicode fixing
+    
+    # decode bytes
+    if isinstance(text, (bytes, bytearray)):
+        text = UnicodeDammit.detwingle(text)
+
+    # unexpected type, just coerce
+    elif not isinstance(text, str):
+        text = str(text)
+
+    # convert to unicode
+    text = UnicodeDammit(text, most_likely_encodings).unicode_markup
+
+    # ftfy for good measure
+    return ftfy.fix_text(text)
     """
     return text.translate(get_ascii_alike_chars())
 
