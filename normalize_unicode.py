@@ -5,8 +5,41 @@ from collections import Counter
 from functools import lru_cache
 from typing import Dict
 
+import ftfy as ftfy
 import unicodedata
 import unidecode
+from bs4 import UnicodeDammit
+
+
+def fix_unicode(text: str) -> str:
+    """
+    Fix unicode text
+
+    :param text:
+    :return:
+    """
+
+    # decode bytes
+    if isinstance(text, (bytes, bytearray)):
+        text = UnicodeDammit.detwingle(text)
+
+    # unexpected type, just coerce
+    elif not isinstance(text, str):
+        text = str(text)
+
+    # convert to unicode
+    text = UnicodeDammit(text).unicode_markup
+
+    # ftfy for good measure
+    text = ftfy.fix_text(text)
+
+    # todo: set flags for suggested encoding, fixing quotation marks, etc
+    text = UnicodeDammit(text,
+                         smart_quotes_to='ascii',
+                         user_encodings=['utf8', 'utf16'],
+                         ).unicode_markup
+
+    return unicodedata.normalize('NFKD', text)
 
 
 @lru_cache
@@ -52,33 +85,35 @@ def get_ascii_alike_chars() -> Dict[int, str]:
     return {codepoint: char for char, codepoints in alpha_alike_codepoints.items() for codepoint in codepoints}
 
 
-def convert_ascii_alike(text: str) -> str:
+def normalize_unicode(text: str) -> str:
     """
-    Convert a string of characters that look like ASCII to a string of actual ASCII
-    
-    todo: try out some unicode fixing
-    
-    # decode bytes
-    if isinstance(text, (bytes, bytearray)):
-        text = UnicodeDammit.detwingle(text)
-
-    # unexpected type, just coerce
-    elif not isinstance(text, str):
-        text = str(text)
-
-    # convert to unicode
-    text = UnicodeDammit(text, most_likely_encodings).unicode_markup
-
-    # ftfy for good measure
-    return ftfy.fix_text(text)
+    normalize unicode characters that to ASCII characters
     """
+    text = fix_unicode(text)
+
+    # copilot suggested this
+    text = text.replace(u'\u2013', '-')
+    text = text.replace(u'\u2014', '-')
+    text = text.replace(u'\u2018', "'")
+    text = text.replace(u'\u2019', "'")
+    text = text.replace(u'\u201a', ',')
+    text = text.replace(u'\u201b', '"')
+    text = text.replace(u'\u201c', '"')
+    text = text.replace(u'\u201d', '"')
+    text = text.replace(u'\u201e', '"')
+    text = text.replace(u'\u201f', '"')
+    text = text.replace(u'\u2022', '*')
+    text = text.replace(u'\u2026', '...')
+    text = text.replace(u'\u00a0', ' ')
+    text = text.replace(u'\u20ac', '€')
+
     return text.translate(get_ascii_alike_chars())
 
 
 if __name__ == '__main__':
-    print(json.dumps(convert_ascii_alike('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝')))
-    print(json.dumps(convert_ascii_alike('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱')))
-    print(json.dumps(convert_ascii_alike('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑')))
-    print(json.dumps(convert_ascii_alike('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
-    print(json.dumps(convert_ascii_alike('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
-    print(json.dumps(convert_ascii_alike('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
+    print(json.dumps(normalize_unicode('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝')))
+    print(json.dumps(normalize_unicode('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱')))
+    print(json.dumps(normalize_unicode('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑')))
+    print(json.dumps(normalize_unicode('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
+    print(json.dumps(normalize_unicode('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
+    print(json.dumps(normalize_unicode('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
