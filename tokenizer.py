@@ -163,9 +163,9 @@ def is_text_char(char: str) -> bool:
                                           'Nd', 'Nl', 'No',  # numbers
                                           'Mn', 'Mc', 'Me',  # diacritics, etc
                                           'Co',  # private use char class
-                                          } or \
-           unicodedata.category(char) in {'Sk',  # modifier symbols
-                                          } and ord(char) < 0xFFFF  # except emoji modifiers
+                                          }  # or \
+    # unicodedata.category(char) in {'Sk',  # modifier symbols
+    #                                } and ord(char) < 0xFFFF  # except emoji modifiers
 
 
 @lru_cache(maxsize=None)
@@ -173,9 +173,9 @@ def is_text_combining_char(char: str) -> bool:
     return unicodedata.category(char) in {'Mn',  # diacritics
                                           'Mc',  # spacing marks
                                           'Me',  # enclosing marks
-                                          } or \
-           unicodedata.category(char) in {'Sk',  # modifier symbols
-                                          } and ord(char) < 0xFFFF  # except emoji modifiers
+                                          }  # or \
+    # unicodedata.category(char) in {'Sk',  # modifier symbols
+    #                                } and ord(char) < 0xFFFF  # except emoji modifiers
 
 
 @lru_cache(maxsize=None)
