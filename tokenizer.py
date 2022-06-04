@@ -147,6 +147,7 @@ APOSTROPHES: Set[str] = {
 
 @lru_cache(maxsize=None)
 def is_word_char(char: str) -> bool:
+    # return regex.fullmatch(r'[\p{L}\p{M}]', char, flags=regex.UNICODE)
     return unicodedata.category(char) in {'Lu', 'Ll', 'Lt', 'Lm', 'Lo',  # letters
                                           'Mn', 'Mc', 'Me',  # diacritics, etc
                                           }
@@ -266,7 +267,7 @@ def _merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, A
 def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
     # todo: special handling for U+00AD (Soft Hyphen)?
 
-    word_buffer = []
+    word_buffer: List[str] = []
     for idx, char in enumerate(text):
         # char is part of word
         if is_text_char(char):
@@ -276,7 +277,7 @@ def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
         else:
             if word_buffer:
                 yield ''.join(word_buffer)
-                word_buffer = []
+                word_buffer.clear()
 
             yield char
 
@@ -286,7 +287,7 @@ def _unicode_tokenize_all_strings(text: str) -> Generator[str, Any, None]:
 
 
 def _unicode_tokenize_all_tokens(text: str) -> Generator[Token, Any, None]:
-    word_buffer = []
+    word_buffer: List[str] = []
     start_idx = None
     for idx, char in enumerate(text):
         # char is part of word
@@ -303,7 +304,7 @@ def _unicode_tokenize_all_tokens(text: str) -> Generator[Token, Any, None]:
         elif is_space_char(char):
             if word_buffer:
                 yield Token(''.join(word_buffer), start_idx, TokenCategory.WORD)
-                word_buffer = []
+                word_buffer.clear()
 
             yield Token(char, idx, TokenCategory.WHITESPACE)
 
@@ -311,7 +312,7 @@ def _unicode_tokenize_all_tokens(text: str) -> Generator[Token, Any, None]:
         else:
             if word_buffer:
                 yield Token(''.join(word_buffer), start_idx, TokenCategory.WORD)
-                word_buffer = []
+                word_buffer.clear()
 
             yield Token(char, idx, TokenCategory.PUNCTUATION)
 
@@ -321,7 +322,9 @@ def _unicode_tokenize_all_tokens(text: str) -> Generator[Token, Any, None]:
 
 
 def _unicode_tokenize_word_strings(text: str) -> Generator[str, Any, None]:
-    word_buffer = []
+    # for word in regex.finditer(r'\w+', text, flags=regex.U):
+    #     yield word.group(0)
+    word_buffer: List[str] = []
     for char in text:
         # char is part of word
         if is_text_char(char):
@@ -330,7 +333,7 @@ def _unicode_tokenize_word_strings(text: str) -> Generator[str, Any, None]:
         # char is non-text AND buffer is text
         elif word_buffer:
             yield ''.join(word_buffer)
-            word_buffer = []
+            word_buffer.clear()
 
     # yield remainder
     if word_buffer:
@@ -338,7 +341,7 @@ def _unicode_tokenize_word_strings(text: str) -> Generator[str, Any, None]:
 
 
 def _unicode_tokenize_word_tokens(text: str) -> Generator[Token, Any, None]:
-    word_buffer = []
+    word_buffer: List[str] = []
     start_idx = None
     for idx, char in enumerate(text):
         # char is part of word
@@ -352,7 +355,7 @@ def _unicode_tokenize_word_tokens(text: str) -> Generator[Token, Any, None]:
         # char is non-text AND buffer is text
         elif word_buffer:
             yield Token(''.join(word_buffer), start_idx, TokenCategory.WORD)
-            word_buffer = []
+            word_buffer.clear()
 
     # yield remainder
     if word_buffer:
@@ -429,8 +432,9 @@ def sentence_split_tokens(text: str,
     else:
         paragraphs = [text.strip()]
 
+    buffer: List[Token] = []
     for para in paragraphs:
-        buffer = []
+        buffer.clear()
         closed = False
         for token in unicode_tokenize(para, as_tokens=True, merge_apostrophe_word=merge_apostrophe_word):
             buffer.append(token)
@@ -439,7 +443,7 @@ def sentence_split_tokens(text: str,
             if closed and token.category is TokenCategory.WHITESPACE:
                 if buffer:
                     yield buffer
-                buffer = []
+                buffer.clear()
                 closed = False
                 continue
 
