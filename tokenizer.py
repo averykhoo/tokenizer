@@ -241,7 +241,7 @@ def _merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, A
         else:
             assert token.category is not TokenCategory.WORD  # since _3 is a WORD, this cannot be a word
             if token.text not in APOSTROPHES:
-                yield Token(text=(_1.text + _2.text + _3.text),
+                yield Token(text=f'{_1.text}{_2.text}{_3.text}',
                             start_pos=_1.start_pos,
                             category=TokenCategory.WORD)
             else:
@@ -258,7 +258,7 @@ def _merge_apostrophes_into_words(tokens: Iterable[Token]) -> Generator[Token, A
 
     # end of loop
     if _3 is not None:
-        yield Token(text=(_1.text + _2.text + _3.text),
+        yield Token(text=f'{_1.text}{_2.text}{_3.text}',
                     start_pos=_1.start_pos,
                     category=TokenCategory.WORD)
     elif _2 is not None:
