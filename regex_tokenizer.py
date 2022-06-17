@@ -75,17 +75,17 @@ def _preprocess(text: str,
     if not isinstance(text, str):
         raise TypeError(f'expected <str>, got <{type(text)}>')
 
-    # pre-process step 1: unicode decomposition
+    # step 1: unicode decomposition
     if nfkd:
         text = f'{unicodedata.normalize("NFKD", text)}\0'
     else:
         text += '\0'
 
-    # pre-process step 2: casefold
+    # step 2: casefold (or lowercase if we're converting to ascii later)
     if casefold:
-        text = text.casefold()
+        text = text.lower() if replace_ascii else text.casefold()
 
-    # pre-process step 3: replace ascii-like chars
+    # step 3: replace ascii-like chars
     if replace_ascii:
         text = text.translate(_ASCII_ALIKE_LOOKUP)
 
@@ -119,23 +119,23 @@ def tokenize(text: str,
     text = _preprocess(text, nfkd=nfkd, casefold=casefold, replace_ascii=replace_ascii)
 
     # get all word tokens
-    tokens = []
-    token_buffer = []
+    words = []
+    word_buffer = []
     for match in _REGEX_GRAPHEME.finditer(text):
         grapheme = match.group(0)
 
-        # don't count underscore as a word token, despite what the unicode standard says
-        if grapheme[0] not in {'_'}:
+        # get all word-like graphemes
+        if grapheme[0] not in {'_'}:  # underscore is not word-like, despite what the unicode standard says
             if _REGEX_WORD_CHAR.match(grapheme):
-                token_buffer.append(grapheme[0] if strip_diacritics else grapheme)
+                word_buffer.append(grapheme[0] if strip_diacritics else grapheme)
                 continue
 
-        # not a word-like grapheme, append current word
-        if token_buffer:
-            tokens.append(''.join(token_buffer))
-            token_buffer.clear()
+        # not a word-like grapheme, so clear word buffer
+        if word_buffer:
+            words.append(''.join(word_buffer))
+            word_buffer.clear()
 
-    return tokens
+    return words
 
 
 if __name__ == '__main__':
