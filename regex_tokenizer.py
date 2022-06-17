@@ -105,7 +105,7 @@ def tokenize(text: str,
     * enable `replace_ascii` if you want to match ascii strings against ascii-alike text
     * enable `strip_diacritics` if you want to fix zalgo text or want to ignore accents
 
-    warning: if any flags are enabled, the output tokens may not be a substring of the input text
+    warning: if any flags are enabled, the output words may not be substrings of the input text
 
     :param text: to extract words from
     :param nfkd: unicode normal form compatibility decomposition
