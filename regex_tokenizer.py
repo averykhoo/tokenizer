@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 import regex
@@ -63,26 +64,14 @@ _ASCII_ALIKE = {'A': 'ÀÁÂÃÄÅĀĂĄǍǞǠǺȀȂȦȺΆΑᴀᴬḀẠẢẤ�
 _ASCII_TRANLATION_LOOKUP = {ord(char): alpha for alpha, chars in _ASCII_ALIKE.items() for char in chars}
 
 
-def tokenize(text: str,
-             nfkd: bool = True,
-             casefold: bool = False,
-             replace_ascii: bool = False,
-             strip_diacritics: bool = False,
-             ) -> List[str]:
-    """
-    tokenize text into words
-
-    :param text: to extract words from
-    :param nfkd: unicode normal form canonical decomposition
-    :param casefold: lowercase but better
-    :param replace_ascii: make ascii-like where possible
-    :param strip_diacritics: unwrap graphemes and only keep base char
-    :return: list of words
-    """
-
+def _preprocess(text: str,
+                nfkd: bool = False,
+                casefold: bool = False,
+                replace_ascii: bool = False,
+                ) -> str:
     # sanity check
     if not isinstance(text, str):
-        raise TypeError(f'expected <str>, for <{type(text)}>')
+        raise TypeError(f'expected <str>, got <{type(text)}>')
 
     # pre-process step 1: unicode decomposition
     if nfkd:
@@ -97,6 +86,35 @@ def tokenize(text: str,
     # pre-process step 3: replace ascii-like chars
     if replace_ascii:
         text = text.translate(_ASCII_TRANLATION_LOOKUP)
+
+    return text
+
+
+def tokenize(text: str,
+             nfkd: bool = False,
+             casefold: bool = False,
+             replace_ascii: bool = False,
+             strip_diacritics: bool = False,
+             ) -> List[str]:
+    """
+    tokenize text into words
+    * enable `nfkd` if you want to do string matching
+    * enable `casefold` if you want case-insensitivity
+    * enable `replace_ascii` if you want to match ascii strings against ascii-alike text
+    * enable `strip_diacritics` if you want to fix zalgo text or want to ignore accents
+
+    warning: if any flags are enabled, the output tokens may not be a substring of the input text
+
+    :param text: to extract words from
+    :param nfkd: unicode normal form compatibility decomposition
+    :param casefold: lowercase but better
+    :param replace_ascii: make ascii-like where possible
+    :param strip_diacritics: unwrap graphemes and only keep base char
+    :return: list of words
+    """
+
+    # pre-process (and sanity check)
+    text = _preprocess(text, nfkd=nfkd, casefold=casefold, replace_ascii=replace_ascii)
 
     # get all word tokens
     tokens = []
@@ -116,3 +134,12 @@ def tokenize(text: str,
             token_buffer.clear()
 
     return tokens
+
+
+if __name__ == '__main__':
+    print(json.dumps(tokenize('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝')))
+    print(json.dumps(tokenize('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱')))
+    print(json.dumps(tokenize('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑')))
+    print(json.dumps(tokenize('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
+    print(json.dumps(tokenize('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
+    print(json.dumps(tokenize('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
