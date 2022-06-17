@@ -7,7 +7,6 @@ import unicodedata
 _REGEX_GRAPHEME = regex.compile(r'\X', flags=regex.UNICODE)
 _REGEX_WORD_CHAR = regex.compile(r'\w', flags=regex.UNICODE)
 
-#
 _ASCII_ALIKE = {'A': 'ÀÁÂÃÄÅĀĂĄǍǞǠǺȀȂȦȺΆΑᴀᴬḀẠẢẤẦẨẪẬẮẰẲẴẶἈἉἊἋἌἍἎἏᾈᾉᾊᾋᾌᾍᾎᾏᾸᾹᾺΆᾼⱯＡ𝐀𝐴𝑨𝒜𝓐𝔄𝔸𝕬𝖠𝗔𝘈𝘼𝙰',
                 'B': 'ƁƂɃʙΒᴃᴮᴯḂḄḆℬＢ𝐁𝐵𝑩𝓑𝔅𝔹𝕭𝖡𝗕𝘉𝘽𝙱',
                 'C': 'ÇĆĈĊČƇȻʗᴄḈℂℭＣ𝐂𝐶𝑪𝒞𝓒𝕮𝖢𝗖𝘊𝘾𝙲',
