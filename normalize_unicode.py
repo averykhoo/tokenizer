@@ -36,7 +36,7 @@ def fix_unicode(text: str) -> str:
     # todo: set flags for suggested encoding, fixing quotation marks, etc
     text = UnicodeDammit(text,
                          smart_quotes_to='ascii',
-                         user_encodings=['utf8', 'utf16'],
+                         # user_encodings=['utf8', 'utf16'],
                          ).unicode_markup
 
     return unicodedata.normalize('NFKD', text)
@@ -117,3 +117,10 @@ if __name__ == '__main__':
     print(json.dumps(normalize_unicode('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
     print(json.dumps(normalize_unicode('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
     print(json.dumps(normalize_unicode('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
+
+    from pprint import pprint
+
+    groupby = {}
+    for o, c in get_ascii_alike_chars().items():
+        groupby.setdefault(c, []).append(chr(o))
+    pprint({alpha: ''.join(sorted(groupby[alpha])) for alpha in sorted(groupby.keys())})
