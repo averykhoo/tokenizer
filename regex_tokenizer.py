@@ -111,7 +111,7 @@ def tokenize(text: str,
     :param nfkd: unicode normal form compatibility decomposition
     :param casefold: lowercase but better
     :param replace_ascii: make ascii-like where possible
-    :param strip_diacritics: unwrap graphemes and only keep base char
+    :param strip_diacritics: unwrap graphemes and only keep base codepoint
     :return: list of words
     """
 
