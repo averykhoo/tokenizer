@@ -123,11 +123,13 @@ def tokenize(text: str,
     word_buffer = []
     for match in _REGEX_GRAPHEME.finditer(text):
         grapheme = match.group(0)
+        char = grapheme[0]
 
         # get all word-like graphemes
-        if grapheme[0] not in {'_'}:  # underscore is not word-like, despite what the unicode standard says
-            if _REGEX_WORD_CHAR.match(grapheme):
-                word_buffer.append(grapheme[0] if strip_diacritics else grapheme)
+        # in my opinion, underscore is not word-like (despite what the unicode standard says)
+        if char not in {'_'}:
+            if _REGEX_WORD_CHAR.match(char):
+                word_buffer.append(char if strip_diacritics else grapheme)
                 continue
 
         # not a word-like grapheme, so clear word buffer
