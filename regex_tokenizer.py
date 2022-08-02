@@ -2,6 +2,7 @@ import json
 from typing import Dict
 from typing import List
 from typing import Pattern
+from typing import Union
 
 import regex
 import unicodedata
@@ -92,18 +93,20 @@ def _preprocess(text: str,
     return text
 
 
-def tokenize(text: str,
-             nfkd: bool = False,
-             casefold: bool = False,
-             replace_ascii: bool = False,
-             strip_diacritics: bool = False,
-             ) -> List[str]:
+def word_tokenize(text: str,
+                  nfkd: bool = False,
+                  casefold: bool = False,
+                  replace_ascii: bool = False,
+                  strip_diacritics: bool = False,
+                  accept_apostrophe: Union[bool, int] = False,
+                  ) -> List[str]:
     """
     tokenize text into words
     * enable `nfkd` if you want to do string matching
     * enable `casefold` if you want case-insensitivity
     * enable `replace_ascii` if you want to match ascii strings against ascii-alike text
     * enable `strip_diacritics` if you want to fix zalgo text or want to ignore accents
+    * enable `accept_apostrophe` if you want to allow an apostrophe in your word (not recommended)
 
     warning: if any flags are enabled, the output words may not be substrings of the input text
 
@@ -112,8 +115,11 @@ def tokenize(text: str,
     :param casefold: lowercase but better
     :param replace_ascii: make ascii-like where possible
     :param strip_diacritics: unwrap graphemes, keeping only initial codepoint
+    :param accept_apostrophe: allow an apostrophe, or an integer number of apostrophes
     :return: list of words
     """
+    # sanity check
+    assert isinstance(accept_apostrophe, (bool, int)) and accept_apostrophe >= 0
 
     # pre-process (and sanity check)
     text = _preprocess(text, nfkd=nfkd, casefold=casefold, replace_ascii=replace_ascii)
@@ -121,29 +127,46 @@ def tokenize(text: str,
     # get all word tokens
     words = []
     word_buffer = []
+    apostrophe_locations = []
     for match in _REGEX_GRAPHEME.finditer(text):
         grapheme = match.group(0)
         char = grapheme[0]
 
         # get all word-like graphemes
         # in my opinion, underscore is not word-like (despite what the unicode standard says)
-        if char not in {'_'}:
-            if _REGEX_WORD_CHAR.match(char):
+        if _REGEX_WORD_CHAR.match(char):
+            if char not in {'_'}:
                 word_buffer.append(char if strip_diacritics else grapheme)
                 continue
 
+        # allow adding apostrophes too
+        # we'll filter those later
+        if char in {"'", '\u2019', '\uFF07'}:
+            apostrophe_locations.append(len(word_buffer))
+            word_buffer.append(char if strip_diacritics else grapheme)
+            continue
+
         # not a word-like grapheme, so clear word buffer
         if word_buffer:
-            words.append(''.join(word_buffer))
+            if len(apostrophe_locations) <= accept_apostrophe:
+                words.append(''.join(word_buffer))
+            else:
+                apostrophe_locations.append(len(word_buffer))
+                current_idx = 0
+                for next_idx in apostrophe_locations:
+                    if next_idx > current_idx:
+                        words.append(''.join(word_buffer[current_idx:next_idx]))
+                    current_idx = next_idx + 1
             word_buffer.clear()
+            apostrophe_locations.clear()
 
     return words
 
 
 if __name__ == '__main__':
-    print(json.dumps(tokenize('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝')))
-    print(json.dumps(tokenize('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱')))
-    print(json.dumps(tokenize('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑')))
-    print(json.dumps(tokenize('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
-    print(json.dumps(tokenize('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
-    print(json.dumps(tokenize('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
+    print(json.dumps(word_tokenize('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝')))
+    print(json.dumps(word_tokenize('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱')))
+    print(json.dumps(word_tokenize('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑')))
+    print(json.dumps(word_tokenize('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
+    print(json.dumps(word_tokenize('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
+    print(json.dumps(word_tokenize('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
