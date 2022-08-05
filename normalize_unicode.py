@@ -63,18 +63,27 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                 continue
 
             # skip chars that aren't text chars
-            if unicodedata.category(char)[0] != 'L':
+            if unicodedata.category(char)[0] != 'L' and unicodedata.category(char) != 'So':
                 continue
 
             # we're only looking for chars that map to ascii letters
             alpha = unidecode.unidecode(char)
+            try:
+                if not alpha and unicodedata.name(char).startswith('REGIONAL INDICATOR SYMBOL LETTER'):
+                    alpha = unicodedata.name(char)[32:].strip()
+            except ValueError:
+                pass
+            if alpha.startswith('(') and alpha.endswith(')'):
+                alpha = alpha[1:-1]   # e.g. '🅤' -> '(U)'
+            if alpha.startswith('[') and alpha.endswith(']'):
+                alpha = alpha[1:-1]   # e.g. '🆄' -> '[U]'
             if alpha not in alpha_alike_codepoints:
                 continue
 
             # add codepoints for latin-like scripts, but skip armenian/cyrillic since that's a bit different
             if any(lang in unicodedata.name(char) for lang in ('LATIN', 'GREEK', 'ROMAN', 'MODIFIER',
                                                                'MATHEMATICAL', 'DOUBLE-STRUCK', 'SCRIPT SMALL',
-                                                               'SCRIPT CAPITAL', 'BLACK-LETTER')):
+                                                               'SCRIPT CAPITAL', 'BLACK-LETTER', 'REGIONAL INDICATOR')):
                 alpha_alike_codepoints[alpha].append(codepoint)
                 # print(chr(codepoint), f'U+{codepoint:04x}', unicodedata.name(char))
             else:
@@ -107,6 +116,12 @@ def normalize_unicode(text: str) -> str:
     text = text.replace(u'\u00a0', ' ')
     text = text.replace(u'\u20ac', '€')
 
+    # zero-width stuff
+    text = text.replace(u'\u200b', '')
+    text = text.replace(u'\u200c', '')
+    text = text.replace(u'\u200d', '')
+    text = text.replace(u'\ufeff', '')
+
     return text.translate(get_ascii_alike_chars())
 
 
@@ -117,6 +132,9 @@ if __name__ == '__main__':
     print(json.dumps(normalize_unicode('𝘏𝘦𝘭𝘭𝘰 𝘞𝘰𝘳𝘭𝘥')))
     print(json.dumps(normalize_unicode('𝑯𝒆𝒍𝒍𝒐 𝑾𝒐𝒓𝒍𝒅')))
     print(json.dumps(normalize_unicode('𝙃𝙚𝙡𝙡𝙤 𝙒𝙤𝙧𝙡𝙙')))
+    print(json.dumps(normalize_unicode('Ｕｎｉｃｏｄｅ!')))
+    print(json.dumps(normalize_unicode('🅤🅝🅘🅒🅞🅓🅔‽')))
+    print(json.dumps(normalize_unicode('🇺‌🇳‌🇮‌🇨‌🇴‌🇩‌🇪!')))
 
     from pprint import pprint
 
