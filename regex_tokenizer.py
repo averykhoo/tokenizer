@@ -139,24 +139,32 @@ def word_tokenize(text: str,
                 word_buffer.append(char if strip_diacritics else grapheme)
                 continue
 
-        # allow adding apostrophes too
-        # we'll filter those later
-        if char in {"'", '\u2019', '\uFF07'}:
+        # allow adding any number of apostrophes to words
+        apostrophe_chars = set("'\u2019\uFF07")
+        # we'll filter out words with too many apostrophes later
+        if char in apostrophe_chars:
             apostrophe_locations.append(len(word_buffer))
             word_buffer.append(char if strip_diacritics else grapheme)
             continue
 
         # not a word-like grapheme, so clear word buffer
         if word_buffer:
+
+            # if we have an acceptable number (possibly zero) of apostrophes
             if len(apostrophe_locations) <= accept_apostrophe:
                 words.append(''.join(word_buffer))
+
+            # otherwise split at the known apostrophe locations
             else:
-                apostrophe_locations.append(len(word_buffer))
                 current_idx = 0
                 for next_idx in apostrophe_locations:
                     if next_idx > current_idx:
                         words.append(''.join(word_buffer[current_idx:next_idx]))
                     current_idx = next_idx + 1
+                if current_idx < len(word_buffer):  # don't forget to add the last bit, if any
+                    words.append(''.join(word_buffer[current_idx:len(word_buffer)]))
+
+            # clear buffers and keep looking for more words
             word_buffer.clear()
             apostrophe_locations.clear()
 
@@ -164,6 +172,7 @@ def word_tokenize(text: str,
 
 
 if __name__ == '__main__':
+    print(json.dumps(word_tokenize('hello world')))
     print(json.dumps(word_tokenize('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝', nfkd=True)))
     print(json.dumps(word_tokenize('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱', nfkd=True)))
     print(json.dumps(word_tokenize('𝐻𝑒𝑙𝑙𝑜 𝑊𝑜𝑟𝑙𝑑', nfkd=True)))
@@ -173,3 +182,7 @@ if __name__ == '__main__':
     print(json.dumps(word_tokenize('Ｕｎｉｃｏｄｅ!', replace_ascii=True)))
     print(json.dumps(word_tokenize('🅤🅝🅘🅒🅞🅓🅔‽', replace_ascii=True)))
     print(json.dumps(word_tokenize('🇺‌🇳‌🇮‌🇨‌🇴‌🇩‌🇪!', replace_ascii=True, strip_diacritics=True)))
+    print(json.dumps(word_tokenize("   'a   a'a   a'   "
+                                   "   ''a   'a'a   'a'   a'a'a   a'a'   a''   "
+                                   "   '''a ''a'a 'a''a 'a'a'a a'a'a'a 'a'a' a'a'a' a''a' a'a'' a'''   ",
+                                   accept_apostrophe=2)))
