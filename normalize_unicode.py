@@ -66,17 +66,23 @@ def get_ascii_alike_chars() -> Dict[int, str]:
             if unicodedata.category(char)[0] != 'L' and unicodedata.category(char) != 'So':
                 continue
 
-            # we're only looking for chars that map to ascii letters
+            # unidecode is usually good at getting the ascii-like char
             alpha = unidecode.unidecode(char)
+
+            # this may break some emoji, but sometimes people use it as letters
             try:
                 if not alpha and unicodedata.name(char).startswith('REGIONAL INDICATOR SYMBOL LETTER'):
                     alpha = unicodedata.name(char)[32:].strip()
             except ValueError:
                 pass
+
+            # unidecode adds brackets to symbol-like chars
             if alpha.startswith('(') and alpha.endswith(')'):
-                alpha = alpha[1:-1]   # e.g. '🅤' -> '(U)'
+                alpha = alpha[1:-1]  # e.g. '🅤' -> '(U)'
             if alpha.startswith('[') and alpha.endswith(']'):
-                alpha = alpha[1:-1]   # e.g. '🆄' -> '[U]'
+                alpha = alpha[1:-1]  # e.g. '🆄' -> '[U]'
+
+            # we're only looking for chars that map to ascii letters
             if alpha not in alpha_alike_codepoints:
                 continue
 
