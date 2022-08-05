@@ -78,9 +78,7 @@ def _preprocess(text: str,
 
     # step 1: unicode decomposition
     if nfkd:
-        text = f'{unicodedata.normalize("NFKD", text)}\0'
-    else:
-        text += '\0'
+        text = unicodedata.normalize("NFKD", text)
 
     # step 2: casefold (or lowercase if we're converting to ascii later)
     if casefold:
@@ -128,7 +126,7 @@ def word_tokenize(text: str,
     words = []
     word_buffer = []
     apostrophe_locations = []
-    for match in _REGEX_GRAPHEME.finditer(text):
+    for match in _REGEX_GRAPHEME.finditer(f'\2{text}\3'):  # ensure first and last iterations are not graphemes
         grapheme = match.group(0)
         char = grapheme[0]
 
@@ -172,6 +170,7 @@ def word_tokenize(text: str,
 
 
 if __name__ == '__main__':
+    print(json.dumps(word_tokenize('hello')))
     print(json.dumps(word_tokenize('hello world')))
     print(json.dumps(word_tokenize('𝐇𝐞𝐥𝐥𝐨 𝐖𝐨𝐫𝐥𝐝', nfkd=True)))
     print(json.dumps(word_tokenize('𝗛𝗲𝗹𝗹𝗼 𝗪𝗼𝗿𝗹𝗱', nfkd=True)))
