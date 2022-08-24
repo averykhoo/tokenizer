@@ -8,6 +8,7 @@ from typing import Dict
 import ftfy as ftfy
 import unicodedata
 import unidecode
+# noinspection PyUnresolvedReferences
 from bs4 import UnicodeDammit
 
 
