@@ -102,6 +102,7 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                          'INFORMATION SOURCE', 'TONE FIVE', 'MICRO SIGN', 'SOUND RECORDING COPYRIGHT')) and
                  all(lang not in unicodedata.name(char) for lang in (
                          'LETTER PHI', 'LETTER ETA', 'LETTER OMEGA', 'LETTER PI', 'LETTER XI', 'LETTER ZETA',
+                         'LETTER KOPPA',
                          'GREEK PHI', 'GREEK PI',
                          'LETTER WYNN', 'LETTER YOGH'))
             ) or (
