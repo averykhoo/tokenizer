@@ -49,7 +49,7 @@ def get_ascii_alike_chars() -> Dict[int, str]:
     Return a string of characters that look like ASCII
     """
     alpha_alike_codepoints = dict()
-    for char in string.ascii_letters:
+    for char in string.ascii_letters + string.digits:
         alpha_alike_codepoints[char] = []
 
     with warnings.catch_warnings():
@@ -64,7 +64,7 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                 continue
 
             # skip chars that aren't text chars
-            if unicodedata.category(char)[0] != 'L' and unicodedata.category(char) != 'So':
+            if unicodedata.category(char)[0] != 'L' and unicodedata.category(char) not in {'So', 'No'}:
                 continue
 
             # unidecode is usually good at getting the ascii-like char, but adds brackets to symbol-like chars
@@ -73,6 +73,8 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                 alpha = alpha[1:-1]  # e.g. '🅤' -> '(U)'
             if alpha.startswith('[') and alpha.endswith(']'):
                 alpha = alpha[1:-1]  # e.g. '🆄' -> '[U]'
+            if alpha.startswith('<') and alpha.endswith('>'):
+                alpha = alpha[1:-1]  # e.g. '🄪' -> '<S>'
 
             # this may break some emoji, but sometimes people use it as letters
             try:
@@ -86,13 +88,31 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                 continue
 
             # add codepoints for latin-like scripts, but skip armenian/cyrillic since that's a bit different
-            if any(lang in unicodedata.name(char) for lang in ('LATIN', 'GREEK', 'ROMAN', 'MODIFIER',
-                                                               'MATHEMATICAL', 'DOUBLE-STRUCK', 'SCRIPT SMALL',
-                                                               'SCRIPT CAPITAL', 'BLACK-LETTER', 'REGIONAL INDICATOR')):
+            if ((alpha in string.ascii_letters and
+                 any(lang in unicodedata.name(char) for lang in (
+                         'LATIN', 'GREEK', 'ROMAN', 'MODIFIER',
+                         'MATHEMATICAL', 'DOUBLE-STRUCK', 'SCRIPT SMALL',
+                         'SCRIPT CAPITAL', 'BLACK-LETTER',
+                         'REGIONAL INDICATOR', 'SUBSCRIPT', 'SUPERSCRIPT',
+                         'TURNED', 'TORTOISE SHELL',
+                         'COPYRIGHT SIGN', 'REGISTERED SIGN',
+                         'FEMININE ORDINAL INDICATOR',
+                         'MASCULINE ORDINAL INDICATOR', 'KELVIN SIGN',
+                         'PLANCK CONSTANT', 'ANGSTROM SIGN', 'ESTIMATED SYMBOL',
+                         'INFORMATION SOURCE', 'TONE FIVE', 'MICRO SIGN', 'SOUND RECORDING COPYRIGHT')) and
+                 all(lang not in unicodedata.name(char) for lang in (
+                         'LETTER PHI', 'LETTER ETA', 'LETTER OMEGA', 'LETTER PI', 'LETTER XI', 'LETTER ZETA',
+                         'GREEK PHI', 'GREEK PI',
+                         'LETTER WYNN', 'LETTER YOGH'))
+            ) or (
+                    alpha in string.digits and
+                    any(lang in unicodedata.name(char) for lang in ('DIGIT', 'SUBSCRIPT', 'SUPERSCRIPT')) and
+                    'ETHIOPIC' not in unicodedata.name(char))):
                 alpha_alike_codepoints[alpha].append(codepoint)
                 # print(chr(codepoint), f'U+{codepoint:04x}', unicodedata.name(char))
             else:
                 c.update(unicodedata.name(char).split())
+                print(char, unicodedata.name(char), alpha)
 
     # print(c.most_common(100))
     # print({chr(codepoint): char for char, codepoints in alpha_alike_codepoints.items() for codepoint in codepoints})
