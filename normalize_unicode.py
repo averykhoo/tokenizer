@@ -4,6 +4,7 @@ import warnings
 from collections import Counter
 from functools import lru_cache
 from typing import Dict
+from typing import List
 
 import ftfy as ftfy
 import unicodedata
@@ -164,7 +165,17 @@ if __name__ == '__main__':
 
     from pprint import pprint
 
-    groupby = {}
+    groupby: Dict[str, List[str]] = dict()
     for o, c in get_ascii_alike_chars().items():
         groupby.setdefault(c, []).append(chr(o))
+
+    # hardcode a few more that unidecode misses
+    groupby['C'].append('∁')  # U+2201 complement
+    groupby['T'].append('⊤')  # U+22A4 true / tautology
+    groupby['T'].append('⊥')  # U+22A5 false / contradiction
+    groupby['A'].append('∀')  # U+2200 forall
+    groupby['E'].append('∃')  # U+2203 exists
+    groupby['V'].append('∨')  # U+2228 or
+
+    # sort and return
     pprint({alpha: ''.join(sorted(groupby[alpha])) for alpha in sorted(groupby.keys())})
