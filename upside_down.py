@@ -187,21 +187,34 @@ def flip_text(text: str) -> str:
 
 
 def unflip_upside_down_words(text: str) -> str:
-    # todo: fix weird edge cases with whitespace before and after flipped text
     out = []
     unflipped = []
-    for word in word_tokenize(text, include_non_word_chars=True):
-        if is_flipped_ascii(word):
-            unflipped.append(flip_text(word))
-        elif unflipped and _REGEX_WORD_CHAR.match(word) is None:
-            unflipped.append(flip_text(word))
+    maybe_unflipped = []
+    for token in word_tokenize(text, include_non_word_chars=True):
+        if is_flipped_ascii(token):
+            unflipped.extend(maybe_unflipped)
+            maybe_unflipped.clear()
+            unflipped.append(flip_text(token))
+        elif _REGEX_WORD_CHAR.match(token) is None:
+            if unflipped:
+                if flip_text(token) == token:
+                    maybe_unflipped.append(token)
+                else:
+                    unflipped.extend(maybe_unflipped)
+                    maybe_unflipped.clear()
+                    unflipped.append(flip_text(token))
+            else:
+                out.append(token)
         else:
-            out.append(word)
             unflipped.reverse()
             out.extend(unflipped)
             unflipped.clear()
+            maybe_unflipped.reverse()
+            out.extend(maybe_unflipped)
+            maybe_unflipped.clear()
+            out.append(token)
 
-    return ''.join(out + unflipped[::-1])
+    return ''.join(out + unflipped[::-1] + maybe_unflipped[::-1])
 
 
 if __name__ == '__main__':
@@ -210,6 +223,6 @@ if __name__ == '__main__':
             print(repr(char), repr(flip_text(char)), repr(flip_text(flip_text(char))))
     print(flip_text(flip_text(string.printable)))
 
-    print(flip_text('hello_world HELLO WORLD'))
+    print(flip_text('hello_world HELLO WORLD test '))
 
-    print(unflip_upside_down_words('normal_text pꞁɹoʍ‾oꞁꞁǝɥ NORMAL TEXT ᗡꞀᴚOϺ OꞀꞀƎH normal text pꞁɹoʍ oꞁꞁǝɥ'))
+    print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
