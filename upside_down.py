@@ -43,7 +43,7 @@ PRINTABLE = {
     '2':  '↊ᄅᘔⵒ',
     '3':  '↋ƐԐԑ',
     '4':  'ᔭㄣ',
-    '5':  'Ϛϛ',
+    '5':  'ϛϚ',
     '6':  '9',
     '7':  '∠Ɫㄥ',
     '8':  '8',
@@ -71,7 +71,7 @@ PRINTABLE = {
     'N':  'NИᴎ',  # 2 of these are reversed, not upside down...
     'O':  'O',
     'P':  'Ԁ',
-    'Q':  'QΌὉꝹ',
+    'Q':  'ΌὉꝹQ',
     'R':  'ᴚʁ',
     'S':  'S',
     'T':  'Ʇ⊥┴',
@@ -224,5 +224,6 @@ if __name__ == '__main__':
     print(flip_text(flip_text(string.printable)))
 
     print(flip_text('hello_world HELLO WORLD test '))
+    print(flip_text(string.printable.split()[0]))
 
     print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
