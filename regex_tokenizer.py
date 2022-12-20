@@ -107,6 +107,7 @@ def word_tokenize(text: str,
                   replace_ascii: bool = False,
                   strip_diacritics: bool = False,
                   accept_apostrophe: Union[bool, int] = False,
+                  include_non_word_chars: bool = False,
                   ) -> List[str]:
     """
     tokenize text into words
@@ -124,6 +125,7 @@ def word_tokenize(text: str,
     :param replace_ascii: make ascii-like where possible
     :param strip_diacritics: unwrap graphemes, keeping only initial codepoint
     :param accept_apostrophe: allow an apostrophe, or an integer number of apostrophes
+    :param include_non_word_chars: include non-word (e.g. whitespace) chars in the output token list
     :return: list of words
     """
     # sanity check
@@ -176,7 +178,11 @@ def word_tokenize(text: str,
             word_buffer.clear()
             apostrophe_locations.clear()
 
-    return words
+        if include_non_word_chars:
+            words.append(char)
+
+    # don't return the \2 and \3
+    return words[1:-1] if include_non_word_chars else words
 
 
 if __name__ == '__main__':
