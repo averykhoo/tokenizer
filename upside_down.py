@@ -1,5 +1,6 @@
 import re
 import string
+import unicodedata
 
 from regex_tokenizer import _REGEX_GRAPHEME
 from regex_tokenizer import _REGEX_WORD_CHAR
@@ -24,58 +25,58 @@ TRANSLITERATIONS = {'ß': 'ss'}
 
 PRINTABLE = {
     '!':  '¡',
-    '"':  '„',
+    '"':  '„﮼',
     '#':  '#',
     '$':  '$',
     '%':  '%',
     '&':  '⅋',
-    "'":  '⸲,',
+    "'":  '⸲,╻',
     '(':  ')',
     ')':  '(',
-    '*':  '*⁎',
+    '*':  '⁎*',
     '+':  '+',
     ',':  "‘ʻ'`",
     '-':  '-',
     '.':  '˙',
     '/':  '/',
     '0':  '0',
-    '1':  'ƖІ⇂⥝',
+    '1':  '⥝ƖІ⇂',
     '2':  '↊ᄅᘔⵒ',
     '3':  '↋ƐԐԑ',
-    '4':  'ᔭㄣ',
+    '4':  'ᔭㄣߤ',
     '5':  'ϛϚ',
-    '6':  '9',
-    '7':  '∠Ɫㄥ',
+    '6':  '9ƍ',
+    '7':  '𝘓Ɫ∠ㄥ',
     '8':  '8',
-    '9':  '6',
+    '9':  '6δẟ',
     ':':  ':',
-    ';':  '؛⸵',
+    ';':  '⸵؛',
     '<':  '>',
     '=':  '=',
     '>':  '<',
     '?':  '¿',
     '@':  '@',
     'A':  'Ɐ∀ᗄ',
-    'B':  'ᗺξ𐐒ჵ',
+    'B':  'ꓭᗺξ𐐒ჵ',
     'C':  'ƆϽↃ',
     'D':  'ᗡ◖',
     'E':  'Ǝ⁆ᴲ∃ⱻ',
-    'F':  '߃ℲᖵℲ',
-    'G':  'פ⅁',
+    'F':  'Ⅎ߃ᖵⅎ',
+    'G':  '⅁פ',
     'H':  'H',
     'I':  'I',
-    'J':  'ſᒋ',
-    'K':  'Ʞ⋊',
-    'L':  'Ꞁ˥ᒣ⅂⅂',
+    'J':  'ᒋſ',
+    'K':  'Ʞ⋊ꓘ',
+    'L':  'Ꞁ˥ᒣ⅂',
     'M':  'ꟽWƜ',
-    'N':  'NИᴎ',  # 2 of these are reversed, not upside down...
+    'N':  'NИᴎ',  # 2 of these are mirrored, not upside down...
     'O':  'O',
     'P':  'Ԁ',
-    'Q':  'ΌὉꝹQ',
-    'R':  'ᴚʁ',
-    'S':  'S',
-    'T':  'Ʇ⊥┴',
-    'U':  'Ⴖ∩',
+    'Q':  'ΌὉꝹ',
+    'R':  'ꓤᴚʁ',  # the last one is mirrored, but you never know what you'll find out there
+    'S':  'SՏ',
+    'T':  'Ʇ⊥┴ꓕ',
+    'U':  '∩ႶՈ',
     'V':  'ɅΛᴧ',
     'W':  'ϺΜM',
     'X':  'X',
@@ -87,27 +88,27 @@ PRINTABLE = {
     '^':  'ᵥ',
     '_':  '‾',
     '`':  ',',
-    'a':  'ɐɒ',
-    'b':  'q',
+    'a':  'ɐɒᵄ',
+    'b':  'qꟼ',
     'c':  'ↄɔͻ',
     'd':  'p',
     'e':  'ǝ',
-    'f':  'ɟ',
+    'f':  'ɟֈ',
     'g':  'ᵷƃ',
-    'h':  'ɥʮʯꞍ',
-    'i':  'ᴉıⵑ',
+    'h':  'ɥʮʯꞍկ',
+    'i':  'ᴉıⵑ℩',
     'j':  'ṛɾ',
     'k':  'ʞ',
     'l':  'ꞁlʃʅן',
-    'm':  'ɯꟺw',
-    'n':  'u',
+    'm':  'ɯꟺwա',
+    'n':  'uս',
     'o':  'o',
     'p':  'd',
     'q':  'b',
-    'r':  'ɹ',
+    'r':  'ɹɺʴ',
     's':  's',
-    't':  'ʇ',
-    'u':  'n',
+    't':  'ʇ⸸',
+    'u':  'nո',
     'v':  'ʌ',
     'w':  'ʍm',
     'x':  'x',
@@ -124,7 +125,7 @@ PRINTABLE = {
     '\v': '\v',
     '\f': '\f',
 }
-UNPRINTABLE = {
+NON_ASCII = {
     '⁅':  '⁆',
     '∴':  '∵',
     '⁀':  '‿',
@@ -132,6 +133,13 @@ UNPRINTABLE = {
     '\0': '\0',
     '\2': '\3',
     '\b': '\b',
+    '‽':  '⸘',
+    '⛤':  '⛧',
+    'ʔ':  'ʖ',
+    'œ':  'ᴔ',
+    'æ':  'ᴂᵆæ',
+    '⬟':  '⯂',
+    '†':  '⸸',
 }
 
 _INVERTED_PRINTABLE = dict()
@@ -139,10 +147,10 @@ for _char, _upside_down in PRINTABLE.items():
     for _upside_down_char in _upside_down:
         _INVERTED_PRINTABLE.setdefault(_upside_down_char, _char)
 
-_INVERTED_UNPRINTABLE = dict()
-for _char, _upside_down in UNPRINTABLE.items():
+_INVERTED_NON_ASCII = dict()
+for _char, _upside_down in NON_ASCII.items():
     for _upside_down_char in _upside_down:
-        _INVERTED_UNPRINTABLE.setdefault(_upside_down_char, _char)
+        _INVERTED_NON_ASCII.setdefault(_upside_down_char, _char)
 
 _INVERTED_DIACRITICS = dict()
 for _char, _upside_down in DIACRITICS.items():
@@ -163,24 +171,32 @@ def is_flipped_ascii(text: str) -> bool:
 
 
 def flip_text(text: str) -> str:
-    char_maps = [PRINTABLE, _INVERTED_PRINTABLE, UNPRINTABLE, _INVERTED_UNPRINTABLE]
+    for _from, _to in TRANSLITERATIONS.items():
+        text = text.replace(_from, _to)
+
+    char_maps = [PRINTABLE, _INVERTED_PRINTABLE, NON_ASCII, _INVERTED_NON_ASCII]
     if is_flipped_ascii(text):
         char_maps.reverse()
 
     out = []
+    flipped_grapheme = []
     for grapheme in _REGEX_GRAPHEME.findall(text):
+        grapheme = unicodedata.normalize('NFKD', grapheme)
         for char_map in char_maps:
             if grapheme[0] in char_map:
-                out.append(char_map[grapheme[0]][0])
+                flipped_grapheme.append(char_map[grapheme[0]][0])
                 break
         else:
-            out.append('\uFFFD')
+            flipped_grapheme.append('\uFFFD')
 
         for diacritic in grapheme[1:]:
             if diacritic in DIACRITICS:
-                out.append(DIACRITICS[diacritic])
+                flipped_grapheme.append(DIACRITICS[diacritic])
             elif diacritic in _INVERTED_DIACRITICS:
-                out.append(_INVERTED_DIACRITICS[diacritic])
+                flipped_grapheme.append(_INVERTED_DIACRITICS[diacritic])
+
+        out.append(''.join(flipped_grapheme))
+        flipped_grapheme.clear()
 
     out.reverse()
     return ''.join(out)
@@ -218,12 +234,27 @@ def unflip_upside_down_words(text: str) -> str:
 
 
 if __name__ == '__main__':
+    for char, upside_down in PRINTABLE.items():
+        print('-' * 100)
+        print(repr(char))
+        for upside_down_char in upside_down:
+            try:
+                print('  ', repr(upside_down_char), unicodedata.name(upside_down_char))
+            except ValueError:
+                print('  ', repr(upside_down_char), f'U+{ord(upside_down_char):04x}')
+
     for char in string.printable:
         if flip_text(flip_text(char)) != char:
             print(repr(char), repr(flip_text(char)), repr(flip_text(flip_text(char))))
-    print(flip_text(flip_text(string.printable)))
-
+    print('0', repr(string.printable))
+    print('1', repr(flip_text(string.printable)))
+    print('2', repr(flip_text(flip_text(string.printable))))
+    print('3', repr(flip_text(flip_text(flip_text(string.printable)))))
     print(flip_text('hello_world HELLO WORLD test '))
     print(flip_text(string.printable.split()[0]))
+    print(flip_text(
+        '''~{|}`‾^[\\]@¿<=>;:/.-ʻ+*()╻\⅋%$#﮼¡Z⅄XϺɅՈꓕSꓤꝹԀONꟽ⅂ꓘᒋIH⅁ᖵƎᗡϽꓭ∀zʎxʍʌnʇsɹbdouɯʅʞɾᴉɥƃⅎǝpɔqɐ68𝘓95ߤ↋↊⇂0'''))
 
     print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
+
+    print(flip_text('köln'))
