@@ -1,29 +1,98 @@
 import re
 import string
+import warnings
+
 import unicodedata
 
 from regex_tokenizer import _REGEX_GRAPHEME
 from regex_tokenizer import _REGEX_WORD_CHAR
 from regex_tokenizer import word_tokenize
 
+# inspired by https://github.com/cburgmer/upsidedown
 DIACRITICS = {
-    '̈': '̤',
-    '̊': '̥',
-    '́': '̗',
-    '̀': '̖',
-    '̇': '̣',
-    '̃': '̰',
-    '̄': '̱',
-    '̂': '̬',
-    '̆': '̯',
-    '̌': '̭',
-    '̑': '̮',
-    '̍': '̩',
+    "◌̀": "◌̖",  # COMBINING GRAVE ACCENT -> COMBINING GRAVE ACCENT BELOW
+    "◌́": "◌̗",  # COMBINING ACUTE ACCENT -> COMBINING ACUTE ACCENT BELOW
+    "◌̂": "◌̬",  # COMBINING CIRCUMFLEX ACCENT -> COMBINING CARON BELOW
+    "◌̃": "◌̰",  # COMBINING TILDE -> COMBINING TILDE BELOW
+    "◌̄": "◌̱",  # COMBINING MACRON -> COMBINING MACRON BELOW
+    "◌̅": "◌̲",  # COMBINING OVERLINE -> COMBINING LOW LINE
+    "◌̆": "◌̯",  # COMBINING BREVE -> COMBINING INVERTED BREVE BELOW
+    "◌̇": "◌̣",  # COMBINING DOT ABOVE -> COMBINING DOT BELOW
+    "◌̈": "◌̤",  # COMBINING DIAERESIS -> COMBINING DIAERESIS BELOW
+    "◌̊": "◌̥",  # COMBINING RING ABOVE -> COMBINING RING BELOW
+    "◌̌": "◌̭",  # COMBINING CARON -> COMBINING CIRCUMFLEX ACCENT BELOW
+    "◌̍": "◌̩",  # COMBINING VERTICAL LINE ABOVE -> COMBINING VERTICAL LINE BELOW
+    "◌̎": "◌͈",  # COMBINING DOUBLE VERTICAL LINE ABOVE -> COMBINING DOUBLE VERTICAL LINE BELOW
+    "◌̑": "◌̮",  # COMBINING INVERTED BREVE -> COMBINING BREVE BELOW
+    "◌̓": "◌̦",  # COMBINING COMMA ABOVE -> COMBINING COMMA BELOW
+    "◌̴": "◌̴",  # COMBINING TILDE OVERLAY -> COMBINING TILDE OVERLAY
+    "◌̵": "◌̵",  # COMBINING SHORT STROKE OVERLAY -> COMBINING SHORT STROKE OVERLAY
+    "◌̶": "◌̶",  # COMBINING LONG STROKE OVERLAY -> COMBINING LONG STROKE OVERLAY
+    "◌̷": "◌̷",  # COMBINING SHORT SOLIDUS OVERLAY -> COMBINING SHORT SOLIDUS OVERLAY
+    "◌̸": "◌̸",  # COMBINING LONG SOLIDUS OVERLAY -> COMBINING LONG SOLIDUS OVERLAY
+    "◌̽": "◌͓",  # COMBINING X ABOVE -> COMBINING X BELOW
+    "◌̿": "◌̳",  # COMBINING DOUBLE OVERLINE -> COMBINING DOUBLE LOW LINE
+    "◌͆": "◌̺",  # COMBINING BRIDGE ABOVE -> COMBINING INVERTED BRIDGE BELOW
+    "◌͌": "◌᷽",  # COMBINING ALMOST EQUAL TO ABOVE -> COMBINING ALMOST EQUAL TO BELOW
+    "◌͐": "◌͔",  # COMBINING RIGHT ARROWHEAD ABOVE -> COMBINING LEFT ARROWHEAD BELOW
+    "◌͑": "◌̹",  # COMBINING LEFT HALF RING ABOVE -> COMBINING RIGHT HALF RING BELOW
+    "◌͗": "◌̜",  # COMBINING RIGHT HALF RING ABOVE -> COMBINING LEFT HALF RING BELOW
+    "◌͛": "◌᷏",  # COMBINING ZIGZAG ABOVE -> COMBINING ZIGZAG BELOW
+    "◌͝": "◌᷼",  # COMBINING DOUBLE BREVE -> COMBINING DOUBLE INVERTED BREVE BELOW
+    "◌͞": "◌͟",  # COMBINING DOUBLE MACRON -> COMBINING DOUBLE MACRON BELOW
+    "◌͡": "◌͜",  # COMBINING DOUBLE INVERTED BREVE -> COMBINING DOUBLE BREVE BELOW
+    # "◌ͬ": "◌᷊",  # COMBINING LATIN SMALL LETTER R -> COMBINING LATIN SMALL LETTER R BELOW
+    "◌ٔ": "◌ٕ",  # ARABIC HAMZA ABOVE -> ARABIC HAMZA BELOW
+    "◌ܰ": "◌ܱ",  # SYRIAC PTHAHA ABOVE -> SYRIAC PTHAHA BELOW
+    "◌ܳ": "◌ܴ",  # SYRIAC ZQAPHA ABOVE -> SYRIAC ZQAPHA BELOW
+    "◌ܶ": "◌ܷ",  # SYRIAC RBASA ABOVE -> SYRIAC RBASA BELOW
+    "◌ܺ": "◌ܻ",  # SYRIAC HBASA ABOVE -> SYRIAC HBASA BELOW
+    "◌ܽ": "◌ܾ",  # SYRIAC ESASA ABOVE -> SYRIAC ESASA BELOW
+    "◌݃": "◌݄",  # SYRIAC TWO VERTICAL DOTS ABOVE -> SYRIAC TWO VERTICAL DOTS BELOW
+    "◌݅": "◌݆",  # SYRIAC THREE DOTS ABOVE -> SYRIAC THREE DOTS BELOW
+    "◌݇": "◌݈",  # SYRIAC OBLIQUE LINE ABOVE -> SYRIAC OBLIQUE LINE BELOW
+    "◌࣪": "◌࣭",  # ARABIC TONE ONE DOT ABOVE -> ARABIC TONE ONE DOT BELOW
+    "◌࣫": "◌࣮",  # ARABIC TONE TWO DOTS ABOVE -> ARABIC TONE TWO DOTS BELOW
+    "◌࣬": "◌࣯",  # ARABIC TONE LOOP ABOVE -> ARABIC TONE LOOP BELOW
+    "◌ࣷ": "◌ࣺ",  # ARABIC LEFT ARROWHEAD ABOVE -> ARABIC RIGHT ARROWHEAD BELOW
+    "◌ࣸ": "◌ࣹ",  # ARABIC RIGHT ARROWHEAD ABOVE -> ARABIC LEFT ARROWHEAD BELOW
+    "◌ᩳ": "◌ᩬ",  # TAI THAM VOWEL SIGN OA ABOVE -> TAI THAM VOWEL SIGN OA BELOW
+    "◌᪻": "◌᪽",  # COMBINING PARENTHESES ABOVE -> COMBINING PARENTHESES BELOW
+    "◌᳴": "◌᳘",  # VEDIC TONE CANDRA ABOVE -> VEDIC TONE CANDRA BELOW
+    # "◌ᷱ": "◌ᪿ",  # COMBINING LATIN SMALL LETTER W -> COMBINING LATIN SMALL LETTER W BELOW
+    "◌᷵": "◌̞",  # COMBINING UP TACK ABOVE -> COMBINING DOWN TACK BELOW
+    "◌᷾": "◌͕",  # COMBINING LEFT ARROWHEAD ABOVE -> COMBINING RIGHT ARROWHEAD BELOW
+    "◌⃒": "◌⃒",  # COMBINING LONG VERTICAL LINE OVERLAY -> COMBINING LONG VERTICAL LINE OVERLAY
+    "◌⃓": "◌⃓",  # COMBINING SHORT VERTICAL LINE OVERLAY -> COMBINING SHORT VERTICAL LINE OVERLAY
+    "◌⃖": "◌⃯",  # COMBINING LEFT ARROW ABOVE -> COMBINING RIGHT ARROW BELOW
+    "◌⃗": "◌⃮",  # COMBINING RIGHT ARROW ABOVE -> COMBINING LEFT ARROW BELOW
+    # "◌⃘": "◌⃘",  # COMBINING RING OVERLAY -> COMBINING RING OVERLAY
+    # "◌⃙": "◌⃙",  # COMBINING CLOCKWISE RING OVERLAY -> COMBINING CLOCKWISE RING OVERLAY
+    # "◌⃚": "◌⃚",  # COMBINING ANTICLOCKWISE RING OVERLAY -> COMBINING ANTICLOCKWISE RING OVERLAY
+    "◌⃥": "◌⃥",  # COMBINING REVERSE SOLIDUS OVERLAY -> COMBINING REVERSE SOLIDUS OVERLAY
+    "◌⃦": "◌⃦",  # COMBINING DOUBLE VERTICAL STROKE OVERLAY -> COMBINING DOUBLE VERTICAL STROKE OVERLAY
+    "◌⃩": "◌᷹",  # COMBINING WIDE BRIDGE ABOVE -> COMBINING WIDE INVERTED BRIDGE BELOW
+    # "◌⃪": "◌⃪",  # COMBINING LEFTWARDS ARROW OVERLAY -> COMBINING LEFTWARDS ARROW OVERLAY
+    "◌⃫": "◌⃫",  # COMBINING LONG DOUBLE SOLIDUS OVERLAY -> COMBINING LONG DOUBLE SOLIDUS OVERLAY
+    "◌⃰": "◌͙",  # COMBINING ASTERISK ABOVE -> COMBINING ASTERISK BELOW
+    "◌︠": "◌︨",  # COMBINING LIGATURE LEFT HALF -> COMBINING LIGATURE RIGHT HALF BELOW
+    "◌︡": "◌︧",  # COMBINING LIGATURE RIGHT HALF -> COMBINING LIGATURE LEFT HALF BELOW
+    "◌︤": "◌︬",  # COMBINING MACRON LEFT HALF -> COMBINING MACRON RIGHT HALF BELOW
+    "◌︥": "◌︫",  # COMBINING MACRON RIGHT HALF -> COMBINING MACRON LEFT HALF BELOW
+    "◌︦": "◌︭",  # COMBINING CONJOINING MACRON -> COMBINING CONJOINING MACRON BELOW
+    "◌𐫥": "◌𐫦",  # MANICHAEAN ABBREVIATION MARK ABOVE -> MANICHAEAN ABBREVIATION MARK BELOW
+    "◌𐽈": "◌𐽆",  # SOGDIAN COMBINING DOT ABOVE -> SOGDIAN COMBINING DOT BELOW
+    "◌𐽉": "◌𐽇",  # SOGDIAN COMBINING TWO DOTS ABOVE -> SOGDIAN COMBINING TWO DOTS BELOW
+    "◌𐽊": "◌𐽋",  # SOGDIAN COMBINING CURVE ABOVE -> SOGDIAN COMBINING CURVE BELOW
+    "◌𐽌": "◌𐽍",  # SOGDIAN COMBINING HOOK ABOVE -> SOGDIAN COMBINING HOOK BELOW
+    # "◌𖾑": "◌𖾒",  # MIAO TONE ABOVE -> MIAO TONE BELOW
 }
-
 TRANSLITERATIONS = {'ß': 'ss'}
 
-PRINTABLE = {
+# always take the first possible rotation, but accept any reverse rotation
+# in order to handle different mappings seen in the wild
+TEXT_CHARS = {
+    # string.printable
     '!':  '¡',
     '"':  '„﮼',
     '#':  '#',
@@ -44,7 +113,7 @@ PRINTABLE = {
     '2':  '↊ᄅᘔⵒ',
     '3':  '↋ƐԐԑ',
     '4':  'ᔭㄣߤ',
-    '5':  'ϛϚ',
+    '5':  'ϛϚ5',
     '6':  '9ƍ',
     '7':  '𝘓Ɫ∠ㄥ',
     '8':  '8',
@@ -124,76 +193,87 @@ PRINTABLE = {
     '\r': '\r',
     '\v': '\v',
     '\f': '\f',
-}
-NON_ASCII = {
-    '⁅':  '⁆',
-    '∴':  '∵',
-    '⁀':  '‿',
-    '―':  '―',
-    '\0': '\0',
-    '\2': '\3',
-    '\b': '\b',
-    '‽':  '⸘',
-    '⛤':  '⛧',
-    'ʔ':  'ʖ',
+
+    # couple of extras
     'œ':  'ᴔ',
-    'æ':  'ᴂᵆæ',
-    '⬟':  '⯂',
-    '†':  '⸸',
+    'æ':  'ᴂ',
+    '‽':  '⸘',
 }
 
-_INVERTED_PRINTABLE = dict()
-for _char, _upside_down in PRINTABLE.items():
-    for _upside_down_char in _upside_down:
-        _INVERTED_PRINTABLE.setdefault(_upside_down_char, _char)
+_FLIPPED_TEXT_CHARS = dict()
+for _char, _upside_down in TEXT_CHARS.items():
+    for _upside_down_char in _REGEX_GRAPHEME.findall(_upside_down):
+        _FLIPPED_TEXT_CHARS.setdefault(_upside_down_char, _char)
 
-_INVERTED_NON_ASCII = dict()
-for _char, _upside_down in NON_ASCII.items():
-    for _upside_down_char in _upside_down:
-        _INVERTED_NON_ASCII.setdefault(_upside_down_char, _char)
+# why are there so many mathematical symbols
+# this doesn't even cover all of them
+SYMBOLS_SYMMETRIC = '―\0\a\b⟛⫩∕∖∤∦∫∬∭∮∯∰∲∳∻∼∽∿≀≁≈≶≷≸≹⊘⋚⋛⟋⟍⦸⧣⧥⧵⧷⧸⧹⨌⨍⨎⨏⨫⨬⩫⩬⫻⫽⦁⦂'
+SYMBOLS_LEFT = '\2⁅∴⁀⛤⬟†˕꭪⊢⊤⟝⟙⍑⍕⟟⫞⫟⫧⫪‹⁽⁾∈∊∉≂≔≪≮≺⊀⊂⊄⊏⋉⊶⊰⊲⋘≥≤⌊⌈⌠〈❨❪❬❮❰❲❴⟔⟜⟣⟥' \
+               '⟦⟨⟪⟬⟮⦃⦅⦇⦉⦍⦏⦑⦓⦕⦗⧀⧙⧛⧼∱⨤⫕⫷⸢⸤⸠⸌⸍⸨⸦〈《「『【〔〖〘〚﹙﹛﹝﹤（＜［｛｟｢⩤'
+SYMBOLS_RIGHT = '\3⁆∵‿⛧⯂⸸˔꭫⊣⊥⟞⟘⍊⍎⫱⊦⫠⫨⫫›₎₍∋∍∌≃≕≫≯≻⊁⊃⊅⊐⋊⊷⊱⊳⋙⋜⋝⌉⌋⌡〉❩❫❭❯❱❳❵⟓⊸⟢⟤' \
+                '⟧⟩⟫⟭⟯⦄⦆⦈⦊⦎⦐⦒⦔⦖⦘⧁⧘⧚⧽⨑⨦⫖⫸⸥⸣⸡⸜⸝⸩⸧〉》」』】〕〗〙〛﹚﹜﹞﹥）＞］｝｠｣⩥'
 
-_INVERTED_DIACRITICS = dict()
-for _char, _upside_down in DIACRITICS.items():
-    for _upside_down_char in _upside_down:
-        _INVERTED_DIACRITICS.setdefault(_upside_down_char, _char)
+_ALL_SYMBOLS = dict()
+for _char in SYMBOLS_SYMMETRIC:
+    _ALL_SYMBOLS[_char] = _char
+for _left, _right in zip(SYMBOLS_LEFT, SYMBOLS_RIGHT):
+    assert _left not in _ALL_SYMBOLS
+    _ALL_SYMBOLS[_left] = _right
+    assert _right not in _ALL_SYMBOLS
+    _ALL_SYMBOLS[_right] = _left
+
+_DIACRITICS = dict()
+for _char, _upside_down_char in DIACRITICS.items():
+    _DIACRITICS.setdefault(_char[-1], _upside_down_char[-1])
+    _DIACRITICS.setdefault(_upside_down_char[-1], _char[-1])
 
 _FLIPPED_CHARS = set()
-for _char, _upside_down in PRINTABLE.items():
+for _char, _upside_down in TEXT_CHARS.items():
     _FLIPPED_CHARS.update(_upside_down)
-REGEX_FLIPPED_CHAR = re.compile(f'^[{re.escape("".join(_FLIPPED_CHARS))}]+$')
-REGEX_PRINTABLE = re.compile(f'^[{re.escape(string.printable)}]$')
+REGEX_FLIPPED_CHAR = re.compile(f'[{re.escape("".join(_FLIPPED_CHARS))}]+')
+REGEX_TEXT = re.compile(f'[{re.escape(string.printable)}]+')
 
 
 def is_flipped_ascii(text: str) -> bool:
-    if REGEX_PRINTABLE.fullmatch(text):
+    if REGEX_TEXT.fullmatch(text):
         return False
-    return REGEX_FLIPPED_CHAR.fullmatch(text) is not None
+    if REGEX_FLIPPED_CHAR.fullmatch(text):
+        return True
+
+    unflipped = ''.join(REGEX_TEXT.findall(text))
+    flipped = ''.join(REGEX_FLIPPED_CHAR.findall(text))
+
+    return len(flipped) > len(unflipped)
 
 
 def flip_text(text: str) -> str:
     for _from, _to in TRANSLITERATIONS.items():
         text = text.replace(_from, _to)
 
-    char_maps = [PRINTABLE, _INVERTED_PRINTABLE, NON_ASCII, _INVERTED_NON_ASCII]
     if is_flipped_ascii(text):
-        char_maps.reverse()
+        char_maps = [_FLIPPED_TEXT_CHARS, TEXT_CHARS, _ALL_SYMBOLS]
+    else:
+        char_maps = [TEXT_CHARS, _FLIPPED_TEXT_CHARS, _ALL_SYMBOLS]
 
     out = []
     flipped_grapheme = []
     for grapheme in _REGEX_GRAPHEME.findall(text):
-        grapheme = unicodedata.normalize('NFKD', grapheme)
         for char_map in char_maps:
             if grapheme[0] in char_map:
                 flipped_grapheme.append(char_map[grapheme[0]][0])
                 break
         else:
-            flipped_grapheme.append('\uFFFD')
+            grapheme = unicodedata.normalize('NFKD', grapheme)  # breaks some things
+            for char_map in char_maps:
+                if grapheme[0] in char_map:
+                    flipped_grapheme.append(char_map[grapheme[0]][0])
+                    break
+            else:
+                flipped_grapheme.append('\uFFFD')
 
         for diacritic in grapheme[1:]:
-            if diacritic in DIACRITICS:
-                flipped_grapheme.append(DIACRITICS[diacritic])
-            elif diacritic in _INVERTED_DIACRITICS:
-                flipped_grapheme.append(_INVERTED_DIACRITICS[diacritic])
+            if diacritic in _DIACRITICS:
+                flipped_grapheme.append(_DIACRITICS[diacritic])
 
         out.append(''.join(flipped_grapheme))
         flipped_grapheme.clear()
@@ -233,8 +313,63 @@ def unflip_upside_down_words(text: str) -> str:
     return ''.join(out + unflipped[::-1] + maybe_unflipped[::-1])
 
 
+def build_diacritics():
+    above = dict()
+    below = dict()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+
+        for codepoint in range(0x10FFFF):
+            diacritic = chr(codepoint)
+
+            # just want the diacritics
+            if unicodedata.category(diacritic) != 'Mn':
+                continue
+
+            try:
+                name = unicodedata.name(diacritic)
+            except ValueError:
+                continue
+
+            if 'OVERLAY' in name:
+                below[name] = '◌' + diacritic
+                above[name] = '◌' + diacritic
+            elif 'OVERLINE' in name:
+                above[name] = '◌' + diacritic
+            elif 'LOW LINE' in name:
+                name = name.replace('LOW LINE', 'OVERLINE')
+                below[name] = '◌' + diacritic
+            elif 'BELOW' in name:
+                name = ' '.join(name.replace('BELOW', ' ').split())
+                below[name] = '◌' + diacritic
+            else:
+                name = ' '.join(name.replace('ABOVE', ' ').split())
+                above[name] = '◌' + diacritic
+
+    def swap(_name, x, y):
+        _name = _name.replace(x, '\0')
+        _name = _name.replace(y, x)
+        _name = _name.replace('\0', y)
+        return _name
+
+    print('DIACRITICS = {')
+    for name, above_char in above.items():
+        # reverse some things
+        name = swap(name, 'LEFT ', 'RIGHT ')
+        name = swap(name, 'UP ', 'DOWN ')
+        name = swap(name, 'CIRCUMFLEX ACCENT', 'CARON')
+        name = swap(name, 'INVERTED BREVE', 'BREVE')
+        name = swap(name, 'INVERTED BRIDGE', 'BRIDGE')
+
+        if name in below:
+            print(f'    "{above_char}": "{below[name]}",  '
+                  f'# {unicodedata.name(above_char[-1])} -> {unicodedata.name(below[name][-1])}')
+    print('}')
+
+
 if __name__ == '__main__':
-    for char, upside_down in PRINTABLE.items():
+    for char, upside_down in TEXT_CHARS.items():
         print('-' * 100)
         print(repr(char))
         for upside_down_char in upside_down:
@@ -253,7 +388,7 @@ if __name__ == '__main__':
     print(flip_text('hello_world HELLO WORLD test '))
     print(flip_text(string.printable.split()[0]))
     print(flip_text(
-        '''~{|}`‾^[\\]@¿<=>;:/.-ʻ+*()╻\⅋%$#﮼¡Z⅄XϺɅՈꓕSꓤꝹԀONꟽ⅂ꓘᒋIH⅁ᖵƎᗡϽꓭ∀zʎxʍʌnʇsɹbdouɯʅʞɾᴉɥƃⅎǝpɔqɐ68𝘓95ߤ↋↊⇂0'''))
+        '''~{|}`‾^[\\]@¿<=>;:/.-ʻ+*()╻\⅋%$#﮼¡ Z⅄XϺɅՈꓕSꓤꝹԀONꟽ⅂ꓘᒋIH⅁ᖵƎᗡϽꓭ∀zʎxʍʌnʇsɹbdouɯʅʞɾᴉɥƃⅎǝpɔqɐ 68𝘓95ߤ↋↊⇂0'''))
 
     print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
 
