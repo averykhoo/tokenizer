@@ -1,12 +1,13 @@
-import re
 import string
 import warnings
 
+import regex
 import unicodedata
 
-from regex_tokenizer import _REGEX_GRAPHEME
-from regex_tokenizer import _REGEX_WORD_CHAR
-from regex_tokenizer import word_tokenize
+from regex_tokenizer import word_tokenize  # only needed to intelligently detect and un-flip words in a string
+
+REGEX_GRAPHEME = regex.compile(r'\X', flags=regex.UNICODE)  # builtins.re does not support `\X`
+REGEX_WORD_CHAR = regex.compile(r'\w', flags=regex.UNICODE)
 
 # inspired by https://github.com/cburgmer/upsidedown
 DIACRITICS = {
@@ -202,7 +203,7 @@ TEXT_CHARS = {
 
 _FLIPPED_TEXT_CHARS = dict()
 for _char, _upside_down in TEXT_CHARS.items():
-    for _upside_down_char in _REGEX_GRAPHEME.findall(_upside_down):
+    for _upside_down_char in REGEX_GRAPHEME.findall(_upside_down):
         _FLIPPED_TEXT_CHARS.setdefault(_upside_down_char, _char)
 
 # why are there so many mathematical symbols
@@ -230,8 +231,8 @@ for _char, _upside_down_char in DIACRITICS.items():
 _FLIPPED_CHARS = set()
 for _char, _upside_down in TEXT_CHARS.items():
     _FLIPPED_CHARS.update(_upside_down)
-REGEX_FLIPPED_CHAR = re.compile(f'[{re.escape("".join(_FLIPPED_CHARS))}]+')
-REGEX_TEXT = re.compile(f'[{re.escape(string.printable)}]+')
+REGEX_FLIPPED_CHAR = regex.compile(f'[{regex.escape("".join(_FLIPPED_CHARS))}]+')
+REGEX_TEXT = regex.compile(f'[{regex.escape(string.printable)}]+')
 
 
 def is_flipped_ascii(text: str) -> bool:
@@ -257,7 +258,7 @@ def flip_text(text: str) -> str:
 
     out = []
     flipped_grapheme = []
-    for grapheme in _REGEX_GRAPHEME.findall(text):
+    for grapheme in REGEX_GRAPHEME.findall(text):
         for char_map in char_maps:
             if grapheme[0] in char_map:
                 flipped_grapheme.append(char_map[grapheme[0]][0])
@@ -291,7 +292,7 @@ def unflip_upside_down_words(text: str) -> str:
             unflipped.extend(maybe_unflipped)
             maybe_unflipped.clear()
             unflipped.append(flip_text(token))
-        elif _REGEX_WORD_CHAR.match(token) is None:
+        elif REGEX_WORD_CHAR.match(token) is None:
             if unflipped:
                 if flip_text(token) == token:
                     maybe_unflipped.append(token)
