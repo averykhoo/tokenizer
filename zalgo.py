@@ -39,6 +39,12 @@ def add_random_faces(text: str) -> str:
 
     out = []
     for char in _REGEX_GRAPHEME.findall(text):
+        # dotless i, breaks compat with flip_text
+        if char == 'i':
+            char = 'ı'
+        # dotless j
+        if char == 'j':
+            char = 'ȷ'
         out.append(char)
         if _REGEX_WORD_CHAR.match(char) is not None:
             out.append(random.choice(mouths)[1])

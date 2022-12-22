@@ -87,6 +87,7 @@ DIACRITICS = {
     "◌𐽊": "◌𐽋",  # SOGDIAN COMBINING CURVE ABOVE -> SOGDIAN COMBINING CURVE BELOW
     "◌𐽌": "◌𐽍",  # SOGDIAN COMBINING HOOK ABOVE -> SOGDIAN COMBINING HOOK BELOW
     # "◌𖾑": "◌𖾒",  # MIAO TONE ABOVE -> MIAO TONE BELOW
+    "◌̧": "◌̔",  # * COMBINING CEDILLA -> COMBINING REVERSED COMMA ABOVE (special case for turkish)
 }
 TRANSLITERATIONS = {'ß': 'ss'}
 
@@ -167,7 +168,8 @@ TEXT_CHARS = {
     'f':  'ɟֈ',
     'g':  'ᵷƃ',
     'h':  'ɥʮʯꞍկ',
-    'i':  'ᴉıⵑ℩',
+    'i':  'ᴉⵑ℩',
+    'ı':  'ı',  # turkish treats the dotless i as a different character, and it's almost symmetric anyway
     'j':  'ṛɾ',
     'k':  'ʞ',
     'l':  'ꞁlʃʅן',
@@ -396,8 +398,9 @@ if __name__ == '__main__':
 
     print(flip_text('köln'))
 
-
     print(flip_text('''[rapid] 2022-12-20 12:00:00
 Keycloak: 12/12 checks are up
 RAPID: 12/12 checks are up
 Scoold: 1/1 checks are up'''))
+
+    print(flip_text('Ş	ş	şe'))
