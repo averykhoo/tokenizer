@@ -92,6 +92,7 @@ TRANSLITERATIONS = {'ß': 'ss'}
 
 # always take the first possible rotation, but accept any reverse rotation
 # in order to handle different mappings seen in the wild
+# todo: optimize for compatibility with android and iphone, telegram and whatsapp
 TEXT_CHARS = {
     # string.printable
     '!':  '¡',
