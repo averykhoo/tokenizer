@@ -3,12 +3,47 @@ import re
 
 import unicodedata
 
+from regex_tokenizer import _REGEX_GRAPHEME
+from regex_tokenizer import _REGEX_WORD_CHAR
+from upside_down import flip_text
+
 RE_ZALGO = re.compile(r'(?:.[\u0300-\u036F\u0488\u0489]+)+(?:(?:\s+|[^\w])(?:.[\u0300-\u036F\u0488\u0489]+)+)*')
 
 
 def sad_face(text: str):
     # return text.replace('', '\u0311\u0308')[2:]  # substitute whitespace
     return re.sub(r'([^\s])', '\\1\u0311\u0308', text)  # don't modify whitespace
+
+
+def add_random_faces(text: str) -> str:
+    mouths = [
+        '◌̆',  # breve
+        '◌̌',  # caron
+        '◌̑',  # inverted breve
+        '◌̂',  # circumflex
+        '◌̄',  # macron
+        '◌̃',  # tilde
+        '◌̅',  # double macron
+        '◌͆',  # bridge
+        '◌̽',  # x
+        '◌̊',  # ring
+    ]
+
+    # skip those two since they're not reversible
+    eyes = [
+        '◌̈',  # diaresis
+        # '◌̋',  # double acute
+        '◌̎',  # double vertical line
+        # '◌̏',  # double grave
+    ]
+
+    out = []
+    for char in _REGEX_GRAPHEME.findall(text):
+        out.append(char)
+        if _REGEX_WORD_CHAR.match(char) is not None:
+            out.append(random.choice(mouths)[1])
+            out.append(random.choice(eyes)[1])
+    return ''.join(out)
 
 
 def simple_zalgo(text: str, n_chars: int = 10):
@@ -139,3 +174,11 @@ if __name__ == '__main__':
     print(unzalgo(z2))
     print(aggressive_unzalgo(z1))
     print(aggressive_unzalgo(z2))
+
+    print(add_random_faces(text))
+    print(aggressive_unzalgo(add_random_faces(text)))
+    print(add_random_faces(text))
+    print(add_random_faces(text))
+    print(add_random_faces(text))
+    print(flip_text(add_random_faces(text)))
+    print(flip_text(add_random_faces(text)))
