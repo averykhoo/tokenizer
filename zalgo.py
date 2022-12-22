@@ -182,3 +182,8 @@ if __name__ == '__main__':
     print(add_random_faces(text))
     print(flip_text(add_random_faces(text)))
     print(flip_text(add_random_faces(text)))
+
+    print(flip_text(add_random_faces('''[rapid] 2022-12-20 12:00:00
+Keycloak: 12/12 checks are up
+RAPID: 12/12 checks are up
+Scoold: 1/1 checks are up''')))

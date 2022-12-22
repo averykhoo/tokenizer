@@ -394,3 +394,9 @@ if __name__ == '__main__':
     print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
 
     print(flip_text('köln'))
+
+
+    print(flip_text('''[rapid] 2022-12-20 12:00:00
+Keycloak: 12/12 checks are up
+RAPID: 12/12 checks are up
+Scoold: 1/1 checks are up'''))
