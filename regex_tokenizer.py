@@ -11,6 +11,7 @@ _REGEX_GRAPHEME: Pattern = regex.compile(r'\X', flags=regex.UNICODE)  # builtins
 _REGEX_WORD_CHAR: Pattern = regex.compile(r'\w', flags=regex.UNICODE)
 
 _ASCII_ALIKE: Dict[str, str] = {
+    # todo: missing bold digits e.g. U+1D7CF, see https://www.compart.com/en/unicode/block/U+1D400
     '0': '⁰₀⓪⓿',
     '1': '¹₁①⑴⓵',
     '2': '²₂②⑵⓶',
