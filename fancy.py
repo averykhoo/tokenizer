@@ -1,6 +1,6 @@
 # https://unicode.org/charts/PDF/U1D400.pdf
 s = (
-    '⓵⓶⓷⓸⓹⓺⓻⓼⓽'  # Double Circled Digit (missing zero)
+    # '⓵⓶⓷⓸⓹⓺⓻⓼⓽'  # Double Circled Digit (missing zero)
 
     'ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ'  # Circled Latin Capital Letter
     'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ'  # Circled Latin Small Letter 
@@ -57,7 +57,8 @@ s = (
     '🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩'  # Negative Circled Latin Capital Letter 
     '⓿❶❷❸❹❺❻❼❽❾'  # Dingbat Negative Circled Digit
     '🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉'  # Negative Squared Latin Capital Letter 🯄 
-    '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿'  # Regional Indicator Symbol Letter (add zwsp `​`)
+    '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿'  # Regional Indicator Symbol Letter (add zwsp `​`) 
+    # 🇦​🇧​🇨​🇩​🇪​🇫​🇬​🇭​🇮​🇯​🇰​🇱​🇲​🇳​🇴​🇵​🇶​🇷​🇸​🇹​🇺​🇻​🇼​🇽​🇾​🇿​
 
     # todo https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
     # todo https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
@@ -65,7 +66,8 @@ s = (
     '⁰¹²³⁴⁵⁶⁷⁸⁹'  # superscript digits  (see also ꜝ )
 
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
-    'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed ⁏ Ↄ ⸮ ⹁ https://www.compart.com/en/unicode/search?q=reversed#characters
+    'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed https://www.compart.com/en/unicode/search?q=reversed#characters
+    'ɒdɔbɘʇ𝼁ʜiįʞlmnoqpɿƨtυvwxγz'  # reversed ⁏ Ↄ ⸮ ⹁ 
     'ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'  # curly
     '₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'  # currency
     'ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'  # cool
