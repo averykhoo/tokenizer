@@ -1,0 +1,4 @@
+ftfy
+bs4
+unidecode
+regex

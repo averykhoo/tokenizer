@@ -93,6 +93,7 @@ TRANSLITERATIONS = {'ß': 'ss'}
 
 # always take the first possible rotation, but accept any reverse rotation
 # in order to handle different mappings seen in the wild
+# see also https://unicode.org/charts/PDF/U2100.pdf
 # todo: optimize for compatibility with android and iphone, telegram and whatsapp
 TEXT_CHARS = {
     # string.printable
@@ -134,12 +135,12 @@ TEXT_CHARS = {
     'D':  'ᗡ◖',
     'E':  'Ǝ⁆ᴲ∃ⱻ',
     'F':  'Ⅎ߃ᖵⅎ',
-    'G':  '⅁פ',
+    'G':  '⅁פꓨ',
     'H':  'H',
     'I':  'I',
     'J':  'ᒋſ',
     'K':  'Ʞ⋊ꓘ',
-    'L':  'Ꞁ˥ᒣ⅂',
+    'L':  'Ꞁ˥ᒣꓶ⅂',
     'M':  'ꟽWƜ',
     'N':  'NИᴎ',  # 2 of these are mirrored, not upside down...
     'O':  'O',
@@ -152,7 +153,7 @@ TEXT_CHARS = {
     'V':  'ɅΛᴧ',
     'W':  'ϺΜM',
     'X':  'X',
-    'Y':  '⅄',
+    'Y':  '⅄𑾰',
     'Z':  'Z',
     '[':  ']',
     '\\': '\\',
@@ -166,7 +167,7 @@ TEXT_CHARS = {
     'd':  'p',
     'e':  'ǝ',
     'f':  'ɟֈ',
-    'g':  'ᵷƃ',
+    'g':  'ᵷƃɓ',
     'h':  'ɥʮʯꞍկ',
     'i':  'ᴉⵑ℩',
     'ı':  'ı',  # turkish treats the dotless i as a different character, and it's almost symmetric anyway
@@ -404,3 +405,7 @@ RAPID: 12/12 checks are up
 Scoold: 1/1 checks are up'''))
 
     print(flip_text('Ş	ş	şe'))
+
+
+    print(flip_text('zʎxʍʌnʇsɹbdouɯlʞɾıɥɓɟǝpɔqɐ'))
+    print(flip_text('ɐqɔpǝɟƃɥıɾʞlɯuobdɹsʇuʌʍxʎz')[::-1])
