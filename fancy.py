@@ -9,6 +9,7 @@ s = (
     'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ'  # Fullwidth Latin Capital Letter 
     'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ'  # Fullwidth Latin Small Letter 
 
+    # https://unicode.org/charts/PDF/U2700.pdf
     '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙'  # Mathematical Bold Capital
     '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳'  # Mathematical Bold Small
     '𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗'  # Mathematical Bold Digit
@@ -64,7 +65,7 @@ s = (
     '⁰¹²³⁴⁵⁶⁷⁸⁹'  # superscript digits  (see also ꜝ )
 
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
-    'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed ⁏
+    'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed ⁏ Ↄ ⸮ ⹁ https://www.compart.com/en/unicode/search?q=reversed#characters
     'ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'  # curly
     '₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'  # currency
     'ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'  # cool
