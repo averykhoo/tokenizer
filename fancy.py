@@ -1,3 +1,68 @@
+from dataclasses import dataclass
+
+
+@dataclass
+class CharacterMapping:
+    translation_table: dict[int, str]
+
+    def from_ascii(self, text: str) -> str:
+        return text.translate(self.translation_table)
+
+    def __repr__(self):
+        return f'CharacterMapping(translation_table={dict((chr(k), v) for k, v in self.translation_table.items())})'
+
+
+def mapping(upper: str | None = None,
+            lower: str | None = None,
+            digit: str | None = None,
+            ascii: str | None = None,
+            chars: str | None = None,
+            *,
+            other: dict[str, str] | None = None,
+            mirror_missing_case: bool = True,
+            ) -> CharacterMapping:
+    _mapping = dict()
+    if upper:
+        assert isinstance(upper, str)
+        assert len(upper) == 26
+        _mapping.update(dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', upper)))
+        if not lower and mirror_missing_case:
+            _mapping.update(dict(zip('abcdefghijklmnopqrstuvwxyz', upper)))
+    if lower:
+        assert isinstance(lower, str)
+        assert len(lower) == 26
+        _mapping.update(dict(zip('abcdefghijklmnopqrstuvwxyz', lower)))
+        if not upper and mirror_missing_case:
+            _mapping.update(dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', lower)))
+    if digit:
+        assert isinstance(digit, str)
+        assert len(digit) == 10
+        _mapping.update(dict(zip('0123456789', digit)))
+
+    if ascii or chars:
+        assert isinstance(ascii, str)
+        assert isinstance(chars, str)
+        assert len(ascii) == len(chars)
+        _mapping.update(dict(zip(ascii, chars)))
+    if other:
+        assert isinstance(other, dict)
+        assert all(isinstance(k, str) for k in other)
+        assert all(len(k) == 1 for k in other)
+        _mapping.update(other)
+
+    if not _mapping:
+        raise ValueError('no input')
+
+    return CharacterMapping(translation_table=str.maketrans(_mapping))
+
+
+if __name__ == '__main__':
+    print(mapping('ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',  # Circled Latin Capital Letter
+                  'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',  # Circled Latin Small Letter
+                  '⓪①②③④⑤⑥⑦⑧⑨',  # Circled Digit
+                  ' +', '◯⨁'
+                  ).from_ascii('Hello world!'))
+
 # https://unicode.org/charts/PDF/U1D400.pdf
 s = (
     # '⓵⓶⓷⓸⓹⓺⓻⓼⓽'  # Double Circled Digit (missing zero)
@@ -63,7 +128,7 @@ s = (
     # todo https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
     # todo https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
     'ᵃᵇᶜᵈᵉᶠᶢʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ'  # superscript small 
-    '⁰¹²³⁴⁵⁶⁷⁸⁹'  # superscript digits  (see also ꜝ )
+    '⁰¹²³⁴⁵⁶⁷⁸⁹'  # superscript digit  (see also ꜝ )
 
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed https://www.compart.com/en/unicode/search?q=reversed#characters
