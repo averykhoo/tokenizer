@@ -2,25 +2,68 @@ from dataclasses import dataclass
 from dataclasses import field
 
 
-@dataclass
+@dataclass(frozen=True)
 class CharacterMapping:
     translation_table: dict[str, str]
-    __inverted_translation_table: dict[str, str] = field(init=False, repr=False)
+    __inverted_translation_table: dict[str, str] = field(default_factory=dict, init=False, repr=False)
 
-    __cached_maketrans_table: dict[int, str] = field(init=False, repr=False)
-    __cached_inverted_maketrans: dict[int, str] = field(init=False, repr=False)
+    __cached_maketrans: dict[int, str] = field(default_factory=dict, init=False, repr=False)
+    __cached_inverted_maketrans: dict[int, str] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
+        # sanity checks
         assert isinstance(self.translation_table, dict)
-        assert all(isinstance(k, str) for k in self.translation_table)
-        assert all(len(k) == 1 for k in self.translation_table)
-        self.__cached_maketrans_table = str.maketrans(self.translation_table)
+        assert all(isinstance(k, str) for k in self.translation_table.keys())
+        assert all(len(k) > 0 for k in self.translation_table.keys())
+        assert all(isinstance(v, str) for v in self.translation_table.values())
+
+        # invert the translation table
+        for k, v in self.translation_table.items():
+            if v in self.__inverted_translation_table:
+                self.__inverted_translation_table.clear()
+                break
+            if v:
+                self.__inverted_translation_table[v] = k
+
+        # maketrans since str.translate is more efficient
+        if all(len(k) == 1 for k in self.translation_table):
+            self.__cached_maketrans.update(str.maketrans(self.translation_table))
+        if all(len(k) == 1 for k in self.__inverted_translation_table):
+            self.__cached_inverted_maketrans.update(str.maketrans(self.__inverted_translation_table))
 
     def from_ascii(self, text: str) -> str:
-        return text.translate(self.__cached_maketrans_table)
+        if self.__cached_maketrans:
+            return text.translate(self.__cached_maketrans)
+        if self.translation_table:
+            return self._translate(text, self.translation_table)
+        return text
 
-    # def __repr__(self):
-    #     return f'CharacterMapping(translation_table={dict((chr(k), v) for k, v in self.translation_table.items())})'
+    def to_ascii(self, text: str) -> str:
+        if self.__cached_inverted_maketrans:
+            return text.translate(self.__cached_inverted_maketrans)
+        if self.__inverted_translation_table:
+            return self._translate(text, self.__inverted_translation_table)
+        return text
+
+    @staticmethod
+    def _translate(text: str, translation_table: dict[str, str]) -> str:
+        lengths = sorted(set(len(k) for k in translation_table), reverse=True)
+        assert all(lengths)  # should never end up with a zero length
+
+        out = []
+        cursor = 0
+        while cursor < len(text):
+            for l in lengths:
+                if cursor + l > len(text):
+                    continue  # technically this check is unnecessary since it'll still behave correctly
+                if text[cursor:cursor + l] in translation_table:
+                    out.append(translation_table[text[cursor:cursor + l]])
+                    cursor += l
+                    break
+            else:
+                out.append(text[cursor])
+                cursor += 1
+        return ''.join(out)
 
 
 def mapping(upper: str | None = None,
@@ -29,6 +72,7 @@ def mapping(upper: str | None = None,
             ascii: str | None = None,
             chars: str | None = None,
             *,
+            # remove: str | None = None,
             other: dict[str, str] | None = None,
             mirror_missing_case: bool = True,
             ) -> CharacterMapping:
@@ -69,11 +113,14 @@ def mapping(upper: str | None = None,
 
 
 if __name__ == '__main__':
-    print(mapping('ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',  # Circled Latin Capital Letter
-                  'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',  # Circled Latin Small Letter
-                  '⓪①②③④⑤⑥⑦⑧⑨',  # Circled Digit
-                  ' +', '◯⨁'
-                  ).from_ascii('Hello world!'))
+    m = mapping('ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',  # Circled Latin Capital Letter
+                'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',  # Circled Latin Small Letter
+                '⓪①②③④⑤⑥⑦⑧⑨',  # Circled Digit
+                ' +', '◯⨁'
+                )
+    print(m)
+    print(m.from_ascii('Hello world!'))
+    print(m.to_ascii(m.from_ascii('Hello world!')))
 
 # https://unicode.org/charts/PDF/U1D400.pdf
 s = (
