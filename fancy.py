@@ -19,11 +19,8 @@ class CharacterMapping:
 
         # invert the translation table
         for k, v in self.translation_table.items():
-            if v in self.__inverted_translation_table:
-                self.__inverted_translation_table.clear()
-                break
             if v:
-                self.__inverted_translation_table[v] = k
+                self.__inverted_translation_table.setdefault(v, k)
 
         # maketrans since str.translate is more efficient
         if all(len(k) == 1 for k in self.translation_table):
