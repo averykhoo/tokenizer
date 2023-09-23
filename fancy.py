@@ -66,38 +66,39 @@ class CharacterMapping:
         return ''.join(out)
 
 
-def mapping(upper: str | None = None,
-            lower: str | None = None,
-            digit: str | None = None,
-            ascii: str | None = None,
-            chars: str | None = None,
-            *,
-            # remove: str | None = None,
-            other: dict[str, str] | None = None,
-            mirror_missing_case: bool = True,
-            ) -> CharacterMapping:
+def mapping(
+        upper: str | list[str] | None = None,
+        lower: str | list[str] | None = None,
+        digit: str | list[str] | None = None,
+        ascii: str | list[str] | None = None,
+        chars: str | list[str] | None = None,
+        *,
+        # remove: str | None = None,
+        other: dict[str, str] | None = None,
+        mirror_missing_case: bool = True,
+) -> CharacterMapping:
     # todo: special handling for whitespace?
     _mapping = dict()
     if upper:
-        assert isinstance(upper, str)
+        assert all(isinstance(x, str) for x in upper)
         assert len(upper) == 26
         _mapping.update(dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', upper)))
         if not lower and mirror_missing_case:
             _mapping.update(dict(zip('abcdefghijklmnopqrstuvwxyz', upper)))
     if lower:
-        assert isinstance(lower, str)
+        assert all(isinstance(x, str) for x in lower)
         assert len(lower) == 26
         _mapping.update(dict(zip('abcdefghijklmnopqrstuvwxyz', lower)))
         if not upper and mirror_missing_case:
             _mapping.update(dict(zip('ABCDEFGHIJKLMNOPQRSTUVWXYZ', lower)))
     if digit:
-        assert isinstance(digit, str)
+        assert all(isinstance(x, str) for x in digit)
         assert len(digit) == 10
         _mapping.update(dict(zip('0123456789', digit)))
 
     if ascii or chars:
-        assert isinstance(ascii, str)
-        assert isinstance(chars, str)
+        assert all(isinstance(x, str) for x in ascii)
+        assert all(isinstance(x, str) for x in chars)
         assert len(ascii) == len(chars)
         _mapping.update(dict(zip(ascii, chars)))
     if other:
@@ -112,83 +113,100 @@ def mapping(upper: str | None = None,
     return CharacterMapping(translation_table=_mapping)
 
 
+mappings = {
+    'Fullwidth':                 mapping(
+        'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',  # Fullwidth Latin Capital Letter
+        'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ',  # Fullwidth Latin Small Letter
+        '０１２３４５６７８９',
+        " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~¢£¥",
+        " ！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝～￠￡￥"),
+    'Bold':                      mapping(
+        '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙',  # Mathematical Bold Capital
+        '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳',  # Mathematical Bold Small
+        '𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗'),  # Mathematical Bold Digit
+    'Italic':                    mapping(
+        '𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍',  # Mathematical Italic Capital
+        '𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧'),  # Mathematical Italic Small (with planck constant)
+    'Bold Italic':               mapping(
+        '𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁',  # Mathematical Bold Italic Capital
+        '𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛'),  # Mathematical Bold Italic Small
+    'Script':                    mapping(
+        '𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵',  # Mathematical Script Capital
+        '𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏'),  # Mathematical Script Small
+    'Bold Script':               mapping(
+        '𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩',  # Mathematical Bold Script Capital
+        '𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃'),  # Mathematical Bold Script Small
+    'Fraktur':                   mapping(
+        '𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ',  # Mathematical Fraktur Capital
+        '𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷'),  # Mathematical Fraktur Small
+    'Bold Fraktur':              mapping(
+        '𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅',  # Mathematical Bold Fraktur Capital
+        '𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟'),  # Mathematical Bold Fraktur Small
+    'Double-Struck':             mapping(
+        '𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ',  # Mathematical Double-Struck Capital
+        '𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫',  # Mathematical Double-Struck Small
+        '𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡',  # Mathematical Double-Struck Digit
+        ';:()|[]', '⨟⦂⦇⦈⫿⟦⟧'),
+    'Sans-Serif':                mapping(
+        '𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹',  # Mathematical Sans-Serif Capital
+        '𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓',  # Mathematical Sans-Serif Small
+        '𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫'),  # Mathematical Sans-Serif Digit
+    'Sans-Serif Bold':           mapping(
+        '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭',  # Mathematical Sans-Serif Bold Capital
+        '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇',  # Mathematical Sans-Serif Bold Small
+        '𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'),  # Mathematical Sans-Serif Bold Digit
+    'Sans-Serif Italic':         mapping(
+        '𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡',  # Mathematical Sans-Serif Italic Capital
+        '𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻'),  # Mathematical Sans-Serif Italic Small
+    'Sans-Serif Bold Italic':    mapping(
+        '𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕',  # Mathematical Sans-Serif Bold Italic Capital
+        '𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯'),  # Mathematical Sans-Serif Bold Italic Small
+    'Monospace':                 mapping(
+        '𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉',  # Mathematical Monospace Capital
+        '𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣',  # Mathematical Monospace Small
+        '𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿'),  # Mathematical Monospace Digit
+
+    # '⓵⓶⓷⓸⓹⓺⓻⓼⓽'  # Double Circled Digit (missing zero)
+    'Circled':                   mapping(
+        'ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',  # Circled Latin Capital Letter
+        'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',  # Circled Latin Small Letter
+        '⓪①②③④⑤⑥⑦⑧⑨',  # Circled Digit
+        ' +', '◯⨁'),
+    'Squared Latin':             mapping(
+        '🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉'),  # Squared Latin Capital Letter ⊡
+    'Negative Circled':          mapping(
+        '🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩',  # Negative Circled Latin Capital Letter
+        digit='⓿❶❷❸❹❺❻❼❽❾'),  # Dingbat Negative Circled Digit
+    'Negative Squared':          mapping(
+        '🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉',  # Negative Squared Latin Capital Letter
+        other={'?': '🯄'}),
+    'Parenthesized':             mapping(
+        '🄐🄑🄒🄓🄔🄕🄖🄗🄘🄙🄚🄛🄜🄝🄞🄟🄠🄡🄢🄣🄤🄥🄦🄧🄨🄩',  # Parenthesized Latin Capital Letter
+        '⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵',  # Parenthesized Latin Small Letter
+        '㈇⑴⑵⑶⑷⑸⑹⑺⑻⑼'),  # Parenthesized Digit (plus hangul ieung)
+
+    # todo https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
+    # todo https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
+    'superscript':               mapping(
+        '', 'ᵃᵇᶜᵈᵉᶠᶢʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ',  # superscript small
+        '⁰¹²³⁴⁵⁶⁷⁸⁹',
+        '!', 'ꜝ'),  # superscript digit
+    'Regional Indicator Symbol': mapping(
+        [f'{x}​' for x in '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿']),  # Regional Indicator Symbol Letter
+    'greek':                     mapping(
+        '', 'αвς∂єƒgнιנкℓмησρqяѕтυνωχуz'),  # todo: fix
+    'armenian':                  mapping(
+        'ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'),  # todo: fix
+}
+
 if __name__ == '__main__':
-    m = mapping('ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',  # Circled Latin Capital Letter
-                'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',  # Circled Latin Small Letter
-                '⓪①②③④⑤⑥⑦⑧⑨',  # Circled Digit
-                ' +', '◯⨁'
-                )
+    m = mappings['Regional Indicator Symbol']
     print(m)
     print(m.from_ascii('Hello world!'))
     print(m.to_ascii(m.from_ascii('Hello world!')))
 
 # https://unicode.org/charts/PDF/U1D400.pdf
 s = (
-    # '⓵⓶⓷⓸⓹⓺⓻⓼⓽'  # Double Circled Digit (missing zero)
-
-    'ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ'  # Circled Latin Capital Letter
-    'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ'  # Circled Latin Small Letter 
-    '⓪①②③④⑤⑥⑦⑧⑨'  # Circled Digit
-
-    'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ'  # Fullwidth Latin Capital Letter 
-    'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ'  # Fullwidth Latin Small Letter 
-
-    # https://unicode.org/charts/PDF/U2700.pdf
-    '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙'  # Mathematical Bold Capital
-    '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳'  # Mathematical Bold Small
-    '𝟎𝟏𝟐𝟑𝟒𝟓𝟔𝟕𝟖𝟗'  # Mathematical Bold Digit
-
-    '𝐴𝐵𝐶𝐷𝐸𝐹𝐺𝐻𝐼𝐽𝐾𝐿𝑀𝑁𝑂𝑃𝑄𝑅𝑆𝑇𝑈𝑉𝑊𝑋𝑌𝑍'  # Mathematical Italic Capital
-    '𝑎𝑏𝑐𝑑𝑒𝑓𝑔ℎ𝑖𝑗𝑘𝑙𝑚𝑛𝑜𝑝𝑞𝑟𝑠𝑡𝑢𝑣𝑤𝑥𝑦𝑧'  # Mathematical Italic Small (and planck constant)
-    '𝑨𝑩𝑪𝑫𝑬𝑭𝑮𝑯𝑰𝑱𝑲𝑳𝑴𝑵𝑶𝑷𝑸𝑹𝑺𝑻𝑼𝑽𝑾𝑿𝒀𝒁'  # Mathematical Bold Italic Capital
-    '𝒂𝒃𝒄𝒅𝒆𝒇𝒈𝒉𝒊𝒋𝒌𝒍𝒎𝒏𝒐𝒑𝒒𝒓𝒔𝒕𝒖𝒗𝒘𝒙𝒚𝒛'  # Mathematical Bold Italic Small
-
-    '𝒜ℬ𝒞𝒟ℰℱ𝒢ℋℐ𝒥𝒦ℒℳ𝒩𝒪𝒫𝒬ℛ𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵'  # Mathematical Script Capital
-    '𝒶𝒷𝒸𝒹ℯ𝒻ℊ𝒽𝒾𝒿𝓀𝓁𝓂𝓃ℴ𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏'  # Mathematical Script Small
-    '𝓐𝓑𝓒𝓓𝓔𝓕𝓖𝓗𝓘𝓙𝓚𝓛𝓜𝓝𝓞𝓟𝓠𝓡𝓢𝓣𝓤𝓥𝓦𝓧𝓨𝓩'  # Mathematical Bold Script Capital
-    '𝓪𝓫𝓬𝓭𝓮𝓯𝓰𝓱𝓲𝓳𝓴𝓵𝓶𝓷𝓸𝓹𝓺𝓻𝓼𝓽𝓾𝓿𝔀𝔁𝔂𝔃'  # Mathematical Bold Script Small
-
-    '𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ'  # Mathematical Fraktur Capital
-    '𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷'  # Mathematical Fraktur Small
-    '𝕬𝕭𝕮𝕯𝕰𝕱𝕲𝕳𝕴𝕵𝕶𝕷𝕸𝕹𝕺𝕻𝕼𝕽𝕾𝕿𝖀𝖁𝖂𝖃𝖄𝖅'  # Mathematical Bold Fraktur Capital
-    '𝖆𝖇𝖈𝖉𝖊𝖋𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟'  # Mathematical Bold Fraktur Small
-
-    '𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ'  # Mathematical Double-Struck Capital
-    '𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫'  # Mathematical Double-Struck Small
-    '𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡'  # Mathematical Double-Struck Digit
-    # see also ⨾ ⨟ ⦂ ⦇  ⦈ ⫿ ⟦ ⟧ and chinese fullstop
-
-    '𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹'  # Mathematical Sans-Serif Capital
-    '𝖺𝖻𝖼𝖽𝖾𝖿𝗀𝗁𝗂𝗃𝗄𝗅𝗆𝗇𝗈𝗉𝗊𝗋𝗌𝗍𝗎𝗏𝗐𝗑𝗒𝗓'  # Mathematical Sans-Serif Small
-    '𝟢𝟣𝟤𝟥𝟦𝟧𝟨𝟩𝟪𝟫'  # Mathematical Sans-Serif Digit
-    '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭'  # Mathematical Sans-Serif Bold Capital
-    '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇'  # Mathematical Sans-Serif Bold Small
-    '𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'  # Mathematical Sans-Serif Bold Digit
-
-    '𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡'  # Mathematical Sans-Serif Italic Capital
-    '𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻'  # Mathematical Sans-Serif Italic Small
-    '𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕'  # Mathematical Sans-Serif Bold Italic Capital
-    '𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯'  # Mathematical Sans-Serif Bold Italic Small
-
-    '𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉'  # Mathematical Monospace Capital
-    '𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣'  # Mathematical Monospace Small
-    '𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿'  # Mathematical Monospace Digit
-
-    '🄐🄑🄒🄓🄔🄕🄖🄗🄘🄙🄚🄛🄜🄝🄞🄟🄠🄡🄢🄣🄤🄥🄦🄧🄨🄩'  # Parenthesized Latin Capital Letter
-    '⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵'  # Parenthesized Latin Small Letter
-    '㈇⑴⑵⑶⑷⑸⑹⑺⑻⑼'  # Parenthesized Digit (plus hangul ieung)
-    '🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉'  # Squared Latin Capital Letter ⊡
-    '🅐🅑🅒🅓🅔🅕🅖🅗🅘🅙🅚🅛🅜🅝🅞🅟🅠🅡🅢🅣🅤🅥🅦🅧🅨🅩'  # Negative Circled Latin Capital Letter 
-    '⓿❶❷❸❹❺❻❼❽❾'  # Dingbat Negative Circled Digit
-    '🅰🅱🅲🅳🅴🅵🅶🅷🅸🅹🅺🅻🅼🅽🅾🅿🆀🆁🆂🆃🆄🆅🆆🆇🆈🆉'  # Negative Squared Latin Capital Letter 🯄 
-    '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿'  # Regional Indicator Symbol Letter (add zwsp `​`) 
-    # 🇦​🇧​🇨​🇩​🇪​🇫​🇬​🇭​🇮​🇯​🇰​🇱​🇲​🇳​🇴​🇵​🇶​🇷​🇸​🇹​🇺​🇻​🇼​🇽​🇾​🇿​
-
-    # todo https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
-    # todo https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
-    'ᵃᵇᶜᵈᵉᶠᶢʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ'  # superscript small 
-    '⁰¹²³⁴⁵⁶⁷⁸⁹'  # superscript digit  (see also ꜝ )
-
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed https://www.compart.com/en/unicode/search?q=reversed#characters
     'ɒdɔbɘʇ𝼁ʜiįʞlmnoqpɿƨtυvwxγz'  # reversed ⁏ Ↄ ⸮ ⹁ 
@@ -207,12 +225,9 @@ s = (
     'ꋫꃃꏸꁕꍟꄘꁍꑛꂑꀭꀗ꒒ꁒꁹꆂꉣꁸ꒓ꌚ꓅ꐇꏝꅐꇓꐟꁴ'
     'ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'
     'a͓̽b͓̽c͓̽d͓̽e͓̽f͓̽g͓̽h͓̽i͓̽j͓̽k͓̽l͓̽m͓̽n͓̽o͓̽p͓̽q͓̽r͓̽s͓̽t͓̽u͓̽v͓̽w͓̽x͓̽y͓̽z͓̽'
-
-    'ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'  # armenian
-    'αвς∂єfgнιנкℓмиσρףяѕтυνωאָуz'  # greek
-    'αв¢∂єƒgнιנкℓмησρqяѕтυνωχуz'
-
 )
+
+# https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
 modifiers = {
     'slash':                   '̷',
     'longSlash':               '̸',
@@ -274,12 +289,6 @@ modifiers = {
     'strike':                  '̶',
     'equalsSign':              '͇',
 }
-
-# https://unicode.org/charts/PDF/UFF00.pdf
-wide = [
-    " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¢£¥",
-    " ！＂＃＄％＆＇（）＊＋，－．／０１２３４５６７８９：；＜＝＞？＠ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ［＼］＾＿｀ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ｛｜｝～￠￡￥"
-]
 
 # https://www.unicode.org/L2/L2020/20275r-math-calligraphic.pdf
 ''.join(
