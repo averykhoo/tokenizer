@@ -1,15 +1,26 @@
 from dataclasses import dataclass
+from dataclasses import field
 
 
 @dataclass
 class CharacterMapping:
-    translation_table: dict[int, str]
+    translation_table: dict[str, str]
+    __inverted_translation_table: dict[str, str] = field(init=False, repr=False)
+
+    __cached_maketrans_table: dict[int, str] = field(init=False, repr=False)
+    __cached_inverted_maketrans: dict[int, str] = field(init=False, repr=False)
+
+    def __post_init__(self):
+        assert isinstance(self.translation_table, dict)
+        assert all(isinstance(k, str) for k in self.translation_table)
+        assert all(len(k) == 1 for k in self.translation_table)
+        self.__cached_maketrans_table = str.maketrans(self.translation_table)
 
     def from_ascii(self, text: str) -> str:
-        return text.translate(self.translation_table)
+        return text.translate(self.__cached_maketrans_table)
 
-    def __repr__(self):
-        return f'CharacterMapping(translation_table={dict((chr(k), v) for k, v in self.translation_table.items())})'
+    # def __repr__(self):
+    #     return f'CharacterMapping(translation_table={dict((chr(k), v) for k, v in self.translation_table.items())})'
 
 
 def mapping(upper: str | None = None,
@@ -21,6 +32,7 @@ def mapping(upper: str | None = None,
             other: dict[str, str] | None = None,
             mirror_missing_case: bool = True,
             ) -> CharacterMapping:
+    # todo: special handling for whitespace?
     _mapping = dict()
     if upper:
         assert isinstance(upper, str)
@@ -53,7 +65,7 @@ def mapping(upper: str | None = None,
     if not _mapping:
         raise ValueError('no input')
 
-    return CharacterMapping(translation_table=str.maketrans(_mapping))
+    return CharacterMapping(translation_table=_mapping)
 
 
 if __name__ == '__main__':
