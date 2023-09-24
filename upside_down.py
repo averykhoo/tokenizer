@@ -94,6 +94,7 @@ TRANSLITERATIONS = {'ß': 'ss'}
 # always take the first possible rotation, but accept any reverse rotation
 # in order to handle different mappings seen in the wild
 # see also https://unicode.org/charts/PDF/U2100.pdf
+# https://unicode.org/charts/PDF/U0250.pdf
 # todo: optimize for compatibility with android and iphone, telegram and whatsapp
 TEXT_CHARS = {
     # string.printable

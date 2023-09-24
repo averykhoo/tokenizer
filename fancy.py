@@ -111,12 +111,16 @@ def mapping(
 
 
 mappings = {
+    # https://unicode.org/charts/PDF/UFF00.pdf
     'Fullwidth':                 mapping(
         'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',  # Fullwidth Latin Capital Letter
         'ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ',  # Fullwidth Latin Small Letter
         '０１２３４５６７８９',
         " !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~¢£¥",
         " ！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝～￠￡￥"),
+
+    # https://unicode.org/charts/PDF/U1D400.pdf
+    # todo: support greek/cyrillic chars too
     'Bold':                      mapping(
         '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙',  # Mathematical Bold Capital
         '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳',  # Mathematical Bold Small
@@ -182,18 +186,44 @@ mappings = {
         '⒜⒝⒞⒟⒠⒡⒢⒣⒤⒥⒦⒧⒨⒩⒪⒫⒬⒭⒮⒯⒰⒱⒲⒳⒴⒵',  # Parenthesized Latin Small Letter
         '㈇⑴⑵⑶⑷⑸⑹⑺⑻⑼'),  # Parenthesized Digit (plus hangul ieung)
 
-    # todo https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
-    # todo https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
+    # https://rupertshepherd.info/resource_pages/superscript-letters-in-unicode
+    # https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts
+    # https://unicode.org/charts/PDF/U1D80.pdf
+    # https://unicode.org/charts/PDF/U1D00.pdf
     'superscript':               mapping(
-        '', 'ᵃᵇᶜᵈᵉᶠᶢʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ',  # superscript small
-        '⁰¹²³⁴⁵⁶⁷⁸⁹',
-        '!', 'ꜝ'),  # superscript digit
+        'ᴬᴮꟲᴰᴱꟳᴳᴴᴵᴶᴷᴸᴹᴺᴼᴾꟴᴿˢᵀᵁⱽᵂᵡʏᶻ',  # missing S,Z inserted from lowercase, X from greek
+        'ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ',
+        '⁰¹²³⁴⁵⁶⁷⁸⁹',  # ꝰ
+        '!~Æœ+-=()', 'ꜝ῀ᴭꟹ⁺⁻⁼⁽⁾'),
     'Regional Indicator Symbol': mapping(
         [f'{x}​' for x in '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿']),  # Regional Indicator Symbol Letter
-    'greek':                     mapping(
-        '', 'αвς∂єƒgнιנкℓмησρqяѕтυνωχуz'),  # todo: fix
-    'armenian':                  mapping(
-        'ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'),  # todo: fix
+
+    # https://www.compart.com/en/unicode/search?q=reversed#characters
+    'reversed':                  mapping(
+        'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ',  # Ↄ
+        'ɒdɔbɘʇ𝼁ʜiįʞlmnoqpɿƨtυvwxγz',
+        '', ';?,~', '⁏⸮⹁∽'),
+    'small caps':                mapping('ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ'),
+
+    # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
+    # https://unicode.org/charts/PDF/U0530.pdf
+    'armenian':                  mapping('ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'),  # todo
+    'greek':                     mapping('', 'αвς∂єƒgнιנкℓмησρqяѕтυνωχуz'),  # todo: fix
+    'curly':                     mapping('ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'),
+    'currency':                  mapping('₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'),
+    'cool':                      mapping('ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'),
+    'magic':                     mapping('αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ'),
+    'upside down':               mapping('∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZ',
+                                         'ɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz',
+                                         '', '.!?', '˙¡¿'),
+    'wiry':                      mapping('卂乃匚ᗪ乇千Ꮆ卄丨ﾌҜㄥ爪几ㄖ卩Ɋ尺丂ㄒㄩᐯ山乂ㄚ乙'),
+    'squiggle 1':                mapping('ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'),
+    'squiggle 2':                mapping('ꋬꃳꉔ꒯ꏂꊰꍌꁝ꒐꒻ꀘ꒒ꂵꋊꄲꉣꆰꋪꇙ꓄꒤꒦ꅐꉧꌦꁴ'),
+    'squiggle 3':                mapping('ꋫꃃꏸꁕꍟꄘꁍꑛꂑꀭꀗ꒒ꁒꁹꆂꉣꁸ꒓ꌚ꓅ꐇꏝꅐꇓꐟꁴ'),
+    'squiggle 4':                mapping('ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'),
+
+    # https://www.compart.com/en/unicode/search?q=Old+Italic+Letter#characters
+    'old italic':                mapping('𐌀𐌁𐌂𐌃𐌄𐌅Ᏽ𐋅𐌉Ꮭ𐌊𐌋𐌌𐌍Ꝋ𐌐𐌒𐌓𐌔𐌕𐌵ᕓᏔ𐋄𐌙Ɀ'),
 }
 
 if __name__ == '__main__':
@@ -201,28 +231,6 @@ if __name__ == '__main__':
     print(m)
     print(m.from_ascii('Hello world!'))
     print(m.to_ascii(m.from_ascii('Hello world!')))
-
-# https://unicode.org/charts/PDF/U1D400.pdf
-s = (
-    # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
-    'AᗺƆᗡƎꟻວHIᒐꓘ⅃MИOꟼϘЯƧTUVWXYZ'  # reversed https://www.compart.com/en/unicode/search?q=reversed#characters
-    'ɒdɔbɘʇ𝼁ʜiįʞlmnoqpɿƨtυvwxγz'  # reversed ⁏ Ↄ ⸮ ⹁ 
-    'ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'  # curly
-    '₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'  # currency
-    'ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'  # cool
-    'αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ'  # magic
-    'ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ'  # small caps
-    '∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz˙¡¿'  # upside down
-    '卂乃匚ᗪ乇千Ꮆ卄丨ﾌҜㄥ爪几ㄖ卩Ɋ尺丂ㄒㄩᐯ山乂ㄚ乙'  # wiry
-
-    '𐌀𐌁𐌂𐌃𐌄𐌅 g h 𐌆 j 𐌊𐌋𐌌𐌍𐌏𐌓𐌒'  # https://www.compart.com/en/unicode/search?q=Old+Italic+Letter#characters
-    '𐌀𐌁𐌂𐌃𐌄𐌅Ᏽ𐋅𐌉Ꮭ𐌊𐌋𐌌𐌍Ꝋ𐌐𐌒𐌓𐌔𐌕𐌵ᕓᏔ𐋄𐌙Ɀ'  # old italic
-    'ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'  # squiggle
-    'ꋬꃳꉔ꒯ꏂꊰꍌꁝ꒐꒻ꀘ꒒ꂵꋊꄲꉣꆰꋪꇙ꓄꒤꒦ꅐꉧꌦꁴ'  # squiggle
-    'ꋫꃃꏸꁕꍟꄘꁍꑛꂑꀭꀗ꒒ꁒꁹꆂꉣꁸ꒓ꌚ꓅ꐇꏝꅐꇓꐟꁴ'
-    'ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'
-    'a͓̽b͓̽c͓̽d͓̽e͓̽f͓̽g͓̽h͓̽i͓̽j͓̽k͓̽l͓̽m͓̽n͓̽o͓̽p͓̽q͓̽r͓̽s͓̽t͓̽u͓̽v͓̽w͓̽x͓̽y͓̽z͓̽'
-)
 
 # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
 modifiers = {
