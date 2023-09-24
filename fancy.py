@@ -196,7 +196,7 @@ mappings = {
         '⁰¹²³⁴⁵⁶⁷⁸⁹',  # ꝰ
         '!~Æœ+-=()', 'ꜝ῀ᴭꟹ⁺⁻⁼⁽⁾'),
     'Regional Indicator Symbol': mapping(
-        [f'{x}​' for x in '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿']),  # Regional Indicator Symbol Letter
+        [f'{x}\u200C' for x in '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿']),  # Regional Indicator Symbol Letter + ZWNJ
 
     # https://www.compart.com/en/unicode/search?q=reversed#characters
     'reversed':                  mapping(
