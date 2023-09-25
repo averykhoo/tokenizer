@@ -195,6 +195,10 @@ mappings = {
         'ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ',
         '⁰¹²³⁴⁵⁶⁷⁸⁹',  # ꝰ
         '!~Æœ+-=()', 'ꜝ῀ᴭꟹ⁺⁻⁼⁽⁾'),
+
+    # either ZWNJ or ZWSP work, but people are more wary of ZWSP nowadays
+    # ZWNJ example: 🇭‌🇪‌🇱‌🇱‌🇴‌ 🇼‌🇴‌🇷‌🇱‌🇩‌!
+    # ZWSP example: 🇭​🇪​🇱​🇱​🇴​ 🇼​🇴​🇷​🇱​🇩​!
     'Regional Indicator Symbol': mapping(
         [f'{x}\u200C' for x in '🇦🇧🇨🇩🇪🇫🇬🇭🇮🇯🇰🇱🇲🇳🇴🇵🇶🇷🇸🇹🇺🇻🇼🇽🇾🇿']),  # Regional Indicator Symbol Letter + ZWNJ
 
