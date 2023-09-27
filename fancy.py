@@ -1,3 +1,4 @@
+import string
 from dataclasses import dataclass
 from dataclasses import field
 
@@ -217,8 +218,8 @@ mappings = {
     'currency':                  mapping('₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'),
     'cool':                      mapping('ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'),
     'magic':                     mapping('αႦƈԃҽϝɠԋιʝƙʅɱɳσρϙɾʂƚυʋɯxყȥ'),
-    'upside down':               mapping('∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZ',
-                                         'ɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz',
+    'upside down':               mapping('∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZ',  # ⱯᗺƆᗡƎℲ⅁HIᒋꓘ⅂ꟽNOԀტᴚSꞱՈΛM X⅄Z
+                                         'ɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz',  # ɐqɔpǝɟɓɥᴉſʞlɯuodbɹsʇnʌʍxʎz
                                          '', '.!?', '˙¡¿'),
     'wiry':                      mapping('卂乃匚ᗪ乇千Ꮆ卄丨ﾌҜㄥ爪几ㄖ卩Ɋ尺丂ㄒㄩᐯ山乂ㄚ乙'),
     'squiggle 1':                mapping('ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'),
@@ -228,7 +229,10 @@ mappings = {
 
     # https://www.compart.com/en/unicode/search?q=Old+Italic+Letter#characters
     'old italic':                mapping('𐌀𐌁𐌂𐌃𐌄𐌅Ᏽ𐋅𐌉Ꮭ𐌊𐌋𐌌𐌍Ꝋ𐌐𐌒𐌓𐌔𐌕𐌵ᕓᏔ𐋄𐌙Ɀ'),
+    'old italic 2':              mapping('𐌀𐌁𐌂𐌃𐌄𐌅Ɠ𐋅𐌉Ɉ𐌊𐌋𐌌𐌍Ꝋ𐌐𐌒Ɽ𐌔𐌕𐌵ƲᏔ𐋄𐌙Ɀ'),
 }
+
+# A͟B͟C͟D͟E͟F͟G͟H͟I͟J͟K͟L͟M͟N͟O͟P͟Q͟R͟S͟T͟U͟V͟W͟X͟Y͟Z͟  a͟b͟c͟d͟e͟f͟g͟h͟i͟j͟k͟l͟m͟n͟o͟p͟q͟r͟s͟t͟u͟v͟w͟x͟y͟z͟
 
 if __name__ == '__main__':
     m = mappings['Regional Indicator Symbol']
@@ -356,3 +360,4 @@ modifiers = {
     '\U0001D4B4\uFE01'  # MATHEMATICAL ROUNDHAND CAPITAL Y
     '\U0001D4B5\uFE01'  # MATHEMATICAL ROUNDHAND CAPITAL Z
 )
+string.ascii_uppercase
