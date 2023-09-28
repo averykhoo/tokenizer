@@ -213,6 +213,8 @@ mappings = {
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     # https://unicode.org/charts/PDF/U0530.pdf
     'armenian':                  mapping('ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'),  # todo
+    # https://unicode.org/charts/PDF/U0370.pdf
+    # https://unicode.org/charts/PDF/U1F00.pdf
     'greek':                     mapping('', 'αвς∂єƒgнιנкℓмησρqяѕтυνωχуz'),  # todo: fix
     'curly':                     mapping('ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'),
     'currency':                  mapping('₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'),
