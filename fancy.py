@@ -210,12 +210,16 @@ mappings = {
         '', ';?,~', '⁏⸮⹁∽'),
     'small caps':                mapping('ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀsᴛᴜᴠᴡxʏᴢ'),
 
-    # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     # https://unicode.org/charts/PDF/U0530.pdf
-    'armenian':                  mapping('ԹՅՇԺȝԲԳɧɿʝƙʅʍՌρφՐՏԵՄעաՃՎՀΙ'),  # todo
+    'armenian':                  mapping('ԹՅՇԺȝԲԳիɿʝƙԼʍըՕբզՐՖԵՄVաՃկչ'),
     # https://unicode.org/charts/PDF/U0370.pdf
-    # https://unicode.org/charts/PDF/U1F00.pdf
-    'greek':                     mapping('', 'αвς∂єƒgнιנкℓмησρqяѕтυνωχуz'),  # todo: fix
+    'greek':                     mapping('', 'αβͼ∂εϝςϟιϳκλмησρϙͱϛϯμνωχγζ'),  # and a bit of coptic
+    # https://unicode.org/charts/PDF/U4E00.pdf
+    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'), # 力
+    # https://unicode.org/charts/PDF/U16A0.pdf
+    'runic':                     None,
+
+    # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     'curly':                     mapping('ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'),
     'currency':                  mapping('₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'),
     'cool':                      mapping('ᗩᗷᑕᗪEᖴGᕼIᒍKᒪᗰᑎOᑭᑫᖇᔕTᑌᐯᗯ᙭Yᘔ'),
@@ -223,7 +227,6 @@ mappings = {
     'upside down':               mapping('∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZ',  # ⱯᗺƆᗡƎℲ⅁HIᒋꓘ⅂ꟽNOԀტᴚSꞱՈΛM X⅄Z
                                          'ɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz',  # ɐqɔpǝɟɓɥᴉſʞlɯuodbɹsʇnʌʍxʎz
                                          '', '.!?', '˙¡¿'),
-    'wiry':                      mapping('卂乃匚ᗪ乇千Ꮆ卄丨ﾌҜㄥ爪几ㄖ卩Ɋ尺丂ㄒㄩᐯ山乂ㄚ乙'),
     'squiggle 1':                mapping('ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'),
     'squiggle 2':                mapping('ꋬꃳꉔ꒯ꏂꊰꍌꁝ꒐꒻ꀘ꒒ꂵꋊꄲꉣꆰꋪꇙ꓄꒤꒦ꅐꉧꌦꁴ'),
     'squiggle 3':                mapping('ꋫꃃꏸꁕꍟꄘꁍꑛꂑꀭꀗ꒒ꁒꁹꆂꉣꁸ꒓ꌚ꓅ꐇꏝꅐꇓꐟꁴ'),
@@ -237,7 +240,8 @@ mappings = {
 # A͟B͟C͟D͟E͟F͟G͟H͟I͟J͟K͟L͟M͟N͟O͟P͟Q͟R͟S͟T͟U͟V͟W͟X͟Y͟Z͟  a͟b͟c͟d͟e͟f͟g͟h͟i͟j͟k͟l͟m͟n͟o͟p͟q͟r͟s͟t͟u͟v͟w͟x͟y͟z͟
 
 if __name__ == '__main__':
-    m = mappings['Regional Indicator Symbol']
+    # m = mappings['Regional Indicator Symbol']
+    m = mappings['wiry']
     print(m)
     print(m.from_ascii('Hello world!'))
     print(m.to_ascii(m.from_ascii('Hello world!')))
