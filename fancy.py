@@ -217,25 +217,46 @@ mappings = {
     # https://unicode.org/charts/PDF/U4E00.pdf
     # https://unicode.org/charts/PDF/U3400.pdf
     # https://unicode.org/charts/PDF/U20000.pdf
+    # https://unicode.org/charts/PDF/U2A700.pdf
     # https://unicode.org/charts/PDF/U2B820.pdf
+    # https://unicode.org/charts/PDF/U2CEB0.pdf
+    # https://unicode.org/charts/PDF/U30000.pdf
+    # https://unicode.org/charts/PDF/U31350.pdf
+    # https://unicode.org/charts/PDF/U2EBF0.pdf
+    # https://unicode.org/charts/PDF/UF900.pdf
+    # https://unicode.org/charts/PDF/U2F800.pdf
+    # https://unicode.org/charts/PDF/U2F00.pdf
+    # https://unicode.org/charts/PDF/U2E80.pdf
+    # https://unicode.org/charts/PDF/U31C0.pdf
+    # https://unicode.org/charts/PDF/U2FF0.pdf
     'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'),  # 力
 
 
     # OO 吅
+    # e ⺋
     # OY 吖
     # OI 叿
     # y 𬼀
-    # E 𬼖
+    # E 𬼖 U+30004
+    # JJ U+30052
+    # G 𭅲 㔾
+    # BE 𮤹
+    # II U+2EBF0
     # ON 叽 叻
     # OE 吆
     # OT 吓 叮
+    # L U+3136B
     # OP 叩
     # CO 叵
     # JL 儿
-    # U 凹
+    # U 凹 U+2F81D ⼐
+    # K U+30020
     # IJ 刂
     # NL 劜
+    # l ⼁
+    # j ⼃ ⼅
     # G 包
+    # O ⼝ ⼞ ㇣
     # C 匚 匸 𠥓
     # OOO 品
     # YP 𠨍
@@ -250,6 +271,7 @@ mappings = {
     # ojil 𠯀
     # JII 川
     # 𡿨
+    # P ⼫
     # I 工
     # E 幺 纟㭅
     # ++ 艹
@@ -267,7 +289,8 @@ mappings = {
     # os 𫩐
     # oc 𫩔
     # X 㐅
-    # L 𠃊
+    # L 𠃊㇗㇄
+    # z ㇊ ㇠
     # LL 𠃏
     # ZZ 𠃐
     # IL 𠃖
@@ -275,6 +298,8 @@ mappings = {
     # G 𠃚
     # A 𠔼
     # 彐 灬 门𠆢
+    # B ⻖⻏
+    # ij ⺉
 
 
 
