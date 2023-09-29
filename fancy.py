@@ -215,9 +215,99 @@ mappings = {
     # https://unicode.org/charts/PDF/U0370.pdf
     'greek':                     mapping('', 'αβͼ∂εϝςϟιϳκλмησρϙͱϛϯμνωχγζ'),  # and a bit of coptic
     # https://unicode.org/charts/PDF/U4E00.pdf
-    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'), # 力
+    # https://unicode.org/charts/PDF/U3400.pdf
+    # https://unicode.org/charts/PDF/U20000.pdf
+    # https://unicode.org/charts/PDF/U2B820.pdf
+    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'),  # 力
+
+
+    # OO 吅
+    # OY 吖
+    # OI 叿
+    # y 𬼀
+    # E 𬼖
+    # ON 叽 叻
+    # OE 吆
+    # OT 吓 叮
+    # OP 叩
+    # CO 叵
+    # JL 儿
+    # U 凹
+    # IJ 刂
+    # NL 劜
+    # G 包
+    # C 匚 匸 𠥓
+    # OOO 品
+    # YP 𠨍
+    # G 𠫔
+    # OZ 𠮙
+    # ol 𠮝
+    # ot 𠮟
+    # oij 𠮧
+    # P 尸 户
+    # WB 屷
+    # WI 屸
+    # ojil 𠯀
+    # JII 川
+    # 𡿨
+    # I 工
+    # E 幺 纟㭅
+    # ++ 艹
+    # i 讠
+    # it 计
+    # iT 订
+    # TB 邒
+    # B 阝㠯
+    # IJ 𢀕
+    # g 𢎘
+    # K 飞
+    # BB 𨸙
+    # BI 𨸖
+    # yy 𫡅
+    # os 𫩐
+    # oc 𫩔
+    # X 㐅
+    # L 𠃊
+    # LL 𠃏
+    # ZZ 𠃐
+    # IL 𠃖
+    # LJ 𠄍
+    # G 𠃚
+    # A 𠔼
+    # 彐 灬 门𠆢
+
+
+
     # https://unicode.org/charts/PDF/U16A0.pdf
-    'runic':                     None,
+    'runic':                     mapping('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+
+    # A ᚢ ᚣ ᚤ ᛟ
+    # B ᛒ ᛔ
+    # C ᚲ ᛈ
+    # D ᚦ ᚧ
+    # E ᛊ
+    # F ᚨ ᚩ ᚪ ᚫ
+    # G
+    # H ᚳ ᚺ ᚻ
+    # I ᛁ ᛂ ᛨ ᛧ
+    # J
+    # K ᛕ
+    # L ᚳ
+    # M ᛖ ᛗ
+    # N ᛲ
+    # O ᛃ ᛥ ᛜ
+    # P ᚹ
+    # Q ᛩ ᛰ
+    # R ᚱ
+    # S ᛇ ᛢ
+    # T ᛏ
+    # U
+    # V
+    # W ᛠ
+    # X ᚷ ᚸ ᛤ ᛶ ᛞ
+    # Y ᚠ ᚴ ᚵ ᚶ ᛉ
+    # Z
+    # ᚼ ᚽ ᚾ ᛀ ᛋ ᛡ ᛬ ᛫ ᛭
 
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     'curly':                     mapping('ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'),
