@@ -230,78 +230,74 @@ mappings = {
     # https://unicode.org/charts/PDF/U31C0.pdf
     # https://unicode.org/charts/PDF/U2FF0.pdf
     'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'),  # 力
-
-
-    # OO 吅
-    # e ⺋
-    # OY 吖
-    # OI 叿
-    # y 𬼀
-    # E 𬼖 U+30004
-    # JJ U+30052
-    # G 𭅲 㔾
-    # BE 𮤹
-    # II U+2EBF0
-    # ON 叽 叻
-    # OE 吆
-    # OT 吓 叮
-    # L U+3136B
-    # OP 叩
-    # CO 叵
-    # JL 儿
-    # U 凹 U+2F81D ⼐
-    # K U+30020
-    # IJ 刂
-    # NL 劜
-    # l ⼁
-    # j ⼃ ⼅
-    # G 包
-    # O ⼝ ⼞ ㇣
-    # C 匚 匸 𠥓
-    # OOO 品
-    # YP 𠨍
-    # G 𠫔
-    # OZ 𠮙
-    # ol 𠮝
-    # ot 𠮟
-    # oij 𠮧
-    # P 尸 户
-    # WB 屷
-    # WI 屸
-    # ojil 𠯀
-    # JII 川
-    # 𡿨
-    # P ⼫
-    # I 工
-    # E 幺 纟㭅
     # ++ 艹
+    # A 𠔼
+    # B ⻖⻏
+    # B 阝㠯
+    # BB 𨸙
+    # BE 𮤹
+    # BI 𨸖
+    # C 匚 匸 𠥓
+    # CO 叵
+    # e ⺋
+    # E 幺 纟㭅
+    # E 𬼖 U+30004
+    # G 包
+    # G 𠃚
+    # G 𠫔
+    # g 𢎘
+    # G 𭅲 㔾
+    # I 工
     # i 讠
+    # II U+2EBF0
+    # ij ⺉
+    # IJ 刂
+    # IJ 𢀕
+    # IL 𠃖
     # it 计
     # iT 订
-    # TB 邒
-    # B 阝㠯
-    # IJ 𢀕
-    # g 𢎘
+    # j ⼃ ⼅
+    # JII 川
+    # JJ U+30052
+    # JL 儿
+    # K U+30020
     # K 飞
-    # BB 𨸙
-    # BI 𨸖
-    # yy 𫡅
-    # os 𫩐
-    # oc 𫩔
-    # X 㐅
+    # L U+3136B
+    # l ⼁
     # L 𠃊㇗㇄
-    # z ㇊ ㇠
-    # LL 𠃏
-    # ZZ 𠃐
-    # IL 𠃖
     # LJ 𠄍
-    # G 𠃚
-    # A 𠔼
+    # LL 𠃏
+    # NL 劜
+    # O ⼝ ⼞ ㇣
+    # oc 𫩔
+    # OE 吆
+    # OI 叿
+    # oij 𠮧
+    # ojil 𠯀
+    # ol 𠮝
+    # ON 叽 叻
+    # OO 吅
+    # OOO 品
+    # OP 叩
+    # os 𫩐
+    # OT 吓 叮
+    # ot 𠮟
+    # OY 吖
+    # OZ 𠮙
+    # P ⼫
+    # P 尸 户
+    # TB 邒
+    # U 凹 U+2F81D ⼐
+    # WB 屷
+    # WI 屸
+    # X 㐅
+    # y 𬼀
+    # YP 𠨍
+    # yy 𫡅
+    # z ㇊ ㇠
+    # ZZ 𠃐
     # 彐 灬 门𠆢
-    # B ⻖⻏
-    # ij ⺉
-
-
+    # 𡿨
 
     # https://unicode.org/charts/PDF/U16A0.pdf
     'runic':                     mapping('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
@@ -334,6 +330,17 @@ mappings = {
     # Z
     # ᚼ ᚽ ᚾ ᛀ ᛋ ᛡ ᛬ ᛫ ᛭
 
+    # https://unicode.org/charts/PDF/U13A0.pdf
+    # https://unicode.org/charts/PDF/UAB70.pdf
+    'cherokee':                  None,
+
+    # promising
+    # https://unicode.org/charts/PDF/U11AC0.pdf
+    # https://unicode.org/charts/PDF/U16B00.pdf
+    # https://unicode.org/charts/PDF/U2C80.pdf
+    # https://unicode.org/charts/PDF/U10300.pdf
+    # https://unicode.org/charts/PDF/U102A0.pdf
+
     # https://github.com/Secret-chest/fancify-text/blob/main/fancify_text/fontData.py
     'curly':                     mapping('ąცƈɖɛʄɠɧıʝƙƖɱŋơ℘զཞʂɬų۷ῳҳყʑ'),
     'currency':                  mapping('₳₿¢₫€₣₲HIJ₭£₥₦O₱QR$₮UV₩X¥₴'),
@@ -342,6 +349,9 @@ mappings = {
     'upside down':               mapping('∀ᗺϽᗡƎℲƃHIſꓘ˥WNOԀQᴚS⊥∩ΛMXʎZ',  # ⱯᗺƆᗡƎℲ⅁HIᒋꓘ⅂ꟽNOԀტᴚSꞱՈΛM X⅄Z
                                          'ɐqɔpǝɟƃɥ!ɾʞןɯuodbɹsʇnʌʍxʎz',  # ɐqɔpǝɟɓɥᴉſʞlɯuodbɹsʇnʌʍxʎz
                                          '', '.!?', '˙¡¿'),
+
+    # https://unicode.org/charts/PDF/UA000.pdf
+    # https://unicode.org/charts/PDF/UA490.pdf
     'squiggle 1':                mapping('ꍏꌃꉓꀸꍟꎇꁅꃅꀤꀭꀘ꒒ꂵꈤꂦꉣꆰꋪꌗ꓄ꀎꃴꅏꊼꌩꁴ'),
     'squiggle 2':                mapping('ꋬꃳꉔ꒯ꏂꊰꍌꁝ꒐꒻ꀘ꒒ꂵꋊꄲꉣꆰꋪꇙ꓄꒤꒦ꅐꉧꌦꁴ'),
     'squiggle 3':                mapping('ꋫꃃꏸꁕꍟꄘꁍꑛꂑꀭꀗ꒒ꁒꁹꆂꉣꁸ꒓ꌚ꓅ꐇꏝꅐꇓꐟꁴ'),
