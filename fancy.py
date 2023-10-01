@@ -425,8 +425,8 @@ modifiers = {
     'strikeShort':             '̵',
     'strike':                  '̶',
     'equalsSign':              '͇',
-# }
-#
+}
+
 # # https://www.unicode.org/L2/L2020/20275r-math-calligraphic.pdf
 # ''.join(
 #     '\U0001D49C\uFE00'  # MATHEMATICAL CHANCERY CAPITAL A
