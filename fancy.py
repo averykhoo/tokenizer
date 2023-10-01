@@ -1,10 +1,11 @@
-import string
 from dataclasses import dataclass
 from dataclasses import field
 
 
 @dataclass(frozen=True)
 class CharacterMapping:
+    # todo: Support ligatures
+    # todo: warn on duplicates if not equal casefolded
     translation_table: dict[str, str]
     __inverted_translation_table: dict[str, str] = field(default_factory=dict, init=False, repr=False)
 
