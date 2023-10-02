@@ -1,16 +1,21 @@
 from dataclasses import dataclass
 from dataclasses import field
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 
 @dataclass(frozen=True)
 class CharacterMapping:
     # todo: Support ligatures
     # todo: warn on duplicates if not equal casefolded
+    # todo: support multiple mappings, like in upside_down.py
     translation_table: dict[str, str]
     __inverted_translation_table: dict[str, str] = field(default_factory=dict, init=False, repr=False)
 
-    __cached_maketrans: dict[int, str] = field(default_factory=dict, init=False, repr=False)
-    __cached_inverted_maketrans: dict[int, str] = field(default_factory=dict, init=False, repr=False)
+    __cached_maketrans: Dict[int, str] = field(default_factory=dict, init=False, repr=False)
+    __cached_inverted_maketrans: Dict[int, str] = field(default_factory=dict, init=False, repr=False)
 
     def __post_init__(self):
         # sanity checks
@@ -45,19 +50,19 @@ class CharacterMapping:
         return text
 
     @staticmethod
-    def _translate(text: str, translation_table: dict[str, str]) -> str:
+    def _translate(text: str, translation_table: Dict[str, str]) -> str:
         lengths = sorted(set(len(k) for k in translation_table), reverse=True)
         assert all(lengths)  # should never end up with a zero length
 
         out = []
         cursor = 0
         while cursor < len(text):
-            for l in lengths:
-                if cursor + l > len(text):
+            for _length in lengths:
+                if cursor + _length > len(text):
                     continue  # technically this check is unnecessary since it'll still behave correctly
-                if text[cursor:cursor + l] in translation_table:
-                    out.append(translation_table[text[cursor:cursor + l]])
-                    cursor += l
+                if text[cursor:cursor + _length] in translation_table:
+                    out.append(translation_table[text[cursor:cursor + _length]])
+                    cursor += _length
                     break
             else:
                 out.append(text[cursor])
@@ -66,14 +71,14 @@ class CharacterMapping:
 
 
 def mapping(
-        upper: str | list[str] | None = None,
-        lower: str | list[str] | None = None,
-        digit: str | list[str] | None = None,
-        ascii: str | list[str] | None = None,
-        chars: str | list[str] | None = None,
+        upper: Optional[Union[str, List[str]]] = None,
+        lower: Optional[Union[str, List[str]]] = None,
+        digit: Optional[Union[str, List[str]]] = None,
+        ascii: Optional[Union[str, List[str]]] = None,
+        chars: Optional[Union[str, List[str]]] = None,
         *,
         # remove: str | None = None,
-        other: dict[str, str] | None = None,
+        other: Optional[Dict[str, str]] = None,
         mirror_missing_case: bool = True,
 ) -> CharacterMapping:
     # todo: special handling for whitespace?
@@ -230,10 +235,11 @@ mappings = {
     # https://unicode.org/charts/PDF/U2E80.pdf
     # https://unicode.org/charts/PDF/U31C0.pdf
     # https://unicode.org/charts/PDF/U2FF0.pdf
-    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙'),  # 力
+    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙',  # 力
+                                         ascii='+-|±`=*', chars='十一丨士丶二大'),
     # ++ 艹
-    # A 𠔼
-    # B ⻖⻏ 阝㠯
+    # A 𠔼 卪凡丹凡丹卂闩
+    # B ⻖⻏ 㠯 阝乃
     # BB 𨸙
     # BE 𮤹
     # BI 𨸖
@@ -241,8 +247,9 @@ mappings = {
     # CO 叵
     # e ⺋
     # E 幺 纟㭅 𬼖 U+30004
-    # G 包 𠃚 𠫔 𭅲 㔾
+    # G 包 𠃚 𠫔 𭅲 㔾 㔾厶乜云公
     # g 𢎘
+    # H: 廾卄
     # I 工
     # i 讠
     # II U+2EBF0
@@ -253,18 +260,18 @@ mappings = {
     # it 计
     # iT 订
     # j ⼃ ⼅
+    # J: 了丁亅
     # jil 川
     # JJ U+30052
     # JL 儿
-    # K U+30020
-    # K 飞
-    # L U+3136B
+    # K U+30020 飞 丬长
+    # L U+3136B 𠃊㇗㇄
     # l ⼁
-    # L 𠃊㇗㇄
     # LJ 𠄍
     # LL 𠃏
+    # N: 力几刀
     # NL 劜
-    # O ⼝ ⼞ ㇣
+    # O ⼝ ⼞ ㇣ 口囗回
     # oc 𫩔
     # OE 吆
     # OI 叿
@@ -281,17 +288,21 @@ mappings = {
     # OY 吖
     # OZ 𠮙
     # P ⼫ 尸 户
+    # Q: 曱㔿
+    # t: 七
+    # T: 丅ㄒ
     # TB 邒
-    # U 凹 U+2F81D ⼐
+    # U 凹 U+2F81D ⼐ 凵ㄩ
     # WB 屷
     # WI 屸
-    # X 㐅
+    # X 㐅乄乂
     # y 𬼀
+    # Y: 丩ㄚ
     # YP 𠨍
     # yy 𫡅
     # z ㇊ ㇠
     # ZZ 𠃐
-    # 彐 灬 门𠆢 𡿨
+    # 互巛 彐 灬 门𠆢 𡿨
 
     # https://unicode.org/charts/PDF/U16A0.pdf
     'runic':                     mapping('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
@@ -360,7 +371,7 @@ mappings = {
 
 if __name__ == '__main__':
     # m = mappings['Regional Indicator Symbol']
-    m = mappings['wiry']
+    m = mappings['chinese']
     print(m)
     print(m.from_ascii('Hello world!'))
     print(m.to_ascii(m.from_ascii('Hello world!')))
@@ -485,4 +496,3 @@ modifiers = {
 #     '\U0001D4B4\uFE01'  # MATHEMATICAL ROUNDHAND CAPITAL Y
 #     '\U0001D4B5\uFE01'  # MATHEMATICAL ROUNDHAND CAPITAL Z
 # )
-# string.ascii_uppercase
