@@ -127,7 +127,6 @@ mappings = {
         " ！＂＃＄％＆＇（）＊＋，－．／：；＜＝＞？＠［＼］＾＿｀｛｜｝～￠￡￥"),
 
     # https://unicode.org/charts/PDF/U1D400.pdf
-    # todo: support greek/cyrillic chars too
     'Bold':                      mapping(
         '𝐀𝐁𝐂𝐃𝐄𝐅𝐆𝐇𝐈𝐉𝐊𝐋𝐌𝐍𝐎𝐏𝐐𝐑𝐒𝐓𝐔𝐕𝐖𝐗𝐘𝐙',  # Mathematical Bold Capital
         '𝐚𝐛𝐜𝐝𝐞𝐟𝐠𝐡𝐢𝐣𝐤𝐥𝐦𝐧𝐨𝐩𝐪𝐫𝐬𝐭𝐮𝐯𝐰𝐱𝐲𝐳',  # Mathematical Bold Small
@@ -202,7 +201,6 @@ mappings = {
         'ᵃᵇᶜᵈᵉᶠᵍʰⁱʲᵏˡᵐⁿᵒᵖ𐞥ʳˢᵗᵘᵛʷˣʸᶻ',
         '⁰¹²³⁴⁵⁶⁷⁸⁹',  # ꝰ
         '!~Æœ+-=()', 'ꜝ῀ᴭꟹ⁺⁻⁼⁽⁾'),
-
     # either ZWNJ or ZWSP work, but people are more wary of ZWSP nowadays
     # ZWNJ example: 🇭‌🇪‌🇱‌🇱‌🇴‌ 🇼‌🇴‌🇷‌🇱‌🇩‌!
     # ZWSP example: 🇭​🇪​🇱​🇱​🇴​ 🇼​🇴​🇷​🇱​🇩​!
@@ -220,6 +218,7 @@ mappings = {
     'armenian':                  mapping('ԹՅՇԺȝԲԳիɿʝƙԼʍըՕբզՐՖԵՄVաՃկչ'),
     # https://unicode.org/charts/PDF/U0370.pdf
     'greek':                     mapping('', 'αβͼ∂εϝςϟιϳκλмησρϙͱϛϯμνωχγζ'),  # and a bit of coptic
+
     # https://unicode.org/charts/PDF/U4E00.pdf
     # https://unicode.org/charts/PDF/U3400.pdf
     # https://unicode.org/charts/PDF/U20000.pdf
