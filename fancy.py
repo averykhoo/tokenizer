@@ -234,8 +234,8 @@ mappings = {
     # https://unicode.org/charts/PDF/U2E80.pdf
     # https://unicode.org/charts/PDF/U31C0.pdf
     # https://unicode.org/charts/PDF/U2FF0.pdf
-    'chinese':                   mapping('卂乃匚ᗪ乇千Ꮆ卄丨了长乚爪几口卩Ɋ尺丂ㄒㄩ丷山乂ㄚ乙',  # 力
-                                         ascii='+-|±`=*', chars='十一丨士丶二大'),
+    'chinese':                   mapping('凡⻖匸囙幺千乜卄工丁长𠃊爪刀口尸㔿尺丂ㄒ⼐丷山乂ㄚ乙',
+                                         ascii='+-|±`=*^𡿨', chars='十一丨士丶二大𠆢<'),
     # ++ 艹
     # A 𠔼 卪凡丹凡丹卂闩
     # B ⻖⻏ 㠯 阝乃
@@ -245,7 +245,7 @@ mappings = {
     # C 匚 匸 𠥓
     # CO 叵
     # e ⺋
-    # E 幺 纟㭅 𬼖 U+30004
+    # E 幺 纟㭅 𬼖 U+30004 乇
     # G 包 𠃚 𠫔 𭅲 㔾 㔾厶乜云公
     # g 𢎘
     # H: 廾卄
@@ -264,7 +264,7 @@ mappings = {
     # JJ U+30052
     # JL 儿
     # K U+30020 飞 丬长
-    # L U+3136B 𠃊㇗㇄
+    # L U+3136B 𠃊㇗㇄乚
     # l ⼁
     # LJ 𠄍
     # LL 𠃏
@@ -282,11 +282,12 @@ mappings = {
     # OOO 品
     # OP 叩
     # os 𫩐
-    # OT 吓 叮
+    # OT 吓
+    # oJ 叮
     # ot 𠮟
     # OY 吖
     # OZ 𠮙
-    # P ⼫ 尸 户
+    # P ⼫ 尸 户卩
     # Q: 曱㔿
     # t: 七
     # T: 丅ㄒ
@@ -301,7 +302,6 @@ mappings = {
     # yy 𫡅
     # z ㇊ ㇠
     # ZZ 𠃐
-    # 互巛 彐 灬 门𠆢 𡿨
 
     # https://unicode.org/charts/PDF/U16A0.pdf
     'runic':                     mapping('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
