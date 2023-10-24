@@ -101,6 +101,8 @@ def mapping(
         _mapping.update(dict(zip('0123456789', digit)))
 
     if ascii or chars:
+        assert ascii is not None
+        assert chars is not None
         assert all(isinstance(x, str) for x in ascii)
         assert all(isinstance(x, str) for x in chars)
         assert len(ascii) == len(chars)

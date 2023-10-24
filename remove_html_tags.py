@@ -152,8 +152,8 @@ _PATTERN_TAG = '(?:(?:!doctype|a(?:bbr|cronym|ddress|pplet|r(?:ea|ticle)|side|ud
                'uby)|s(?:amp|cript|e(?:ction|lect)|mall|ource|pan|t(?:r(?:ike|ong)|yle)|u(?:b|mmary|p))?|t(?:ab' \
                'le|body|d|e(?:mplate|xtarea)|foot|h(?:ead)?|i(?:me|tle)|r(?:ack)?|t)|ul?|v(?:ar|ideo)|wbr))'
 
-RE_COMMENT = re.compile(f'(?:<!--(?P<comment>.*)-->)', flags=re.I | re.U)
-RE_SCRIPT = re.compile(f'(?:<script(?:\s+[^<>]*)?>.*</script\s*>)', flags=re.I | re.U)
+RE_COMMENT = re.compile(r'(?:<!--(?P<comment>.*)-->)', flags=re.I | re.U)
+RE_SCRIPT = re.compile(r'(?:<script(?:\s+[^<>]*)?>.*</script\s*>)', flags=re.I | re.U)
 RE_TAG = re.compile(fr'(?:</?{_PATTERN_TAG}(?:\s+[^<>]*)?/?>)', flags=re.I | re.U)
 
 

@@ -394,7 +394,7 @@ if __name__ == '__main__':
     print(flip_text('hello_world HELLO WORLD test '))
     print(flip_text(string.printable.split()[0]))
     print(flip_text(
-        '''~{|}`‾^[\\]@¿<=>;:/.-ʻ+*()╻\⅋%$#﮼¡ Z⅄XϺɅՈꓕSꓤꝹԀONꟽ⅂ꓘᒋIH⅁ᖵƎᗡϽꓭ∀zʎxʍʌnʇsɹbdouɯʅʞɾᴉɥƃⅎǝpɔqɐ 68𝘓95ߤ↋↊⇂0'''))
+        '''~{|}`‾^[\\]@¿<=>;:/.-ʻ+*()╻\\⅋%$#﮼¡ Z⅄XϺɅՈꓕSꓤꝹԀONꟽ⅂ꓘᒋIH⅁ᖵƎᗡϽꓭ∀zʎxʍʌnʇsɹbdouɯʅʞɾᴉɥƃⅎǝpɔqɐ 68𝘓95ߤ↋↊⇂0'''))
 
     print(unflip_upside_down_words('normal_pꞁɹoʍ‾oꞁꞁǝɥ_text  NORMAL ᗡꞀᴚOϺ OꞀꞀƎH TEXT  normal pꞁɹoʍ oꞁꞁǝɥ text  ʇsǝʇ '))
 
@@ -406,7 +406,6 @@ RAPID: 12/12 checks are up
 Scoold: 1/1 checks are up'''))
 
     print(flip_text('Ş	ş	şe'))
-
 
     print(flip_text('zʎxʍʌnʇsɹbdouɯlʞɾıɥɓɟǝpɔqɐ'))
     print(flip_text('ɐqɔpǝɟƃɥıɾʞlɯuobdɹsʇuʌʍxʎz')[::-1])

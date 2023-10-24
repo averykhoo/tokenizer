@@ -105,11 +105,10 @@ def get_ascii_alike_chars() -> Dict[int, str]:
                          'LETTER PHI', 'LETTER ETA', 'LETTER OMEGA', 'LETTER PI', 'LETTER XI', 'LETTER ZETA',
                          'LETTER KOPPA',
                          'GREEK PHI', 'GREEK PI',
-                         'LETTER WYNN', 'LETTER YOGH'))
-            ) or (
-                    alpha in string.digits and
-                    any(lang in unicodedata.name(char) for lang in ('DIGIT', 'SUBSCRIPT', 'SUPERSCRIPT')) and
-                    'ETHIOPIC' not in unicodedata.name(char))):
+                         'LETTER WYNN', 'LETTER YOGH'))) or
+                    (alpha in string.digits and
+                     any(lang in unicodedata.name(char) for lang in ('DIGIT', 'SUBSCRIPT', 'SUPERSCRIPT')) and
+                     'ETHIOPIC' not in unicodedata.name(char))):
                 alpha_alike_codepoints[alpha].append(codepoint)
                 # print(chr(codepoint), f'U+{codepoint:04x}', unicodedata.name(char))
             else:
