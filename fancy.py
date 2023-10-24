@@ -11,8 +11,8 @@ class CharacterMapping:
     # todo: Support ligatures
     # todo: warn on duplicates if not equal casefolded
     # todo: support multiple mappings, like in upside_down.py
-    translation_table: dict[str, str]
-    __inverted_translation_table: dict[str, str] = field(default_factory=dict, init=False, repr=False)
+    translation_table: Dict[str, str]
+    __inverted_translation_table: Dict[str, str] = field(default_factory=dict, init=False, repr=False)
 
     __cached_maketrans: Dict[int, str] = field(default_factory=dict, init=False, repr=False)
     __cached_inverted_maketrans: Dict[int, str] = field(default_factory=dict, init=False, repr=False)
@@ -119,7 +119,7 @@ def mapping(
     return CharacterMapping(translation_table=_mapping)
 
 
-mappings = {
+mappings: Dict[str, CharacterMapping] = {
     # https://unicode.org/charts/PDF/UFF00.pdf
     'Fullwidth':                 mapping(
         'ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ',  # Fullwidth Latin Capital Letter
@@ -343,7 +343,7 @@ mappings = {
 
     # https://unicode.org/charts/PDF/U13A0.pdf
     # https://unicode.org/charts/PDF/UAB70.pdf
-    'cherokee':                  None,
+    # 'cherokee':                  None,
 
     # promising
     # https://unicode.org/charts/PDF/U11AC0.pdf
